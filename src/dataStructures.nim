@@ -1,108 +1,162 @@
 import std/options
+import std/macros
 
 type
   Mode* = enum
     mdOneFile,
 
+const `helperTokKind`*: seq[(string, Option[string])] = @[
+  #--------
+  ("tokInternalAstStart", none(string)), # fake token indicating the beginning of the AST
+  ("tokBad", none(string)),           # invalid input!
+  #--------
+  ("tokIdent", none(string)),  # identifiers
+  ("tokNumLit", none(string)), # 0-9, hex numbers, binary numbers, etc.
+  ("tokStrLit", none(string)), # string literals
+  ("tokTrue", some("true")),
+  ("tokFalse", some("false")),
+  #--------
+  ("tokLParen", some("(")),
+  ("tokRParen", some(")")),
+  ("tokLBracket", some("[")),
+  ("tokRBracket", some("]")),
+  ("tokLBrace", some("{")),
+  ("tokRBrace", some("}")),
+  ("tokSemicolon", some(";")),
+  #--------
+  ("tokPtr", some("ptr")),
+  ("tokAddr", some("addr")),
+  ("tokDot", some(".")),
+  ("tokDeref", some("[] ")), # pointer dereference
+  #--------
+  ("tokVar", some("var")),
+  ("tokDef", some("def")),
+  #("tokMacro", some("macro")),
+      # Maybe save `macro` for the bootstrapped compiler?
+      # I'm not sure I outright need macros for this version of the
+      # compiler
+  ("tokStruct", some("struct")),
+  ("tokEnum", some("enum")),
+  ("tokExtern", some("extern")),
+  ("tokCextern", some("cextern")),
+  ("tokImport", some("import")),
+  ("tokCImport", some("cimport")),
+  #--------
+  ("tokScope", some("scope")),
+  ("tokIf", some("if")),
+  ("tokElif", some("elif")),
+  ("tokElse", some("else")),
+  ("tokSwitch", some("switch,")),
+  ("tokCase", some("case")),
+  ("tokDefault", some("default")),
+  ("tokFor", some("for")),
+  ("tokWhile", some("while")),
+  ("tokContinue", some("continue")),
+  ("tokBreak", some("break")),
+  ("tokResult", some("result")),
+  #--------
+  ("tokType", some("type")),
+  ("tokArray", some("array")),
+  ("tokVoid", some("void")),
+  ("tokBool", some("bool")),
+  ("tokU8", some("u8")),
+  ("tokI8", some("i8")),
+  ("tokU16", some("u16")),
+  ("tokI16", some("i16")),
+  ("tokU32", some("u32")),
+  ("tokI32", some("i32")),
+  ("tokU64", some("u64")),
+  ("tokI64", some("i64")),
+  ("tokF32", some("f32")),
+  ("tokF64", some("f64")),
+  ("tokChar", some("char")),
+  ("tokCString", some("cstring")),
+  #--------
+  ("tokCmpEq", some("==")),
+  ("tokCmpNe", some("!=")),
+  ("tokCmpLt", some("<")),
+  ("tokCmpGt", some(">")),
+  ("tokCmpLe", some("<=")),
+  ("tokCmpGe", some(">=")),
+  #--------
+  ("tokPlus", some("+")),
+  ("tokMinus", some("-")),
+  ("tokMul", some("*")),
+  ("tokDiv", some("/")),
+  ("tokMod", some("%")),
+  ("tokBitAnd", some("&")),
+  ("tokBitOr", some("|")),
+  ("tokBitXor", some("^")),
+  ("tokBitInvert", some("~")),
+  ("tokLogicAnd", some("&&")),
+  ("tokLogicOr", some("||")),
+  ("tokBitShl", some("<<")),
+  ("tokBitShr", some(">>")),
+  #--------
+  ("tokAssign", some("=")),
+  ("tokAssignPlus", some("+=")),
+  ("tokAssignMinus", some("-=")),
+  ("tokAssignMul", some("*=")),
+  ("tokAssignDiv", some("/=")),
+  ("tokAssignMod", some("%=")),
+  ("tokAssignBitAnd", some("&=")),
+  ("tokAssignBitOr", some("|=")),
+  ("tokAssignBitXor", some("^=")),
+  ("tokAssignBitShl", some("<<=")),
+  ("tokAssignBitShr", some(">>=")),
+  #--------
+  ("tokLim", none(string)),
+]
 
-type
-  TokKind* = enum
-    #--------
-    tokInternalAstStart, # fake token indicating the beginning of the AST
-    #--------
-    tokIdent,         # identifiers
-    tokNumLit,        # 0-9, hex numbers, binary numbers, etc.
-    tokStrLit,        # string literals
-    tokTrue,          # `true`
-    tokFalse,         # `false`
-    #--------
-    tokLParen,        # (
-    tokRParen,        # )
-    tokLBracket,      # [
-    tokRBracket,      # ]
-    tokLBrace,        # {
-    tokRBrace,        # }
-    tokSemicolon,     # ;
-    #--------
-    tokPtr,           # `ptr`
-    tokAddr,          # `addr`
-    tokDot,           # `.`
-    tokDeref,         # `[]` (pointer dereference)
-    #--------
-    tokVar,           # `var`
-    tokDef,           # `def`
-    #tokMacro,        # maybe save this for the bootstrapped compiler?
-    tokStruct,        # `struct`
-    tokEnum,          # `enum`
-    tokExtern,        # `extern`
-    tokCextern,       # `cextern`
-    tokImport,        # `import`
-    tokCImport,       # `cimport`
-    #--------
-    tokScope,         # `scope`
-    tokIf,            # `if`
-    tokElif,          # `elif`
-    tokElse,          # `else`
-    tokSwitch,        # `switch`,
-    tokCase,          # `case`
-    tokDefault,       # `default`
-    tokFor,           # `for`
-    tokWhile,         # `while`
-    tokContinue,      # `continue`
-    tokBreak,         # `break`
-    tokResult,        # `result`
-    #--------
-    tokType,          # `type`
-    tokArray,         # `array`
-    tokVoid,          # `void`
-    tokBool,          # `bool`
-    tokU8,            # `u8`
-    tokI8,            # `i8`
-    tokU16,           # `u16`
-    tokI16,           # `i16`
-    tokU32,           # `u32`
-    tokI32,           # `i32`
-    tokU64,           # `u64`
-    tokI64,           # `i64`
-    tokF32,           # `f32`
-    tokF64,           # `f64`
-    tokChar,          # `char`
-    tokCString,       # `cstring`
-    #--------
-    tokCmpEq,         # ==
-    tokCmpNe,         # !=
-    tokCmpLt,         # <
-    tokCmpGt,         # >
-    tokCmpLe,         # <=
-    tokCmpGe,         # >=
-    #--------
-    tokPlus,          # +
-    tokMinus,         # -
-    tokMul,           # *
-    tokDiv,           # /
-    tokMod,           # %
-    tokBitAnd,        # &
-    tokBitOr,         # |
-    tokBitXor,        # ^
-    tokBitInvert,     # ~
-    tokLogicAnd,      # &&
-    tokLogicOr,       # ||
-    tokBitShl,        # <<
-    tokBitShr,        # >>
-    #--------
-    tokAssign,        # =
-    tokAssignPlus,    # +=
-    tokAssignMinus,   # -=
-    tokAssignMul,     # *=
-    tokAssignDiv,     # /=
-    tokAssignMod,     # %=
-    tokAssignBitAnd,  # &=
-    tokAssignBitOr,   # |=
-    tokAssignBitXor,  # ^=
-    tokAssignBitShl,  # <<=
-    tokAssignBitShr,  # >>=
-    #--------
-    tokLim,
+#macro `tokKindXMacro`*(): untyped = 
+#  result = quote do:
+#    type
+#      TokKind* = enum
+#
+#
+#  for idx in 0 ..< helperTokKind.len():
+#    let tempIdent = ident(helperTokKind[idx][0])
+#
+#    result.add quote do:
+#      $tempIdent,
+#dumpTree:
+#  type
+#    TokKind* = enum
+#      #--------
+#      tokInternalAstStart, # fake token indicating the beginning of the AST
+#      tokBad,           # invalid input!
+#      #--------
+#      tokIdent,         # identifiers
+#      tokNumLit,        # 0-9, hex numbers, binary numbers, etc.
+
+#StmtList
+#  TypeSection
+#    TypeDef
+#      Postfix
+#        Ident "*"
+#        Ident "TokKind"
+#      Empty
+#      EnumTy
+#        Empty
+#        Ident "tokInternalAstStart"
+#        Ident "tokBad"
+#        Ident "tokIdent"
+#        Ident "tokNumLit"
+
+macro mkEnumTokKind(): untyped =
+  var tempSeq: seq[NimNode]
+
+  for idx in 0 ..< helperTokKind.len():
+    tempSeq.add ident(helperTokKind[idx][0])
+    
+  result = newEnum(
+    name=ident("TokKind"),
+    fields=tempSeq,
+    public=true,
+    pure=false,
+  )
+
+mkEnumTokKind()
 
 type
   TypeKind* = enum
@@ -139,4 +193,5 @@ type
     lineNum*: uint64
     strData*: string
     chIdxSeq*: seq[uint64]    # indices into `Scone.ast` children
+    parentIdx*: uint64
 

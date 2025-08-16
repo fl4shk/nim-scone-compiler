@@ -36,8 +36,8 @@ if paramsSeq.len() == 3:
 else:
   usage()
 
-#case myMode:
-#of mdOneFile:
-#  discard
-let scone = mkScone(myMode=myMode)
+let scone = mkScone(
+  myMode=myMode,
+  inputFname=inputFname,
+)
 writeFile(filename=outputFname, content=scone.outp)
