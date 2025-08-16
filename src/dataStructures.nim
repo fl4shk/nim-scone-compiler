@@ -5,14 +5,15 @@ type
   Mode* = enum
     mdOneFile,
 
-const `helperTokKind`*: seq[(string, Option[string])] = @[
+const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   #--------
   ("tokInternalAstStart", none(string)), # fake token indicating the beginning of the AST
   ("tokBad", none(string)),           # invalid input!
   #--------
   ("tokIdent", none(string)),  # identifiers
-  ("tokNumLit", none(string)), # 0-9, hex numbers, binary numbers, etc.
+  ("tokUInt64Lit", none(string)), # 0-9, hex numbers, binary numbers, etc.
   ("tokStrLit", none(string)), # string literals
+  #--------
   ("tokTrue", some("true")),
   ("tokFalse", some("false")),
   #--------
@@ -26,10 +27,11 @@ const `helperTokKind`*: seq[(string, Option[string])] = @[
   #--------
   ("tokPtr", some("ptr")),
   ("tokAddr", some("addr")),
-  ("tokDot", some(".")),
   ("tokDeref", some("[] ")), # pointer dereference
+  ("tokDot", some(".")),
   #--------
   ("tokVar", some("var")),
+  ("tokConst", some("const")),
   ("tokDef", some("def")),
   #("tokMacro", some("macro")),
       # Maybe save `macro` for the bootstrapped compiler?
@@ -105,8 +107,16 @@ const `helperTokKind`*: seq[(string, Option[string])] = @[
   ("tokAssignBitShl", some("<<=")),
   ("tokAssignBitShr", some(">>=")),
   #--------
-  ("tokLim", none(string)),
+  #("tokLim", none(string)),
 ]
+
+#dumpTree:
+#  const `helperTokKindTest`*: seq[(string, Option[string])] = @[
+#    ("tokA", some("a")),
+#    ("tokB", some("b")),
+#  ]
+
+
 
 #macro `tokKindXMacro`*(): untyped = 
 #  result = quote do:
@@ -114,8 +124,8 @@ const `helperTokKind`*: seq[(string, Option[string])] = @[
 #      TokKind* = enum
 #
 #
-#  for idx in 0 ..< helperTokKind.len():
-#    let tempIdent = ident(helperTokKind[idx][0])
+#  for idx in 0 ..< helperTokKindSeq.len():
+#    let tempIdent = ident(helperTokKindSeq[idx][0])
 #
 #    result.add quote do:
 #      $tempIdent,
@@ -146,8 +156,8 @@ const `helperTokKind`*: seq[(string, Option[string])] = @[
 macro mkEnumTokKind(): untyped =
   var tempSeq: seq[NimNode]
 
-  for idx in 0 ..< helperTokKind.len():
-    tempSeq.add ident(helperTokKind[idx][0])
+  for idx in 0 ..< helperTokKindSeq.len():
+    tempSeq.add ident(helperTokKindSeq[idx][0])
     
   result = newEnum(
     name=ident("TokKind"),
@@ -158,32 +168,84 @@ macro mkEnumTokKind(): untyped =
 
 mkEnumTokKind()
 
+
+#let temp = tokAssignDiv
+
+
+type
+  TypeInfoMain* = object
+    name*: string
+    ptrDim*: uint           # how many `ptr`s are there in the type?
+    arrDim*: uint64         # what are the array dimensions (if any)?
+    parentSymIdx*: uint64   # the parent symbol
+
+type
+  TypeInfoUnknown* = object
+    main*: TypeInfoMain
+
+type
+  TypeInfoBuiltinType* = object
+    main*: TypeInfoMain
+
+type
+  TypeInfoStruct* = object
+    main*: TypeInfoMain
+    chIdxSeq*: seq[uint64]  # indices into the `TypeInfo` table
+                            # indicating struct fields, the next array
+                            # dimension, etc.
+
+type
+  TypeInfoFunc* = object
+    main*: TypeInfoMain
+    argIdxSeq*: seq[uint64]     # function arguments
+
 type
   TypeKind* = enum
-    typeKindUnknown,      # this needs to be resolved because it's a
-                          # forward reference
+    typeKindUnknown,      # this needs to be resolved in a later pass
+                          # because it's a forward reference
     typeKindBuiltinType,
     typeKindStruct,
     typeKindFunc,
-    typeKindVar,
-    typeKindLim,
-
-type
+    #typeKindVar,
+    #typeKindLim,
   TypeInfo* = object
-    # covers both the type of a function 
-    name*: string
-    kind*: TypeKind
-    ptrDim*: uint               # how many `ptr`s are there in the type?
-    arrDimSeq*: seq[uint64]     # what are the array dimensions?
-    fieldIdxSeq*: seq[uint64]   # indices into the `TypeInfo` table
-                                # indicating struct fields, etc.
-    argIdxSeq*: seq[uint64]     # function arguments
-    parentSymIdx*: uint64
+    case kind: TypeKind
+    of typeKindUnknown:
+      tiUnkVal: TypeInfoUnknown
+    of typeKindBuiltinType:
+      tiBuiltinTypeVal: TypeInfoBuiltinType
+    of typeKindStruct:
+      tiStructVal: TypeInfoStruct
+    of typeKindFunc:
+      tiFuncVal: TypeInfoFunc
+
+template name*(
+  self: var TypeInfo
+): string =
+  self.main.name
+template ptrDim*(
+  self: var TypeInfo
+): uint =
+  self.main.ptrDim
+template arrDim*(
+  self: var TypeInfo
+): uint64 =
+  self.main.arrDim
+template parentSymIdx*(
+  self: var TypeInfo
+): string =
+  self.main.parentSymIdx
+
 
 type
+  SymKind* = enum
+    symKindVar,
+    symKindConst,
   Symbol* = object
     name*: string
-    typeInfo*: TypeInfo
+    kind*: SymKind
+    typeInfoIdx*: uint  # surely we don't need to support 
+                        # more than 1 << 32 types, right?
     initValAstIdx*: Option[uint64]  # index into the `seq[AstNode]`
                                     # indicating the initial value
 
@@ -192,6 +254,6 @@ type
     tok*: TokKind
     lineNum*: uint64
     strData*: string
+    symIdxSeq: seq[uint64]
     chIdxSeq*: seq[uint64]    # indices into `Scone.ast` children
     parentIdx*: uint64
-
