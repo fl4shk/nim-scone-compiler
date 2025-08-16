@@ -40,18 +40,21 @@ proc lex(
   if self.inpIdx >= self.inp.len():
     return
 
+  var prevLongestSize: (int, Option[int]) = (0, none(int))
+
   for idx, (tok, opt) in helperTokKindSeq:
     if opt.isSome:
       if self.inpIdx + opt.get.len() < self.inp.len():
         let tempStr = self.inp[self.inpIdx .. self.inpIdx + opt.get.len()]
         if tempStr == opt.get():
-          echo "Here is my string: " & tempStr
-          self.currTok = (TokKind(idx), opt, none(uint64))
-        
+          if prevLongestSize[0] < opt.get().len():
+            prevLongestSize[0] = opt.get().len()
+            prevLongestSize[1] = some(idx)
+            echo "`lex()`: Here is my string: " & tempStr
+            self.currTok = (TokKind(idx), opt, none(uint64))
 
   # check identifiers first
   if self.inpChar in IdentStartChars:
-    self.currTok[0] = tokIdent
     var tempStr: string
     tempStr.add self.inpChar
     self.inpIdx += 1
@@ -62,21 +65,69 @@ proc lex(
         self.inpIdx += 1
       else:
         break;
+    var tempCond: bool = false
+    if prevLongestSize[1].isSome():
+      let tempOpt = (
+        helperTokKindSeq[prevLongestSize[1].get()][1]
+      )
+      assert(
+        tempOpt.isSome()
+      )
+      if tempStr == tempOpt.get():
+        tempCond = true
+    if not tempCond:
+      self.currTok = (tokIdent, some(tempStr), none(uint64))
     return
 
+  #proc handleDigits(
+  #  mySet: set[char]
+  #) = 
+  #  while self.inpIdx < self.inp.len() :
+  #    if self.inpChar in mySet:
+  #      discard
+  #    else:
+  #      return
   proc handleDigits(
-    mySet: set[char]
-  ) = 
-    while self.inpIdx < self.inp.len() :
-      if self.inpChar in mySet:
-        discard
-      else:
-        return
+    myRangeEnd: Option[char]
+  ) =
+    self.inpIdx += 1
+    if self.inpIdx >= self.inp.len():
+      return
 
+    self.currTok = (tokUInt64Lit, none(string), some(0u64))
+
+    var tempMul: uint64 = 0u64
+
+    if myRangeEnd.isSome:
+      tempMul = uint64(myRangeEnd.get()) + 1u64
+    else: # hexadecimal
+      tempMul = 16u64
+
+    var tempU64: uint64 = 0u64
+    const hexLowerDigits = {'a' .. 'f'}
+    const hexUpperDigits = {'A' .. 'F'}
+
+    while self.inpIdx < self.inp.len():
+      var toSubChar: int32 = int32('0')
+      if not myRangeEnd.isSome:
+        if self.inpChar in hexLowerDigits:
+          toSubChar = int32('a')
+        elif self.inpChar in hexUpperDigits:
+          toSubChar = int32('A')
+      let tempInt32 = int32(self.inpChar) - toSubChar
+      if tempInt32 >= 0 and tempInt32 < int32(tempMul):
+        tempU64 *= tempMul
+        tempU64 += tempInt32.uint64()
+
+      self.inpIdx += 1
+
+    self.currTok[2] = some(tempU64)
+    
+
+  const postZeroDigits = {'1' .. '9'}
   if self.inpChar == '0':
     #self.inpIdx += 1
 
-    self.currTok = (tokUInt64Lit, none(string), some(uint64(0)))
 
     if self.inpIdx + 1 < self.inp.len():
       self.inpIdx += 1
@@ -85,21 +136,16 @@ proc lex(
 
       case self.inpChar:
       of 'x':
-        handleDigits(HexDigits)
-      #of 'o':
-      #  handleDigits({'0' .. '7'})
+        handleDigits(myRangeEnd=none(char))
+      of 'o':
+        handleDigits(myRangeEnd=some('7'))
       of 'b':
-        handleDigits({'0' .. '1'})
-        #let prevInpIdx = self.inpIdx - 1
-        #self.inpIdx -= 1
-        #self.currTok = (
-        #  tokIntLit, none(string), some(parseBiggestUInt())
-        #)
-      elif self.inpChar in {'1' .. '9'}:
-        handleDigits(Digits)
+        handleDigits(myRangeEnd=some('1'))
+      elif self.inpChar in postZeroDigits:
+        handleDigits(myRangeEnd=some('9'))
     return
-  elif self.inpChar in {'1' .. '9'}:
-    handleDigits(Digits)
+  elif self.inpChar in postZeroDigits:
+    handleDigits(myRangeEnd=some('9'))
 
     
   #for idx in 0 ..< 

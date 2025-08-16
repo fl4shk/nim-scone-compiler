@@ -92,6 +92,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokBitInvert", some("~")),
   ("tokLogicAnd", some("&&")),
   ("tokLogicOr", some("||")),
+  ("tokLogicNot", some("!")),
   ("tokBitShl", some("<<")),
   ("tokBitShr", some(">>")),
   #--------
