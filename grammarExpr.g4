@@ -1,5 +1,7 @@
+grammar scone;
+
 exprLowestNonOp:
-	ident | literal | '(' expr ')'
+	TokIdent | /*literal |*/ '(' expr ')'
 	;
 
 expr:
@@ -84,11 +86,11 @@ exprUnary:
 	;
 
 exprSuffixFieldAccess:
-	'.' ident
+	'.' TokIdent
 	;
-exprSuffixMethodCall:
-	'->' exprFuncCall
-	;
+//exprSuffixMethodCall:
+//	'->' exprFuncCall
+//	;
 
 exprSuffixDeref:
 	'[]'
@@ -111,15 +113,23 @@ exprFieldArrEtc:
 exprFieldArrEtcChoice:
 	(
 		exprSuffixFieldAccess
-		| exprSuffixMethodCall
+		//| exprSuffixMethodCall
 		| exprSuffixDeref
 		| exprSuffixArray
 	)+
 	;
 
 exprLhsLowestNonOp:
-	ident | '(' exprLhs ')'
+	TokIdent | '(' exprLhs ')'
 	;
 exprLhs:
 	exprLhsLowestNonOp exprFieldArrEtcChoice?
 	;
+
+TokIdent: 
+	[_a-zA-Z][_a-zA-Z0-9]*
+	;
+
+options {
+	k = 1;
+}

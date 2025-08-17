@@ -1,39 +1,59 @@
 module:
-	'module' ident '('
+	'module' TokIdent '('
 		(
 			funcDecl
 			| structDecl
 			//| macroDecl
 			//| variantDecl
 			//| tupleDecl
-			| constDecl
-			| externDecl
-			| importDecl
+			//| constDecl ';'
+			//| externDecl
+			//| importDecl
 		)*
 	')'
 	;
 
 funcDecl:
-	'def' ident
-	( '{' genericDecl+ '}' )?
+	'def' TokIdent
+	( '{' genericDeclList '}' )?
 	'('
-		funcDeclArgList
+		funcArgDeclList
 	')' '('
 		stmtList
 	')' ';'
 	;
 
-funcDeclArgList:
+funcArgDeclList:
 	( identList ':' typeWithOptPreKwVar ',' )* 
 	'result' typeWithoutOptPreKwVar
 	;
+funcArgImplList:
+	funcArgImplItem ( ',' funcArgImplItem )* ',' ?
+	;
+
+funcArgImplItem:
+	TokIdent '=' expr
+	;
+
+structDecl:
+	'struct' TokIdent
+	( '{' genericDeclList '}' )?
+	'('
+		// perhaps support methods in this `structDecl` rule later?
+		// Or alternatively do something like Nim does and have syntax
+		// sugar when the first argument to a function is of the same type
+		// as the struct on which to execute the method.
+		// I like that approach, so that's what I'll do for now!
+		( varEtcDeclMost ';' )*
+	')'
+	;
 
 identList:
-	(ident (',' ident)*)+
+	(TokIdent (',' TokIdent)* )+
 	;
 
 
-varEtcDeclMost:
+varEtcDeclMost: // "Most" is short for "Most of it"
 	identList ':' typeWithOptPreKwVar
 	;
 
@@ -44,12 +64,12 @@ varDecl:
 letDecl:
 	'let' varEtcDeclMost '=' expr
 	;
-constDecl:
-	'const' varEtcDeclMost '=' expr
-	;
+//constDecl:
+//	'const' varEtcDeclMost '=' expr
+//	;
 //--------
 stmt:
-	varDecl | letDecl | constDecl
+	varDecl | letDecl //| constDecl
 	| breakStmt | continueStmt
 	| forStmt | whileStmt
 	| ifStmt
@@ -69,7 +89,7 @@ continueStmt:
 	;
 
 forStmt:
-	'for' '(' ident 'in' expr ('to' | 'until') expr ')' '('
+	'for' '(' TokIdent 'in' expr ('to' | 'until') expr ')' '('
 		stmtList
 	')'
 	;
@@ -134,7 +154,7 @@ assignStmt:
 	;
 //--------
 exprLowestNonOp:
-	ident | literal | '(' expr ')'
+	TokIdent | literal | '(' expr ')'
 	;
 
 expr:
@@ -219,7 +239,7 @@ exprUnary:
 	;
 
 exprSuffixFieldAccess:
-	'.' ident
+	'.' TokIdent
 	;
 exprSuffixMethodCall:
 	'->' exprFuncCall
@@ -249,15 +269,25 @@ exprFieldArrEtcChoice:
 		| exprSuffixMethodCall
 		| exprSuffixDeref
 		| exprSuffixArray
+		| exprFuncCall
 	)+
 	;
 
 exprLhsLowestNonOp:
-	ident | '(' exprLhs ')'
+	TokIdent | '(' exprLhs ')'
 	;
+
 exprLhs:
 	exprLhsLowestNonOp exprFieldArrEtcChoice?
 	;
+
+exprFuncCall:
+	TokIdent ( '{' genericImplList '}' )? 
+	'('
+		funcArgImplList
+	')'
+	;
+	
 
 
 //exprFieldArrEtc:
@@ -281,7 +311,7 @@ exprLhs:
 //	exprPrio1
 //	(
 //		(
-//			'.' ident // struct field access
+//			'.' TokIdent // struct field access
 //			'.@' exprFuncCall
 //		)
 //		expr
@@ -291,7 +321,7 @@ exprLhs:
 //	exprPrio1
 //	(
 //		(
-//			'.' ident				// struct field access
+//			'.' TokIdent				// struct field access
 //			| '[]'					// pointer dereference
 //			| ( '[' expr ']' )	// array access
 //			| ( '@' exprFuncCall )	// function call
@@ -323,7 +353,7 @@ typeWithOptPreKwVar:
 	;
 
 typeToResolve:
-	ident ( '{' genericImpl '}' )?
+	TokIdent ( '{' genericImplList '}' )?
 	;
 
 typeBuiltinScalar:
@@ -334,23 +364,27 @@ typeBuiltinScalar:
 	| 'void'
 	;
 
-genericImpl:
-	ident '=' typeWithOptPreKwVar
-	// `var` will simply be ignored if this `genericImpl` is for a `struct`
-	// field
+genericDeclList:
+	genericDeclItem ( ',' genericDeclItem )* ',' ?
+	//identList
 	;
 
-structDecl:
-	'struct' ident
-	( '{' genericDecl+ '}' )?
-	'('
-		// perhaps support methods in this `structDecl` rule later?
-		// Or alternatively do something like Nim does and have syntax
-		// sugar when the first argument to a function is of the same type
-		// as the struct on which to execute the method.
-		// I like that approach, so that's what I'll do for now!
-		( varEtcDeclMost ';' )*
-	')'
+genericDeclItem:
+	identList ',' ?
+	;
+
+genericImplList:
+	genericImplItem ( ';' genericImplItem )* ',' ?
+	;
+
+genericImplItem:
+	TokIdent '=' typeWithOptPreKwVar
+	// `var` will simply be ignored if this `genericImplList` is for a
+	// `struct` field
+	;
+
+TokIdent:
+	[_a-zA-Z][_a-zA-Z0-9]*
 	;
 
 //stmtList:
