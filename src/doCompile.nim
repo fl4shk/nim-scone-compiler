@@ -291,17 +291,20 @@ proc mkAst(
 #  self.currAstIdx = currAst.parentIdx
 proc expect(
   self: var Scone,
-  tok: TokKind,
+  tokSet: HashSet[TokKind],
 ) =
   doAssert(
-    tok == self.currTok.tok,
+    #tok == self.currTok.tok,
+    self.currTok.tok in tokSet,
     (
       (
         "error: "
       ) & (
-        "expected:" & $tok & ", but have " & $self.currTok.tok & " "
+        "expected:" & $tokSet & ", but have " & $self.currTok.tok & " "
       ) & (
-        "at this location: " & self.inputFname & ":" & $self.lineNum
+        "at this location: " & self.inputFname & ":"
+      ) & (
+        $self.lineNum & ":" & $self.locInLine
       )
     )
   )
@@ -309,26 +312,25 @@ proc expect(
 proc doCompileModeOneFile(
   self: var Scone
 ) =
-  while self.inpIdx < self.inp.len():
-    #echo (
-    #  (
-    #    "before: " & $self.inpIdx & " "
-    #  ) & (
-    #     $self.lineNum & ":" & $self.locInLine
-    #  )
-    #)
-    self.lex()
-    #echo (
-    #  (
-    #    "after: " & $self.inpIdx & " "
-    #  ) & (
-    #     $self.lineNum & ":" & $self.locInLine
-    #  )
-    #)
-    echo $self.currTok
+  #while self.inpIdx < self.inp.len():
+  #  #echo (
+  #  #  (
+  #  #    "before: " & $self.inpIdx & " "
+  #  #  ) & (
+  #  #     $self.lineNum & ":" & $self.locInLine
+  #  #  )
+  #  #)
+  #  self.lex()
+  #  #echo (
+  #  #  (
+  #  #    "after: " & $self.inpIdx & " "
+  #  #  ) & (
+  #  #     $self.lineNum & ":" & $self.locInLine
+  #  #  )
+  #  #)
+  #  echo $self.currTok
   #echo $self.currTok
-  #echo self.
-  #discard
+  discard
 
 proc mkScone*(
   myMode: Mode,
