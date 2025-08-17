@@ -1,22 +1,37 @@
 import std/strutils
-import std/sequtils
+#import std/sequtils
 import std/tables
 import std/sets
 import std/options
 
 import dataStructures
 
+type
+  CurrTok* = object
+    tok*: TokKind
+    optStr*: Option[string]
+    optU64*: Option[uint64]
+
+proc mkCurrTok(
+  tok: TokKind,
+  optStr: Option[string],
+  optU64: Option[uint64],
+): CurrTok = CurrTok(
+  tok: tok,
+  optStr: optStr,
+  optU64: optU64
+)
 
 type
   Scone* = object
     mode*: Mode
     ast*: seq[AstNode]
-    currAstIdx*: uint64
+    currAstParentIdx*: uint64
     symSeq*: seq[Symbol]
     symNameToIdxTbl*: OrderedTable[string, uint64]
     lineNum*: uint64
     #line*: string
-    currTok*: (TokKind, Option[string], Option[uint64])
+    currTok*: CurrTok #(TokKind, Option[string], Option[uint64])
     inp*: string
     inpIdx*: int
     outp*: string
@@ -30,28 +45,48 @@ proc lex(
   self: var Scone,
 ) =
   # first eat whitespace
+  #echo "eating whitespace"
   while self.inpIdx < self.inp.len():
-    if isSpaceAscii(self.inpChar):
+    if (
+      (
+        isSpaceAscii(self.inpChar)
+      ) or (
+        self.inpChar == '\n'
+      )
+    ):
+      if self.inpChar == '\n':
+        echo "increment lineNum: " & $self.lineNum
+        self.lineNum += 1
+      echo "increment inpIdx: " & $self.inpIdx
       self.inpIdx += 1
+    else:
+      break
 
   # next determine the kind of token (and if it's valid)
-  self.currTok = (tokBad, none(string), none(uint64))
+  self.currTok = mkCurrTok(tokBad, none(string), none(uint64))
 
   if self.inpIdx >= self.inp.len():
     return
 
   var prevLongestSize: (int, Option[int]) = (0, none(int))
 
+  var kwTempStr: string
   for idx, (tok, opt) in helperTokKindSeq:
     if opt.isSome:
+      #echo "opt.isSome: " & opt.get()
       if self.inpIdx + opt.get.len() < self.inp.len():
-        let tempStr = self.inp[self.inpIdx .. self.inpIdx + opt.get.len()]
-        if tempStr == opt.get():
+        kwTempStr = self.inp[self.inpIdx ..< self.inpIdx + opt.get.len()]
+        if kwTempStr == opt.get():
+          #echo "kwTempStr == opt.get(): " & kwTempStr
           if prevLongestSize[0] < opt.get().len():
             prevLongestSize[0] = opt.get().len()
             prevLongestSize[1] = some(idx)
-            echo "`lex()`: Here is my string: " & tempStr
-            self.currTok = (TokKind(idx), opt, none(uint64))
+            self.currTok = mkCurrTok(TokKind(idx), opt, none(uint64))
+
+  if prevLongestSize[1].isSome:
+    if kwTempStr[0] notin IdentStartChars:
+      self.inpIdx += prevLongestSize[1].get()
+      return
 
   # check identifiers first
   if self.inpChar in IdentStartChars:
@@ -64,7 +99,8 @@ proc lex(
         tempStr.add self.inpChar
         self.inpIdx += 1
       else:
-        break;
+        break
+
     var tempCond: bool = false
     if prevLongestSize[1].isSome():
       let tempOpt = (
@@ -76,7 +112,7 @@ proc lex(
       if tempStr == tempOpt.get():
         tempCond = true
     if not tempCond:
-      self.currTok = (tokIdent, some(tempStr), none(uint64))
+      self.currTok = mkCurrTok(tokIdent, some(tempStr), none(uint64))
     return
 
   #proc handleDigits(
@@ -88,90 +124,128 @@ proc lex(
   #    else:
   #      return
   proc handleDigits(
-    myRangeEnd: Option[char]
+    self: var Scone,
+    myRangeEnd: Option[char],
   ) =
     self.inpIdx += 1
     if self.inpIdx >= self.inp.len():
       return
 
-    self.currTok = (tokUInt64Lit, none(string), some(0u64))
+    self.currTok = mkCurrTok(tokUInt64Lit, none(string), some(0u64))
 
     var tempMul: uint64 = 0u64
 
     if myRangeEnd.isSome:
-      tempMul = uint64(myRangeEnd.get()) + 1u64
+      tempMul = uint64(myRangeEnd.get()) - uint64('0') + 1u64
     else: # hexadecimal
       tempMul = 16u64
+
+    #echo "tempMul:" & $tempMul
 
     var tempU64: uint64 = 0u64
     const hexLowerDigits = {'a' .. 'f'}
     const hexUpperDigits = {'A' .. 'F'}
 
-    while self.inpIdx < self.inp.len():
+    var finish: bool = false
+    while (
+      (
+        not finish
+      ) and (
+        self.inpIdx < self.inp.len()
+      )
+    ):
       var toSubChar: int32 = int32('0')
+      var myAddend: int32 = 0
       if not myRangeEnd.isSome:
         if self.inpChar in hexLowerDigits:
+          #echo "have hexLowerDigits: " & self.inpChar
           toSubChar = int32('a')
+          myAddend = 10
         elif self.inpChar in hexUpperDigits:
+          #echo "have hexUpperDigits: " & self.inpChar
           toSubChar = int32('A')
-      let tempInt32 = int32(self.inpChar) - toSubChar
+          myAddend = 10
+        elif self.inpChar notin Digits:
+          finish = true
+      else:
+        if self.inpChar notin {'0' .. myRangeEnd.get}:
+          finish = true
+
+      let tempInt32 = int32(self.inpChar) - toSubChar + myAddend
       if tempInt32 >= 0 and tempInt32 < int32(tempMul):
+        #echo $tempInt32 & " " & $tempU64
         tempU64 *= tempMul
         tempU64 += tempInt32.uint64()
+      else:
+        break
 
       self.inpIdx += 1
 
-    self.currTok[2] = some(tempU64)
+    self.currTok.optU64 = some(tempU64)
     
 
   const postZeroDigits = {'1' .. '9'}
   if self.inpChar == '0':
     #self.inpIdx += 1
 
-
     if self.inpIdx + 1 < self.inp.len():
       self.inpIdx += 1
 
-      var tempStr: string
+      #var tempStr: string
 
       case self.inpChar:
       of 'x':
-        handleDigits(myRangeEnd=none(char))
+        self.handleDigits(myRangeEnd=none(char))
       of 'o':
-        handleDigits(myRangeEnd=some('7'))
+        self.handleDigits(myRangeEnd=some('7'))
       of 'b':
-        handleDigits(myRangeEnd=some('1'))
+        self.handleDigits(myRangeEnd=some('1'))
       elif self.inpChar in postZeroDigits:
-        handleDigits(myRangeEnd=some('9'))
+        self.handleDigits(myRangeEnd=some('9'))
     return
   elif self.inpChar in postZeroDigits:
-    handleDigits(myRangeEnd=some('9'))
+    self.handleDigits(myRangeEnd=some('9'))
 
-    
-  #for idx in 0 ..< 
+  if self.inpChar == '"':
+    discard
 
+template parent(
+  child: AstNode
+): untyped =
+  self.ast[child.parentIdx]
+template currParent(): untyped =
+  self.ast[self.currAstParentIdx]
+  
 
 proc mkAst(
   self: var Scone,
   tok: TokKind,
-  strData: string,
+  litVal: Option[AstLitVal],
+  symIdxSeq: seq[uint64],
+  parentIdx: uint64,
 ) =
-  self.ast.add AstNode(
+  let toAdd = AstNode(
     tok: tok,
     lineNum: self.lineNum,
+    litVal: litVal,
+    symIdxSeq: symIdxSeq,
+    parentIdx: parentIdx,
   )
+  toAdd.parent.chIdxSeq.add uint64(self.ast.len())
+  self.ast.add toAdd
 
 proc unstackAst(
   self: var Scone,
 ) =
-  let myNode = addr self.ast[self.currAstIdx]
-  self.currAstIdx = myNode[].parentIdx
+  self.currAstParentIdx = currParent.parentIdx
 
 proc doCompileModeOneFile(
   self: var Scone
 ) =
-  #self.lex()
-  discard
+  self.lex()
+  echo $self.currTok
+  #echo self.
+  #discard
 
 proc mkScone*(
   myMode: Mode,
@@ -182,10 +256,11 @@ proc mkScone*(
   result.ast.add AstNode(
     tok: tokInternalAstStart,
     lineNum: 0.uint64,
-    strData: ""
+    litVal: none(AstLitVal),
   )
   result.lineNum = 1
   result.inp = readFile(filename=inputFname)
+  result.inpIdx = 0
   result.outp = ""
 
   case myMode:

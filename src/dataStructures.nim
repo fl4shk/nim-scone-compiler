@@ -251,10 +251,24 @@ type
                                     # indicating the initial value
 
 type
+  AstLitValKind* = enum
+    astLvKindU64,
+    astLvKindStr,
+
+  AstLitVal* = object
+    case kind: AstLitValKind
+    of astLvKindU64:
+      u64Val: uint64
+    of astLvKindStr:
+      strVal: string
+
+type
   AstNode* = object
     tok*: TokKind
     lineNum*: uint64
-    strData*: string
-    symIdxSeq: seq[uint64]
+    #u64Val*: uint64
+    #strVal*: string
+    litVal*: Option[AstLitVal]
+    symIdxSeq*: seq[uint64]
     chIdxSeq*: seq[uint64]    # indices into `Scone.ast` children
     parentIdx*: uint64
