@@ -12,7 +12,7 @@ MY_NIM_OPTS="$MY_NIM_OPTS --mm:arc"
 #MY_NIM_OPTS="$MY_NIM_OPTS -d:useMalloc"
 #MY_NIM_OPTS="$MY_NIM_OPTS --threads:off"
 
-MY_NIM_OPTS="$MY_NIM_OPTS -d:release"
+#MY_NIM_OPTS="$MY_NIM_OPTS -d:release"
 
 #MY_NIM_OPTS="$MY_NIM_OPTS --objChecks:off --fieldChecks:off"
 #MY_NIM_OPTS="$MY_NIM_OPTS --rangeChecks:off --boundChecks:off"

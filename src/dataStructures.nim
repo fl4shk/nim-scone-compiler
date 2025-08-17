@@ -9,6 +9,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   #--------
   ("tokInternalAstStart", none(string)), # fake token indicating the beginning of the AST
   ("tokBad", none(string)),           # invalid input!
+  ("tokEof", none(string)),           # end of file
   #--------
   ("tokIdent", none(string)),  # identifiers
   ("tokUInt64Lit", none(string)), # 0-9, hex numbers, binary numbers, etc.
