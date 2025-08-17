@@ -1,5 +1,5 @@
 module:
-	'module' TokIdent '('
+	'module' ident '('
 		(
 			funcDecl
 			| structDecl
@@ -11,10 +11,11 @@ module:
 			//| importDecl
 		)*
 	')'
+	';'
 	;
 
 funcDecl:
-	'def' TokIdent
+	'def' ident
 	( '{' genericDeclList '}' )?
 	'('
 		funcArgDeclList
@@ -34,11 +35,11 @@ funcArgImplList:
 	;
 
 funcArgImplItem:
-	TokIdent '=' expr
+	ident '=' expr
 	;
 
 structDecl:
-	'struct' TokIdent
+	'struct' ident
 	( '{' genericDeclList '}' )?
 	'('
 		( varEtcDeclMost ';' )*
@@ -46,7 +47,7 @@ structDecl:
 	;
 
 identList:
-	(TokIdent (',' TokIdent)* )+
+	(ident (',' ident)* )+
 	;
 
 
@@ -86,7 +87,7 @@ continueStmt:
 	;
 
 forStmt:
-	'for' '(' TokIdent 'in' expr ('to' | 'until') expr ')' '('
+	'for' '(' ident 'in' expr ('to' | 'until') expr ')' '('
 		stmtList
 	')'
 	;
@@ -151,7 +152,7 @@ assignStmt:
 	;
 //--------
 exprLowestNonOp:
-	TokIdent | literal | '(' expr ')'
+	ident | literal | '(' expr ')'
 	;
 
 expr:
@@ -236,7 +237,7 @@ exprUnary:
 	;
 
 exprSuffixFieldAccess:
-	'.' TokIdent
+	'.' ident
 	;
 exprSuffixMethodCall:
 	'->' exprFuncCall
@@ -270,7 +271,7 @@ exprFieldArrEtcChoice:
 exprLhsLowestNonOpEtc:
 	'addr' ?
 	(
-		TokIdent
+		ident
 		| '(' exprLhs ')'
 	)
 	;
@@ -280,7 +281,7 @@ exprLhs:
 	;
 
 exprFuncCall:
-	TokIdent ( '{' genericImplList '}' )? 
+	ident ( '{' genericImplList '}' )? 
 	'('
 		funcArgImplList
 	')'
@@ -309,7 +310,7 @@ exprFuncCall:
 //	exprPrio1
 //	(
 //		(
-//			'.' TokIdent // struct field access
+//			'.' ident // struct field access
 //			'.@' exprFuncCall
 //		)
 //		expr
@@ -319,7 +320,7 @@ exprFuncCall:
 //	exprPrio1
 //	(
 //		(
-//			'.' TokIdent				// struct field access
+//			'.' ident				// struct field access
 //			| '[]'					// pointer dereference
 //			| ( '[' expr ']' )	// array access
 //			| ( '@' exprFuncCall )	// function call
@@ -358,7 +359,7 @@ typeWithOptPreKwVar:
 	;
 
 typeToResolve:
-	TokIdent ( '{' genericImplList '}' )?
+	ident ( '{' genericImplList '}' )?
 	;
 
 typeBuiltinScalar:
@@ -383,9 +384,13 @@ genericImplList:
 	;
 
 genericImplItem:
-	TokIdent '=' typeWithOptPreKwVar
+	ident '=' typeWithOptPreKwVar
 	// `var` will simply be ignored if this `genericImplList` is for a
 	// `struct` field
+	;
+
+ident:
+	TokIdent
 	;
 
 TokIdent:

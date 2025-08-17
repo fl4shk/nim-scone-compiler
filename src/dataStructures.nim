@@ -24,6 +24,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokRBracket", some("]")),
   ("tokLBrace", some("{")),
   ("tokRBrace", some("}")),
+  ("tokComma", some(",")),
   ("tokSemicolon", some(";")),
   #--------
   ("tokPtr", some("ptr")),
