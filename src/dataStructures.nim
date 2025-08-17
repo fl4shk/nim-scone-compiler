@@ -30,6 +30,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokAddr", some("addr")),
   ("tokDeref", some("[] ")), # pointer dereference
   ("tokDot", some(".")),
+  ("tokMethodCall", some("->")),
   #--------
   ("tokVar", some("var")),
   ("tokConst", some("const")),
@@ -38,6 +39,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
       # Maybe save `macro` for the bootstrapped compiler?
       # I'm not sure I outright need macros for this version of the
       # compiler
+  ("tokModule", some("module")),
   ("tokStruct", some("struct")),
   ("tokEnum", some("enum")),
   ("tokExtern", some("extern")),
@@ -59,7 +61,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokResult", some("result")),
   #--------
   ("tokType", some("type")),
-  ("tokArray", some("array")),
+  #("tokArray", some("array")),
   ("tokVoid", some("void")),
   ("tokBool", some("bool")),
   ("tokU8", some("u8")),

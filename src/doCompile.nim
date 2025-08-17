@@ -289,25 +289,52 @@ proc mkAst(
 #) =
 #  #self.currAstIdx = currParent.parentIdx
 #  self.currAstIdx = currAst.parentIdx
-proc expect(
+
+type
+  ChoiceProc = proc(
+    self: var Scone,
+    chk: bool,
+  ): bool
+
+proc choiceParse(
   self: var Scone,
-  tokSet: HashSet[TokKind],
+  choiceProcSeq: seq[ptr ChoiceProc],
+): Option[ptr ChoiceProc] =
+  #for myProc in choiceProcSeq:
+  #  if myProc[](self, true):
+  #    return myProc
+  for idx in 0 ..< choiceProcSeq.len():
+    if choiceProcSeq[idx][](self, true):
+      return some(choiceProcSeq[idx])
+    
+  result = none(ptr ChoiceProc)
+
+#proc expect(
+#  self: var Scone,
+#  tokSet: HashSet[TokKind],
+#) =
+#  doAssert(
+#    #tok == self.currTok.tok,
+#    self.currTok.tok in tokSet,
+#    (
+#      (
+#        "error: "
+#      ) & (
+#        "expected:" & $tokSet & ", but have " & $self.currTok.tok & " "
+#      ) & (
+#        "at this location: " & self.inputFname & ":"
+#      ) & (
+#        $self.lineNum & ":" & $self.locInLine
+#      )
+#    )
+#  )
+
+proc parseModule(
+  self: var Scone,
+  chk: bool,
 ) =
-  doAssert(
-    #tok == self.currTok.tok,
-    self.currTok.tok in tokSet,
-    (
-      (
-        "error: "
-      ) & (
-        "expected:" & $tokSet & ", but have " & $self.currTok.tok & " "
-      ) & (
-        "at this location: " & self.inputFname & ":"
-      ) & (
-        $self.lineNum & ":" & $self.locInLine
-      )
-    )
-  )
+  self.lex()
+
 
 proc doCompileModeOneFile(
   self: var Scone
@@ -330,7 +357,8 @@ proc doCompileModeOneFile(
   #  #)
   #  echo $self.currTok
   #echo $self.currTok
-  discard
+
+  self.parseModule(true)
 
 proc mkScone*(
   myMode: Mode,

@@ -25,10 +25,12 @@ funcDecl:
 
 funcArgDeclList:
 	( identList ':' typeWithOptPreKwVar ',' )* 
-	'result' typeWithoutOptPreKwVar
+	'result' typeWithOptPreKwVar //typeWithoutOptPreKwVar
 	;
+
 funcArgImplList:
 	funcArgImplItem ( ',' funcArgImplItem )* ',' ?
+	| expr
 	;
 
 funcArgImplItem:
@@ -39,11 +41,6 @@ structDecl:
 	'struct' TokIdent
 	( '{' genericDeclList '}' )?
 	'('
-		// perhaps support methods in this `structDecl` rule later?
-		// Or alternatively do something like Nim does and have syntax
-		// sugar when the first argument to a function is of the same type
-		// as the struct on which to execute the method.
-		// I like that approach, so that's what I'll do for now!
 		( varEtcDeclMost ';' )*
 	')'
 	;
@@ -257,28 +254,29 @@ exprPrefixUnary:
 	'+' | '-' | '!' | '~'
 
 	| 'addr'
-	// only `addr` allowed if `exprLhs`
 	;
 
 exprFieldArrEtc:
-	exprLowestNonOp exprFieldArrEtcChoice?
+	exprLowestNonOp exprFieldArrEtcChoice*
 	;
 exprFieldArrEtcChoice:
-	(
-		exprSuffixFieldAccess
-		| exprSuffixMethodCall
-		| exprSuffixDeref
-		| exprSuffixArray
-		| exprFuncCall
-	)+
+	exprSuffixFieldAccess
+	| exprSuffixMethodCall
+	| exprSuffixDeref
+	| exprSuffixArray
+	| exprFuncCall
 	;
 
-exprLhsLowestNonOp:
-	TokIdent | '(' exprLhs ')'
+exprLhsLowestNonOpEtc:
+	'addr' ?
+	(
+		TokIdent
+		| '(' exprLhs ')'
+	)
 	;
 
 exprLhs:
-	exprLhsLowestNonOp exprFieldArrEtcChoice?
+	exprLhsLowestNonOpEtc exprFieldArrEtcChoice*
 	;
 
 exprFuncCall:
@@ -343,13 +341,20 @@ exprFuncCall:
 typeMain:
 	typeBuiltinScalar
 	| typeToResolve
+	//| 'array' '{'
+	//	('dim' '=')? expr ','
+	//	('ElemT' '=')? typeWithoutOptPreKwVar
+	//'}'
 	;
 
 
-typeWithoutOptPreKwVar:
-	('ptr')* typeMain
+typeArrDim:
+	'[' expr ']'
+
+//typeWithoutOptPreKwVar:
+//	('ptr')* typeMain typeArrDim*
 typeWithOptPreKwVar:
-	('var' | ('ptr')+ )? typeMain
+	('var' | 'ptr'+ )? typeMain typeArrDim*
 	;
 
 typeToResolve:
