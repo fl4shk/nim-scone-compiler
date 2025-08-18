@@ -31,7 +31,7 @@ proc doCompileModeOneFile(
   #  echo $self.currTok
   #echo $self.currTok
 
-  self.parseModule(true)
+  self.parseModule()
 
 proc mkScone*(
   myMode: Mode,

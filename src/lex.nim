@@ -1,14 +1,15 @@
+import std/sets
 import std/options
 import std/strutils
 
 import dataStructures
 import scone
-import dataStructures
 
 proc inpChar(
   self: var Scone
 ): char =
   result = self.inp[self.inpIdx]
+
 proc lex*(
   self: var Scone,
 ) =
@@ -87,11 +88,11 @@ proc lex*(
       #  (
       #    "kwTempStr[1][0] notin IdentStartChars: "
       #  ) & (
-      #    kwTempStr[1] & " " & $prevLongestSize
+      #    "\"" & kwTempStr[1] & "\" " & $prevLongestSize
       #  )
       #)
       self.incrInpIdx(amount=prevLongestSize[0])
-      #echo "debug: " &  self.inp[self.inpIdx .. ^1]
+      #echo "debug: " & self.inp[self.inpIdx .. ^1]
       return
 
   # check identifiers first
@@ -222,3 +223,79 @@ proc lex*(
 
   if self.inpChar == '"':
     discard
+
+proc locMsg*(
+  self: var Scone
+): string =
+  result = (
+    (
+      "at this location: " & self.inputFname & ":"
+    ) & (
+      $self.lineNum & "," & $self.locInLine
+    )
+  )
+
+proc expect*(
+  self: var Scone,
+  tokSet: HashSet[TokKind],
+) =
+  doAssert(
+    #tok == self.currTok.tok,
+    self.currTok.tok in tokSet,
+    (
+      (
+        "error: "
+      ) & (
+        "expected:" & $tokSet & ", but have " 
+      ) & (
+        $self.currTok & " "
+      ) & (
+        self.locMsg()
+      )
+    )
+  )
+
+proc lexAndExpect*(
+  self: var Scone,
+  tokSet: HashSet[TokKind],
+) =
+  self.lex()
+  self.expect(tokSet)
+
+proc expect*(
+  self: var Scone,
+  tok: TokKind,
+) =
+  self.expect(toHashSet([tok]))
+
+proc lexAndExpect*(
+  self: var Scone,
+  tok: TokKind,
+) =
+  self.lex()
+  self.expect(tok)
+
+proc lexAndCheck*(
+  self: var Scone,
+  chk: bool,
+  tokSet: HashSet[TokKind],
+  #someSpp: SelParseProc,
+): Option[TokKind] =
+  result = none(TokKind)
+  if chk:
+    self.stackSavedIlp()
+    self.lex()
+    #if not someSpp(self=self, chk=chk):
+    #  result = true
+    if self.currTok.tok in tokSet:
+      result = some(self.currTok.tok)
+    self.unstackSavedIlp()
+  else:
+    self.lexAndExpect(tokSet)
+
+proc lexAndCheck*(
+  self: var Scone,
+  chk: bool,
+  tok: TokKind,
+): Option[TokKind] =
+  result = self.lexAndCheck(chk=chk, tokSet=toHashSet([tok]))

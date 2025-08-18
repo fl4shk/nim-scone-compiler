@@ -44,86 +44,149 @@ type
     self: var Scone,
     chk: bool,
   ): bool
+#template SelParseProc(): untyped = 
+#  proc(self: var Scone, chk: bool): bool
+template spp(
+  someProc: untyped
+): untyped =
+  SelParseProc(someProc)
+
+template doChkTok(
+  tokOrTokSet: untyped,
+): untyped =
+  result = false
+  let hiddenMyTok = self.lexAndCheck(chk, tokOrTokSet)
+  if chk:
+    if hiddenMyTok.isSome:
+      return true
+    else:
+      return false
+  hiddenMyTok
+
 
 proc selParse(
   self: var Scone,
-  selProcSeq: seq[SelParseProc],
+  selProcSet: HashSet[SelParseProc],
 ): Option[SelParseProc] =
-  #for myProc in selProcSeq:
+  #for myProc in selProcSet:
   #  if myProc[](self, true):
   #    return myProc
-  for idx in 0 ..< selProcSeq.len():
+  #for idx in 0 ..< selProcSet.len():
+  #echo "selParse(): begin"
+  for selProc in selProcSet:
+    #echo "selParse(): loop begin: " #& $selProc
     self.stackSavedIlp()
-    if selProcSeq[idx](self, true):
+    if selProc(self=self, chk=true):
+      #echo "selParse(): found something: " & $self.currTok
       self.unstackSavedIlp()
-      return some(selProcSeq[idx])
+      return some(selProc)
     self.unstackSavedIlp()
+    #echo "selParse(): loop end"
     
+  #echo "selParse(): returning `none`"
   return none(SelParseProc)
 
-proc expect*(
+#template doCheckSpp(
+#  selProc: untyped,
+#): untyped =
+#  result = false
+
+#proc selParse(
+#  self: var Scone,
+#  selTokSeq: seq[TokKind]
+#): Option[TokKind] =
+#  #result = none(TokKind)
+#  for idx in 0 ..< selTokSeq.len():
+#    self.stackSavedIlp()
+#    let myTok = self.lexAndCheck(chk=false, 
+
+proc loopSelParse(
   self: var Scone,
-  tokSet: HashSet[TokKind],
+  selProcSet: HashSet[SelParseProc],
+  sepTok: Option[TokKind]=none(TokKind),
+  #endTok: Option[TokKind]=none(TokKind),
 ) =
-  doAssert(
-    #tok == self.currTok.tok,
-    self.currTok.tok in tokSet,
-    (
-      (
-        "error: "
-      ) & (
-        "expected:" & $tokSet & ", but have " & $self.currTok.tok & " "
-      ) & (
-        "at this location: " & self.inputFname & ":"
-      ) & (
-        $self.lineNum & ":" & $self.locInLine
-      )
-    )
+  var mySpp = self.selParse(selProcSet)
+  while mySpp.isSome:
+    #echo "loopSelParse(): begin: " & $sepTok
+    discard mySpp.get()(self=self, chk=false)
+    #echo "post mySpp.get()"
+    if sepTok.isSome:
+      #self.lexAndExpect(sepTok.get())
+      self.stackSavedIlp()
+      self.lex()
+      if self.currTok.tok != sepTok.get():
+        self.unstackSavedIlp()
+        #echo "loopSelParse(): break"
+        break
+      self.unstackSavedIlp()
+    #echo "loopSelParse(): end"
+    mySpp = self.selParse(selProcSet)
+
+#proc loopSelParse(
+#  self: var Scone,
+#  selTokSeq: seq[TokKind],
+#  sepTok: Option[TokKind]=none(TokKind)
+#) =
+#  var selProcSet: seq[SelParseProc]
+
+
+proc parseIdent(
+  self: var Scone,
+  chk: bool,
+): bool =
+  #echo "parseIdent(): begin: chk:" & $chk
+  discard doChkTok(tokIdent)
+  let tempStr = self.currTok.optStr.get()
+  #echo "parseIdent(): adding this ident: " & tempStr
+  self.currIdentStrSeq.add tempStr
+
+proc parseIdentList(
+  self: var Scone,
+  chk: bool,
+): bool =
+  discard doChkTok(tokIdent)
+  self.loopSelParse(
+    selProcSet=(toHashSet([spp(parseIdent)])),
+    sepTok=some(tokComma),
   )
 
-proc lexAndExpect*(
+proc parseGenericDeclList(
   self: var Scone,
-  tokSet: HashSet[TokKind],
-) =
-  self.lex()
-  self.expect(tokSet)
-
-proc expect*(
-  self: var Scone,
-  tok: TokKind,
-) =
-  self.expect(toHashSet([tok]))
-
-proc lexAndExpect*(
-  self: var Scone,
-  tok: TokKind,
-) =
-  self.lex()
-  self.expect(tok)
-
-proc lexAndCheckOrExpect*(
-  self: var Scone,
-  chk: bool
+  chk: bool,
 ): bool =
-  if chk:
-    discard
-  else:
-    discard
+  result = false
+
+proc subParseGenericDeclList(
+  self: var Scone,
+  chk: bool,
+): bool =
+  discard doChkTok(tokLBrace)
 
 proc parseFuncDecl(
   self: var Scone,
   chk: bool,
 ): bool =
-  discard
+  #echo "parseFuncDecl(): begin: chk:" & $chk
+  discard doChkTok(tokDef)
+  #echo "parseFuncDecl(): post `tokDef`"
+  discard self.parseIdent(chk=false)
+  #echo "parseFuncDecl(): " & $self.currIdentStrSeq
+  self.lexAndExpect(tokLParen)
+  self.lexAndExpect(tokRParen)
+  self.lexAndExpect(tokLParen)
+  self.lexAndExpect(tokRParen)
+  self.lexAndExpect(tokSemicolon)
+
 proc parseStructDecl(
   self: var Scone,
   chk: bool,
 ): bool =
-  discard
+  discard doChkTok(tokStruct)
 
 proc parseModule*(
   self: var Scone,
-  chk: bool,
+  #chk: bool,
 ) =
   self.lexAndExpect(tokModule)
   self.lexAndExpect(tokIdent)
@@ -131,14 +194,16 @@ proc parseModule*(
   # AST stuff here
   #self.mkAst(
   #)
-
   self.lexAndExpect(tokLParen)
-  discard self.selParse(
-    @[
-      SelParseProc(parseFuncDecl),
-      SelParseProc(parseStructDecl),
-    ]
+
+  self.loopSelParse(
+    toHashSet([
+      spp(parseFuncDecl),
+      spp(parseStructDecl),
+    ])
   )
+    
+  
   self.lexAndExpect(tokRParen)
   self.lexAndExpect(tokSemicolon)
 
