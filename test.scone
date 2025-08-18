@@ -1,4 +1,9 @@
 module aaaa(
+
 def main()(
 );
+
+struct Vec2{T, V[]}(
+);
+
 );

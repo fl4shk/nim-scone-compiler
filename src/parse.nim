@@ -63,6 +63,18 @@ template doChkTok(
       return false
   hiddenMyTok
 
+proc optParse(
+  self: var Scone,
+  selProc: SelParseProc
+): bool =
+  result = false
+  self.stackSavedIlp()
+  if selProc(self=self, chk=true):
+    self.unstackSavedIlp()
+    discard selProc(self=self, chk=false)
+    return true
+  self.unstackSavedIlp()
+
 
 proc selParse(
   self: var Scone,
@@ -105,8 +117,11 @@ proc loopSelParse(
   selProcSet: HashSet[SelParseProc],
   sepTok: Option[TokKind]=none(TokKind),
   #endTok: Option[TokKind]=none(TokKind),
+  haveOptEndSepTok: bool=false,
 ) =
   var mySpp = self.selParse(selProcSet)
+  var didBreak: bool = false
+  #var limitCnt: int = -1
   while mySpp.isSome:
     #echo "loopSelParse(): begin: " & $sepTok
     discard mySpp.get()(self=self, chk=false)
@@ -117,11 +132,26 @@ proc loopSelParse(
       self.lex()
       if self.currTok.tok != sepTok.get():
         self.unstackSavedIlp()
+        didBreak = true
         #echo "loopSelParse(): break"
         break
       self.unstackSavedIlp()
+      self.lex()
     #echo "loopSelParse(): end"
     mySpp = self.selParse(selProcSet)
+
+  if not didBreak and haveOptEndSepTok:
+    doAssert(
+      sepTok.isSome
+    )
+    self.stackSavedIlp()
+    self.lex()
+    let haveSepTok = (
+      self.currTok.tok == sepTok.get()
+    )
+    self.unstackSavedIlp()
+    if haveSepTok:
+      self.lex()
 
 #proc loopSelParse(
 #  self: var Scone,
@@ -151,17 +181,29 @@ proc parseIdentList(
     sepTok=some(tokComma),
   )
 
+proc parseGenericDeclItem(
+  self: var Scone,
+  chk: bool,
+): bool =
+  result = self.parseIdent(chk=chk)
+
 proc parseGenericDeclList(
   self: var Scone,
   chk: bool,
 ): bool =
-  result = false
-
+  self.loopSelParse(
+    selProcSet=toHashSet([
+      spp(parseGenericDeclItem)
+    ]),
+    sepTok=some(tokComma),
+  )
 proc subParseGenericDeclList(
   self: var Scone,
   chk: bool,
 ): bool =
   discard doChkTok(tokLBrace)
+  discard self.parseGenericDeclList(chk=false)
+  self.lexAndExpect(tokRBrace)
 
 proc parseFuncDecl(
   self: var Scone,
@@ -172,10 +214,17 @@ proc parseFuncDecl(
   #echo "parseFuncDecl(): post `tokDef`"
   discard self.parseIdent(chk=false)
   #echo "parseFuncDecl(): " & $self.currIdentStrSeq
+  #discard self.subParseGenericDeclList(chk=false)
+  discard self.optParse(spp(subParseGenericDeclList))
+
   self.lexAndExpect(tokLParen)
+  # args go here
   self.lexAndExpect(tokRParen)
+
   self.lexAndExpect(tokLParen)
+  # stmts go here
   self.lexAndExpect(tokRParen)
+
   self.lexAndExpect(tokSemicolon)
 
 proc parseStructDecl(
@@ -183,6 +232,13 @@ proc parseStructDecl(
   chk: bool,
 ): bool =
   discard doChkTok(tokStruct)
+  discard self.parseIdent(chk=false)
+  discard self.optParse(spp(subParseGenericDeclList))
+
+  self.lexAndExpect(tokLParen)
+  # fields go here
+  self.lexAndExpect(tokRParen)
+  self.lexAndExpect(tokSemicolon)
 
 proc parseModule*(
   self: var Scone,

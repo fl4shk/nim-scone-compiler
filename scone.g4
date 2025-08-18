@@ -1,3 +1,5 @@
+grammar scone;
+
 module:
 	'module' ident '('
 		(
@@ -152,7 +154,7 @@ assignStmt:
 	;
 //--------
 exprLowestNonOp:
-	ident | literal | '(' expr ')'
+	ident | /*literal |*/ '(' expr ')'
 	;
 
 expr:
@@ -376,7 +378,7 @@ genericDeclList:
 	;
 
 genericDeclItem:
-	identList ',' ?
+	ident
 	;
 
 genericImplList:
