@@ -31,7 +31,8 @@ proc doCompileModeOneFile(
   #  echo $self.currTok
   #echo $self.currTok
 
-  self.parseModule()
+  #self.parseModule()
+  self.parseSrcFile()
 
 proc mkScone*(
   myMode: Mode,
@@ -44,11 +45,15 @@ proc mkScone*(
     lineNum: 0.uint64,
     litVal: none(AstLitVal),
   )
-  result.locInLine = 1
-  result.lineNum = 1
+  result.lexMain.locInLine = 1
+  result.lexMain.lineNum = 1
+
+  var identStrSeq: seq[string]
+  result.identStrS2d.add identStrSeq
+
   result.inputFname = inputFname
   result.inp = readFile(filename=inputFname)
-  result.inpIdx = 0
+  result.lexMain.inpIdx = 0
   result.outp = ""
 
   case myMode:

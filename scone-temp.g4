@@ -13,7 +13,6 @@ srcFile:
 		//| importDecl
 	)*
 	;
-
 module:
 	'module' ident ';'
 	;
@@ -28,12 +27,12 @@ funcDecl:
 
 funcArgDeclList:
 	( identList ':' typeWithOptPreKwVar ',' )* 
-	'result' ':' typeWithOptPreKwVar //typeWithoutOptPreKwVar
+	'result' typeWithOptPreKwVar //typeWithoutOptPreKwVar
 	;
 
 funcArgImplList:
 	funcArgImplItem ( ',' funcArgImplItem )* ',' ?
-	//| expr
+	| expr
 	;
 
 funcArgImplItem:
@@ -138,7 +137,7 @@ defaultStmt:
 	;
 
 returnStmt:
-	'return' expr?
+	'return' 
 	;
 
 assignStmt:
@@ -306,7 +305,7 @@ exprFuncCall:
 //	;
 //--------
 
-//	;
+	;
 
 //expr:
 //	exprPrio1
@@ -353,7 +352,6 @@ typeMain:
 
 typeArrDim:
 	'[' expr ']'
-	;
 
 //typeWithoutOptPreKwVar:
 //	('ptr')* typeMain typeArrDim*
@@ -383,7 +381,7 @@ genericDeclItem:
 	;
 
 genericImplList:
-	genericImplItem ( ',' genericImplItem )* ',' ?
+	genericImplItem ( ';' genericImplItem )* ',' ?
 	;
 
 genericImplItem:

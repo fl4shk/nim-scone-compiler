@@ -41,7 +41,7 @@ proc lex*(
       if tempCond:
         #echo "increment lineNum: " & $self.lineNum & " " & $self.locInLine
         self.lineNum += 1
-        self.locInLine = 1
+        self.locInLine() = 1
 
       self.incrInpIdx(doIncrLocInLine=tempCond)
       #if tempCond:
@@ -49,13 +49,12 @@ proc lex*(
     else:
       break
 
-
   if self.inpIdx >= self.inp.len():
-    self.currTok = mkCurrTok(tokEof, none(string), none(uint64))
+    self.currTok() = mkCurrTok(tokEof, none(string), none(uint64))
     return
 
   # next determine the kind of token (and if it's valid)
-  self.currTok = mkCurrTok(tokBad, none(string), none(uint64))
+  self.currTok() = mkCurrTok(tokBad, none(string), none(uint64))
 
   var prevLongestSize: (int, Option[int]) = (0, none(int))
 
@@ -79,7 +78,7 @@ proc lex*(
             prevLongestSize[0] = opt.get().len()
             prevLongestSize[1] = some(idx)
             kwTempStr[1] = kwTempStr[0]
-            self.currTok = mkCurrTok(TokKind(idx), opt, none(uint64))
+            self.currTok() = mkCurrTok(TokKind(idx), opt, none(uint64))
 
   if prevLongestSize[1].isSome:
     if kwTempStr[1][0] notin IdentChars:
@@ -121,7 +120,9 @@ proc lex*(
       if tempStr == tempOpt.get():
         tempCond = true
     if not tempCond:
-      self.currTok = mkCurrTok(tokIdent, some(tempStr), none(uint64))
+      self.currTok() = (
+        mkCurrTok(tokIdent, some(tempStr), none(uint64))
+      )
     return
 
   #proc handleDigits(
@@ -141,7 +142,9 @@ proc lex*(
     if self.inpIdx >= self.inp.len():
       return
 
-    self.currTok = mkCurrTok(tokUInt64Lit, none(string), some(0u64))
+    self.currTok() = (
+      mkCurrTok(tokUInt64Lit, none(string), some(0u64))
+    )
 
     var tempMul: uint64 = 0u64
 
@@ -299,3 +302,9 @@ proc lexAndCheck*(
   tok: TokKind,
 ): Option[TokKind] =
   result = self.lexAndCheck(chk=chk, tokSet=toHashSet([tok]))
+proc lexAndCheck*(
+  self: var Scone,
+  chk: bool,
+  tokArr: openArray[TokKind],
+): Option[TokKind] =
+  result = self.lexAndCheck(chk=chk, tokSet=toHashSet(tokArr))

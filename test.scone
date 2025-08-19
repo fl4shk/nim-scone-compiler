@@ -1,9 +1,7 @@
-module aaaa(
+module test;
 
-def main()(
+def main(a: var f32, result: i32)(
 );
 
-struct Vec2{T, V[]}(
-);
-
+struct Vec2{T}(
 );

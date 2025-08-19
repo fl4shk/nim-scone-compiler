@@ -26,6 +26,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokRBrace", some("}")),
   ("tokComma", some(",")),
   ("tokSemicolon", some(";")),
+  ("tokColon", some(":")),
   #--------
   ("tokPtr", some("ptr")),
   ("tokAddr", some("addr")),
@@ -76,7 +77,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokF32", some("f32")),
   ("tokF64", some("f64")),
   ("tokChar", some("char")),
-  ("tokCString", some("cstring")),
+  ("tokString", some("string")),
   #--------
   ("tokCmpEq", some("==")),
   ("tokCmpNe", some("!=")),
@@ -186,22 +187,18 @@ type
 
 type
   TypeInfoUnknown* = object
-    main*: TypeInfoMain
 
 type
   TypeInfoBuiltinType* = object
-    main*: TypeInfoMain
 
 type
   TypeInfoStruct* = object
-    main*: TypeInfoMain
     chIdxSeq*: seq[uint64]  # indices into the `TypeInfo` table
                             # indicating struct fields, the next array
                             # dimension, etc.
 
 type
   TypeInfoFunc* = object
-    main*: TypeInfoMain
     argIdxSeq*: seq[uint64]     # function arguments
 
 type
@@ -214,7 +211,8 @@ type
     #typeKindVar,
     #typeKindLim,
   TypeInfo* = object
-    case kind: TypeKind
+    main*: TypeInfoMain
+    case kind*: TypeKind
     of typeKindUnknown:
       tiUnkVal: TypeInfoUnknown
     of typeKindBuiltinType:
@@ -224,27 +222,67 @@ type
     of typeKindFunc:
       tiFuncVal: TypeInfoFunc
 
-template name*(
+proc name*(
   self: var TypeInfo
-): string =
+): var string =
   self.main.name
-template ptrDim*(
+  #case self.kind:
+  #of typeKindUnknown:
+  #  return self.tiUnkVal.main.name
+  #of typeKindBuiltinType:
+  #  return self.tiBuiltinTypeVal.main.name
+  #of typeKindStruct:
+  #  return self.tiStructVal.main.name
+  #of typeKindFunc:
+  #  return self.tiFuncVal.main.name
+
+proc ptrDim*(
   self: var TypeInfo
-): uint =
-  self.main.ptrDim
-template arrDim*(
+): var uint =
+  result = self.main.ptrDim
+  #case self.kind:
+  #of typeKindUnknown:
+  #  return self.tiUnkVal.main.ptrDim
+  #of typeKindBuiltinType:
+  #  return self.tiBuiltinTypeVal.main.ptrDim
+  #of typeKindStruct:
+  #  return self.tiStructVal.main.ptrDim
+  #of typeKindFunc:
+  #  return self.tiFuncVal.main.ptrDim
+
+proc arrDim*(
   self: var TypeInfo
-): uint64 =
-  self.main.arrDim
-template parentSymIdx*(
+): var uint64 =
+  result = self.main.arrDim
+  #case self.kind:
+  #of typeKindUnknown:
+  #  return self.tiUnkVal.main.arrDim
+  #of typeKindBuiltinType:
+  #  return self.tiBuiltinTypeVal.main.arrDim
+  #of typeKindStruct:
+  #  return self.tiStructVal.main.arrDim
+  #of typeKindFunc:
+  #  return self.tiFuncVal.main.arrDim
+
+proc parentSymIdx*(
   self: var TypeInfo
-): string =
-  self.main.parentSymIdx
+): var uint64 =
+  result = self.main.parentSymIdx
+  #case self.kind:
+  #of typeKindUnknown:
+  #  return self.tiUnkVal.main.parentSymIdx
+  #of typeKindBuiltinType:
+  #  return self.tiBuiltinTypeVal.main.parentSymIdx
+  #of typeKindStruct:
+  #  return self.tiStructVal.main.parentSymIdx
+  #of typeKindFunc:
+  #  return self.tiFuncVal.main.parentSymIdx
 
 
 type
   SymKind* = enum
     symKindVar,
+    symKindLet,
     symKindConst,
   Symbol* = object
     name*: string
@@ -256,13 +294,22 @@ type
 
 type
   AstLitValKind* = enum
+    astLvKindI64,
     astLvKindU64,
+    #astLvKindF32,
+    #astLvKindF64,
     astLvKindStr,
 
   AstLitVal* = object
     case kind: AstLitValKind
+    of astLvKindI64:
+      i64Val: int64
     of astLvKindU64:
       u64Val: uint64
+    #of astLvKindF32:
+    #  f32Val: string
+    #of astLvKindF64:
+    #  f64Val: string
     of astLvKindStr:
       strVal: string
 
