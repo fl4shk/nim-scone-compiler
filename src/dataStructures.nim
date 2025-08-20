@@ -32,7 +32,6 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokAddr", some("addr")),
   ("tokDeref", some("[]")), # pointer dereference
   ("tokDot", some(".")),
-  ("tokMethodCall", some("->")),
   #--------
   ("tokVar", some("var")),
   ("tokConst", some("const")),

@@ -154,12 +154,13 @@ assignStmt:
 	;
 //--------
 exprLowestNonOp:
-	ident | /*literal |*/ '(' expr ')'
+	exprIdentOrFuncCall | /*literal |*/ '(' expr ')'
 	;
 
 expr:
-	exprLowestNonOp
-	| exprLogicOr // the lowest precedence operator
+	//exprLowestNonOp
+	//| 
+	exprLogicOr // the lowest precedence operator
 	;
 
 exprLogicOr:
@@ -238,12 +239,12 @@ exprUnary:
 	exprPrefixUnary? exprFieldArrEtc
 	;
 
-exprSuffixFieldAccess:
-	'.' ident
+exprSuffixFieldMethodAccess:
+	'.' exprIdentOrFuncCall
 	;
-exprSuffixMethodCall:
-	'->' exprFuncCall
-	;
+//exprSuffixMethodCall:
+//	'->' exprFuncCallMain
+//	;
 
 exprSuffixDeref:
 	'[]'
@@ -264,16 +265,17 @@ exprFieldArrEtc:
 	;
 exprFieldArrEtcChoice:
 	exprSuffixFieldAccess
-	| exprSuffixMethodCall
+	//| exprSuffixMethodCall
 	| exprSuffixDeref
 	| exprSuffixArray
-	| exprFuncCall
+	//| exprFuncCall
 	;
 
 exprLhsLowestNonOpEtc:
 	'addr' ?
 	(
-		ident
+		//ident exprFuncCallPostIdent?
+		exprIdentOrFuncCall
 		| '(' exprLhs ')'
 	)
 	;
@@ -282,13 +284,29 @@ exprLhs:
 	exprLhsLowestNonOpEtc exprFieldArrEtcChoice*
 	;
 
-exprFuncCall:
-	ident ( '{' genericImplList '}' )? 
+exprIdentOrFuncCall:
+	//'$' exprFuncCallMain
+	// '$' (or some other leading token) required because the parser needs
+	// to have at most one token to determine if a rule can be taken.
+	ident
+
+	exprFuncCallPostIdent?	// if we have `exprFuncCallPostIdent`,
+							// this indicates calling either 
+							// a function or method
+	;
+exprFuncCallPostIdent:
+	( '{' genericImplList '}' )? 
 	'('
-		funcArgImplList
+		funcArgImplList?
 	')'
 	;
-	
+
+//exprFuncCallMain:
+//	ident ( '{' genericImplList '}' )? 
+//	'('
+//		funcArgImplList?
+//	')'
+//	;
 
 
 //exprFieldArrEtc:
