@@ -130,30 +130,36 @@ proc optParse(
 
 proc selParse(
   self: var Scone,
+  chk: bool,
   selProcSet: HashSet[SelParseProc],
 ): (SelParseProc, SppResult) =
   #for myProc in selProcSet:
   #  if myProc[](self, true):
   #    return myProc
   #for idx in 0 ..< selProcSet.len():
+  result[1].foundTok = none(TokKind)
   for selProc in selProcSet:
     self.stackSavedIlp()
     let sppRet = selProc(self=self, chk=true)
     result[1].tokSet = result[1].tokSet.union(sppRet.tokSet)
 
     if sppRet.foundTok.isSome:
-      self.unstackSavedIlp()
-      return (selProc, sppRet)
+      if chk:
+        result[1].foundTok = sppRet.foundTok
+      else:
+        self.unstackSavedIlp()
+        return (selProc, sppRet)
+        
     self.unstackSavedIlp()
     
   #echo "selParse(): returning `none`"
-  result[1].foundTok = none(TokKind)
 
 proc selParse(
   self: var Scone,
-  selProcSeq: seq[SelParseProc]
+  chk: bool,
+  selProcSeq: seq[SelParseProc],
 ): (SelParseProc, SppResult) =
-  result = self.selParse(selProcSet=toHashSet(selProcSeq))
+  result = self.selParse(chk=chk, selProcSet=toHashSet(selProcSeq))
   #self.stackSavedIlp()
   #self.lex()
   #echo "selParse test: " & $self.currTok
@@ -195,8 +201,11 @@ proc loopSelParse(
   sepTok: Option[TokKind]=none(TokKind),
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
-) =
-  var mySpp = self.selParse(selProcSet)
+): SppResult =
+  var mySpp = self.selParse(chk=false, selProcSet=selProcSet)
+
+  # result is if we found any valid token at all
+  result = mySpp[1]
   var didBreak: bool = false
   #var limitCnt: int = -1
   while mySpp[1].foundTok.isSome:
@@ -210,9 +219,9 @@ proc loopSelParse(
         break
       self.unstackSavedIlp()
       self.lex()
-    mySpp = self.selParse(selProcSet)
+    mySpp = self.selParse(chk=false, selProcSet=selProcSet)
 
-  if not didBreak and haveOptEndSepTok:
+  if not result.foundTok.isSome and not didBreak and haveOptEndSepTok:
     doAssert(
       sepTok.isSome
     )
@@ -230,11 +239,11 @@ proc loopSelParse(
   selProcSeq: seq[SelParseProc],
   sepTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
-) =
+): SppResult =
   #var tempSelProcSeq: seq[SelParseProc]
   #for selProc in selProcArr:
   #  tempSelProcSeq.add sppSeq(selProc)
-  self.loopSelParse(
+  result = self.loopSelParse(
     selProcSet=toHashSet(selProcSeq),
     sepTok=sepTok,
     haveOptEndSepTok=haveOptEndSepTok,
@@ -275,7 +284,7 @@ proc parseIdentList(
   #discard doChkTok(tokIdent)
   discard doChkSpp(parseIdent)
 
-  self.loopSelParse(
+  discard self.loopSelParse(
     selProcSeq=(sppSeq @[parseIdent]),
     sepTok=some(tokComma),
     haveOptEndSepTok=false,
@@ -333,6 +342,7 @@ proc parseTypeMain(
   result.foundTok = none(TokKind)
 
   let mySpp = self.selParse(
+    chk=false,
     sppSeq @[
       parseTypeBuiltinScalar,
       parseTypeToResolve,
@@ -466,7 +476,7 @@ proc parseGenericDeclList(
   self: var Scone,
   #chk: bool,
 ) =
-  self.loopSelParse(
+  discard self.loopSelParse(
     selProcSeq=(
       sppSeq @[parseGenericDeclItem]
     ),
@@ -498,7 +508,7 @@ proc parseGenericImplList(
   self: var Scone,
   #chk: bool,
 ) =
-  self.loopSelParse(
+  discard self.loopSelParse(
     selProcSeq=sppSeq @[parseGenericImplItem],
     sepTok=some(tokComma),
     haveOptEndSepTok=true,
@@ -547,7 +557,7 @@ proc parseFuncArgDeclList(
     discard doChkSpp(subParseFuncArgDeclList)
     #echo "not haveNoArgs.isSome: post doChkSpp"
 
-    self.loopSelParse(
+    discard self.loopSelParse(
       selProcSeq=(
         sppSeq @[subParseFuncArgDeclList]
       ),
@@ -618,7 +628,28 @@ proc parseSrcFile*(
 ) =
   self.parseModule(chk=false)
 
-  self.loopSelParse(sppSeq @[
+  let mySppSeq = sppSeq @[
     parseFuncDecl,
     parseStructDecl,
-  ])
+  ]
+  let temp = self.selParse(
+    chk=true,
+    mySppSeq
+  )
+  #echo "post self.selParse: " & $temp
+  if temp[1].foundTok.isSome:
+    #echo "test"
+    discard self.loopSelParse(
+      mySppSeq
+    )
+  else:
+    self.lexAndExpect(
+      temp[1].tokSet.union(toHashSet([tokEof]))
+    )
+
+  self.lexAndExpect(tokEof)
+  #let temp = self.loopSelParse()
+  #if not temp.foundTok.isSome:
+  #  discard
+
+
