@@ -202,10 +202,13 @@ proc loopSelParse(
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
 ): SppResult =
+  result = self.selParse(chk=true, selProcSet=selProcSet)[1]
+  #echo "loopSelParse: result:" & $result
+
   var mySpp = self.selParse(chk=false, selProcSet=selProcSet)
+  #echo "mySpp:" & $mySpp
 
   # result is if we found any valid token at all
-  result = mySpp[1]
   var didBreak: bool = false
   #var limitCnt: int = -1
   while mySpp[1].foundTok.isSome:
@@ -249,6 +252,37 @@ proc loopSelParse(
     haveOptEndSepTok=haveOptEndSepTok,
   )
 
+# `req` is short for `required`
+proc reqLoopSelParse(
+  self: var Scone,
+  #chk: bool,
+  selProcSet: HashSet[SelParseProc],
+  sepTok: Option[TokKind]=none(TokKind),
+  #endTok: Option[TokKind]=none(TokKind),
+  haveOptEndSepTok: bool=false,
+): SppResult = 
+  #echo "reqLoopSelParse(): " & $self.currTok
+  result = self.loopSelParse(
+    selProcSet=selProcSet,
+    sepTok=sepTok,
+    haveOptEndSepTok=haveOptEndSepTok,
+  )
+  if not result.foundTok.isSome:
+    #echo "not result.foundTok.isSome: " & $result & " " & $self.currTok
+    self.lexAndExpect(result.tokSet)
+
+proc reqLoopSelParse(
+  self: var Scone,
+  selProcSeq: seq[SelParseProc],
+  sepTok: Option[TokKind]=none(TokKind),
+  haveOptEndSepTok: bool=false,
+): SppResult =
+  result = self.reqLoopSelParse(
+    selProcSet=toHashSet(selProcSeq),
+    sepTok=sepTok,
+    haveOptEndSepTok=haveOptEndSepTok,
+  )
+
 #proc optLoopSelParse(
 #  self: var Scone,
 #  selProcSet: HashSet[SelParseProc],
@@ -284,11 +318,13 @@ proc parseIdentList(
   #discard doChkTok(tokIdent)
   discard doChkSpp(parseIdent)
 
-  discard self.loopSelParse(
-    selProcSeq=(sppSeq @[parseIdent]),
-    sepTok=some(tokComma),
-    haveOptEndSepTok=false,
-  )
+  if self.lexAndCheck(chk=true, tokComma).isSome:
+    self.lex()
+    discard self.loopSelParse(
+      selProcSeq=(sppSeq @[parseIdent]),
+      sepTok=some(tokComma),
+      haveOptEndSepTok=false,
+    )
 proc parseExpr(
   self: var Scone,
   chk: bool,
@@ -476,7 +512,7 @@ proc parseGenericDeclList(
   self: var Scone,
   #chk: bool,
 ) =
-  discard self.loopSelParse(
+  discard self.reqLoopSelParse(
     selProcSeq=(
       sppSeq @[parseGenericDeclItem]
     ),

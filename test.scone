@@ -1,7 +1,6 @@
 module test;
 
-a
-def main(a: ptr ptr f32, result: i32)(
+def main(a, b: ptr ptr f32, result: i32)(
 );
 
 struct Vec2{T}(
