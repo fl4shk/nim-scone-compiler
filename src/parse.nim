@@ -74,6 +74,7 @@ template doChkTokSet(
 ): untyped =
   #result = none(SppResultMain)
   #result = SppResult(foundTok: none(TokKind))
+  result.tokSet = argTokSet
   result.foundTok = none(TokKind)
   let hiddenMyTok = self.lexAndCheck(chk=chk, argTokSet)
   if chk:
@@ -82,13 +83,15 @@ template doChkTokSet(
       #  tokSet: argTokSet,
       #  foundTok: hiddenMyTok.get(),
       #))
-      return SppResult(
-        tokSet: argTokSet,
-        foundTok: hiddenMyTok,
-      )
-    else:
-      #return none(SppResultMain)
-      return
+      #return SppResult(
+      #  tokSet: argTokSet,
+      #  foundTok: hiddenMyTok,
+      #)
+      result.foundTok = hiddenMyTok
+    #else:
+    #  #return none(SppResultMain)
+    #  return
+    return
   hiddenMyTok
 
 template doChkTok(
