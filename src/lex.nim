@@ -34,19 +34,41 @@ proc lex*(
 
   # first eat whitespace
   #echo "eating whitespace"
-  while self.inpIdx < self.inp.len():
-    if isSpaceAscii(self.inpChar) or self.inpChar == '\n':
-      let tempCond = (self.inpChar == '\n')
+  proc eatWhitespace(
+    self: var Scone,
+  ): bool =
+    result = false
+    while self.inpIdx < self.inp.len():
+      if isSpaceAscii(self.inpChar) or self.inpChar == '\n':
+        let tempCond = (self.inpChar == '\n')
 
-      if tempCond:
-        #echo "increment lineNum: " & $self.lineNum & " " & $self.locInLine
-        self.lineNum += 1
-        self.locInLine() = 1
+        if tempCond:
+          #echo "increment lineNum: " & $self.lineNum & " " & $self.locInLine
+          self.lineNum += 1
+          self.locInLine() = 1
 
-      self.incrInpIdx(doIncrLocInLine=tempCond)
-      #if tempCond:
-      #  self.locInLine = 1
+        self.incrInpIdx(doIncrLocInLine=tempCond)
+        #if tempCond:
+        #  self.locInLine = 1
+      else:
+        break
+    if self.inpIdx >= self.inp.len():
+      return true
+
+  while true:
+    if self.eatWhitespace():
+      break
+    if self.inpChar == '#':
+      self.incrInpIdx(doIncrLocInLine=true)
+      var tempCond = false
+      while (self.inpIdx < self.inp.len()) and not tempCond:
+        if self.inpChar == '\n':
+          tempCond = true
+        self.incrInpIdx(doIncrLocInLine=true)
     else:
+      break
+
+    if self.inpIdx >= self.inp.len():
       break
 
   if self.inpIdx >= self.inp.len():
