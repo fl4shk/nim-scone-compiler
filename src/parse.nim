@@ -1328,13 +1328,13 @@ proc parseExprSuffixDeref(
 ): SppResult = 
   discard doChkTok(tokDeref)
 
-proc parseExprSuffixArray(
-  self: var Scone,
-  chk: bool,
-): SppResult =
-  discard doChkTok(tokLBrace)
-  discard self.parseExpr(chk=false)
-  discard doChkTok(tokRBrace)
+#proc parseExprSuffixArray(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  discard doChkTok(tokLBrace)
+#  discard self.parseExpr(chk=false)
+#  discard doChkTok(tokRBrace)
 
 proc parseExprFieldArrEtcChoice(
   self: var Scone,
@@ -1348,7 +1348,7 @@ proc parseExprFieldArrEtcChoice(
       sppSeq @[
         parseExprSuffixFieldMethodAccess,
         parseExprSuffixDeref,
-        parseExprSuffixArray,
+        #parseExprSuffixArray,
       ]
     )
   )

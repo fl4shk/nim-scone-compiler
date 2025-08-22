@@ -31,7 +31,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   #--------
   ("tokPtr", some("ptr")),
   ("tokAddr", some("addr")),
-  ("tokDeref", some("[]")), # pointer dereference
+  ("tokDeref", some("@")), # pointer dereference
   ("tokDot", some(".")),
   #--------
   ("tokVar", some("var")),
@@ -40,6 +40,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokFuncReturnTypePrefix", some("->")),
   #("tokFuncNamedArgListStart", some("$(")),
   #("tokGenericNamedArgListStart", some("$[")),
+  #("tokGenericArgListStart", some("#[")),
   ("tokArray", some("array")),
   #("tokMacro", some("macro")),
       # Maybe save `macro` for the bootstrapped compiler?

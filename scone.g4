@@ -224,12 +224,13 @@ exprSuffixFieldMethodAccess:
 //	;
 
 exprSuffixDeref:
-	'[]'
+	//'[]'
+	'@'
 	;
 
-exprSuffixArray:
-	'[' expr ']'
-	;
+//exprSuffixArray:
+//	'[' expr ']'
+//	;
 
 exprPrefixUnary:
 	'+' | '-' | '!' | '~'
@@ -244,7 +245,7 @@ exprFieldArrEtcChoice:
 	exprSuffixFieldMethodAccess
 	//| exprSuffixMethodCall
 	| exprSuffixDeref
-	| exprSuffixArray
+	//| exprSuffixArray
 	//| exprFuncCall
 	;
 

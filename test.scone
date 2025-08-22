@@ -16,6 +16,11 @@ module test;
 #	x: T;
 #	y: T;
 #};
+
+def plus(left: i32, right: i32) -> i32 {
+	#return left + right;
+};
+
 struct Temp {
-	x: array[3 plus 4; u32];
+	x: array[((a plus 3) plus (b plus d)); u32];
 };
