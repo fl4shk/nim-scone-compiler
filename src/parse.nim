@@ -509,20 +509,20 @@ proc subParseIdentAssign(
     result = self.parseIdent(chk=false)
     self.lexAndExpect(tokAssign)
 
-proc parseIdentList(
-  self: var Scone,
-  chk: bool,
-): SppResult =
-  #discard doChkTok(tokIdent)
-  result = doChkSpp(parseIdent)
-
-  if self.lexAndCheck(chk=true, tokComma).isSome:
-    self.lex()
-    discard self.loopSelParse(
-      selProcSeq=(sppSeq @[parseIdent]),
-      sepTok=some(tokComma),
-      haveOptEndSepTok=false,
-    )
+#proc parseIdentList(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  #discard doChkTok(tokIdent)
+#  result = doChkSpp(parseIdent)
+#
+#  if self.lexAndCheck(chk=true, tokComma).isSome:
+#    self.lex()
+#    discard self.loopSelParse(
+#      selProcSeq=(sppSeq @[parseIdent]),
+#      sepTok=some(tokComma),
+#      haveOptEndSepTok=false,
+#    )
 proc parseExpr(
   self: var Scone,
   chk: bool,
@@ -738,10 +738,13 @@ proc parseTypeWithoutOptPreKwVar(
   #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
 
 
-#proc parseVarDeclEtcMost(
-#  self: var Scone,
-#  chk: bool,
-#): bool =
+proc parseVarDeclEtcMost(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkSpp(parseIdent)
+  self.lexAndExpect(tokColon)
+  discard self.parseTypeWithoutOptPreKwVar(chk=false)
 
 proc parseGenericDeclItem(
   self: var Scone,
@@ -870,7 +873,7 @@ proc subParseFuncArgDeclList(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  result = doChkSpp(parseIdentList)
+  result = doChkSpp(parseIdent)
   self.lexAndExpect(tokColon)
   discard self.parseTypeWithOptPreKwVar(chk=false)
   #self.lexAndExpect(tokComma)
@@ -990,7 +993,7 @@ proc parseFuncUnnamedArgImplList(
     ),
   )
 
-proc parseExprFuncCallPostGeneric(
+proc parseExprFuncCallPostGenericMain(
   self: var Scone,
   chk: bool,
 ): SppResult =
@@ -1022,6 +1025,18 @@ proc parseExprFuncCallPostGeneric(
     self.parseFuncNamedArgImplList()
 
   self.lexAndExpect(tokRParen)
+
+proc parseExprFuncCallPostGeneric(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = doChkSelParse(
+    sppSeq @[
+      parseExprFuncCallPostGenericMain,
+      parseExpr,
+    ],
+    none(HashSet[TokKind]),
+  )[1]
 
 
 
@@ -1060,6 +1075,11 @@ proc parseStructDecl(
 
   self.lexAndExpect(tokLBrace)
   # fields go here
+  discard self.loopSelParse(
+    selProcSeq=(
+      sppSeq @[parseVarDeclEtcMost]
+    ),
+  )
   self.lexAndExpect(tokRBrace)
   self.lexAndExpect(tokSemicolon)
 

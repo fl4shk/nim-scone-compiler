@@ -27,7 +27,7 @@ funcDecl:
 	;
 
 funcArgDeclList:
-	( identList ':' typeWithOptPreKwVar ',' )+
+	( ident ':' typeWithOptPreKwVar ',' )+
 	//'result' ':' type //typeWithoutOptPreKwVar
 	;
 
@@ -54,13 +54,13 @@ structDecl:
 	'}'
 	;
 
-identList:
-	(ident (',' ident)* )+
-	;
+//identList:
+//	(ident (',' ident)* )+
+//	;
 
 
 varEtcDeclMost: // "Most" is short for "Most of it"
-	identList ':' typeWithoutOptPreKwVar
+	ident ':' typeWithoutOptPreKwVar
 	;
 
 //--------
@@ -269,9 +269,16 @@ exprFuncCallPostIdent:
 	genericFullImplList?
 	exprFuncCallPostGeneric
 	;
+//exprFuncCallPostGenericBinop:
+//	ident
+//	;
 exprFuncCallPostGeneric:
 	//'$(' funcNamedArgImplList? ')'
 	//| '(' funcUnnamedArgImplList? ')'
+	exprFuncCallPostGenericMain
+	| expr
+	;
+exprFuncCallPostGenericMain:
 	'(' 
 		(
 			funcUnnamedArgImplList (',' funcNamedArgImplList?)?
