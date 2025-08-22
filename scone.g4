@@ -160,7 +160,14 @@ assignStmt:
 	;
 //--------
 exprLowestNonOp:
-	exprIdentOrFuncCall | literal | '(' expr ')'
+	//exprIdentOrFuncCall
+	(
+		//ident exprFuncCallPostIdent?
+		exprIdentOrFuncCall
+		| literal exprFuncCall?
+		| '(' expr ')' exprFuncCall?
+	)
+	//exprFuncCallPostIdent?
 	;
 
 //exprList:
@@ -264,6 +271,10 @@ exprIdentOrFuncCall:
 							// this indicates calling either 
 							// a function or method
 	;
+exprFuncCall:
+	ident exprFuncCallPostIdent
+	;
+
 exprFuncCallPostIdent:
 	//( '[' genericImplList ']' )? 
 	genericFullImplList?

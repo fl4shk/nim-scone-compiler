@@ -384,6 +384,7 @@ proc loopSelParse(
   #echo "loopSelParse: result:" & $result
 
   var mySpp = self.selParse(chk=true, selProcSet=selProcSet)
+  let foundFirst = mySpp[1].foundTok.isSome
   #echo "mySpp:" & $mySpp
 
   # result is if we found any valid token at all
@@ -417,7 +418,7 @@ proc loopSelParse(
       self.unstackSavedIlp()
       if haveSepTok:
         self.lex()
-  if haveForcedEndSepTok:
+  if foundFirst and haveForcedEndSepTok:
     #echo "inside if haveForcedEndSepTok: " & $self.lexMain
     doAssert(
       not haveOptEndSepTok
@@ -759,7 +760,7 @@ proc parseTypeWithoutOptPreKwVar(
   #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
 
 
-proc parseVarDeclEtcMost(
+proc parseVarEtcDeclMost(
   self: var Scone,
   chk: bool,
 ): SppResult =
@@ -968,7 +969,8 @@ proc parseFuncNamedArgImplItem(
   #self.lexAndExpect(tokAssign)
   result = self.subParseIdentAssign(chk=chk)
   if not chk:
-    discard self.parseTypeWithOptPreKwVar(chk=false)
+    #discard self.parseTypeWithOptPreKwVar(chk=false)
+    discard self.parseExpr(chk=false)
   #discard self.parseType(chk=false)
 
 proc parseFuncNamedArgImplList(
@@ -985,7 +987,8 @@ proc parseFuncUnnamedArgImplItem(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  result = self.parseTypeWithoutOptPreKwVar(chk=true)
+  #result = self.parseTypeWithoutOptPreKwVar(chk=true)
+  result = self.parseExpr(chk=true)
   let haveNamed = self.subParseIdentAssign(chk=true)
   if chk:
     if not haveNamed.foundTok.isSome:
@@ -995,7 +998,8 @@ proc parseFuncUnnamedArgImplItem(
       result.foundTok1 = none(TokKind)
   else: # if not chk:
     #if not haveNamed.foundTok.isSome:
-    result = self.parseTypeWithoutOptPreKwVar(chk=false)
+    #result = self.parseTypeWithoutOptPreKwVar(chk=false)
+    result = self.parseExpr(chk=false)
     #else:
     #  result
     #else:
@@ -1099,7 +1103,7 @@ proc parseStructDecl(
   #echo "test"
   discard self.loopSelParse(
     selProcSeq=(
-      sppSeq @[parseVarDeclEtcMost]
+      sppSeq @[parseVarEtcDeclMost]
     ),
     sepTok=some(tokSemicolon),
     haveForcedEndSepTok=true,
@@ -1171,11 +1175,43 @@ proc parseExprIdentOrFuncCall(
     selProc=spp parseExprFuncCallPostIdent,
   )
 
-proc parseU64Lit(
+proc parseExprFuncCall(
   self: var Scone,
   chk: bool,
 ): SppResult =
+  result = doChkSpp(parseIdent)
+  discard self.parseExprFuncCallPostIdent(chk=false)
+  
+proc parseU64LitWithOptFuncCall(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  #echo (
+  #  "parseU64LitWithOptFuncCall: pre: chk:" & $chk & " " & $self.lexMain
+  #)
   discard doChkTok(tokU64Lit)
+  #echo (
+  #  "parseU64LitWithOptFuncCall: post: chk:" & $chk & " " & $self.lexMain
+  #)
+  let temp = self.optParse(
+    chk=false,
+    selProc=spp parseExprFuncCall,
+  )
+  #echo (
+  #  (
+  #    "parseU64LitWithOptFuncCall: final 0: chk:" & $chk & " "
+  #  ) & (
+  #    $self.lexMain
+  #  )
+  #)
+  #echo (
+  #  (
+  #    "parseU64LitWithOptFuncCall: final 1: chk:" & $chk & " "
+  #  ) & (
+  #    $temp
+  #  )
+  #)
+  #echo ""
 
 proc subParseParenExpr(
   self: var Scone,
@@ -1184,20 +1220,25 @@ proc subParseParenExpr(
   discard doChkTok(tokLParen)
   discard self.parseExpr(chk=false)
   self.lexAndExpect(tokRParen)
+  discard self.optParse(
+    chk=false,
+    selProc=spp parseExprFuncCall,
+  )
 
 proc parseExprLowestNonOp(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  #echo "parseExprLowestNonOp: " & "chk:" & $chk & " " & $self.lexMain
+  #echo "parseExprLowestNonOp: pre: " & "chk:" & $chk & " " & $self.lexMain
   result = doChkSelParse(
     sppSeq @[
       parseExprIdentOrFuncCall,
-      parseU64Lit,
+      parseU64LitWithOptFuncCall,
       subParseParenExpr,
     ],
     none(HashSet[TokKind]),
   )[1]
+  #echo "parseExprLowestNonOp: post: " & "chk:" & $chk & " " & $self.lexMain
 
 proc subOptParseExprBinop(
   self: var Scone,

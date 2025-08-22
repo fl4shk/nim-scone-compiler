@@ -8,11 +8,14 @@ module test;
 #	#return a.x * b.x + a.y * b.y;
 #};
 
-def dot[T](a: Vec2[T], b: Vec2[T]) -> T {
-	#return a.x * b.x + a.y * b.y;
-};
-
-struct Vec2[T] {
-	x: T;
-	y: T;
+#def dot[T](a: Vec2[T], b: array[3 * f 4 ; Vec2[T]]) -> T {
+#	#return a.x * b.x + a.y * b.y;
+#};
+#
+#struct Vec2[T] {
+#	x: T;
+#	y: T;
+#};
+struct Temp {
+	x: array[3 plus 4; u32];
 };
