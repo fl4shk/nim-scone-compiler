@@ -807,7 +807,7 @@ proc parseGenericNamedImplItem(
   #self.lexAndExpect(tokAssign)
   result = self.subParseIdentAssign(chk=chk)
   if not chk:
-    discard self.parseTypeWithOptPreKwVar(chk=false)
+    discard self.parseTypeWithoutOptPreKwVar(chk=false)
   #discard self.parseType(chk=false)
 
 proc parseGenericNamedImplList(

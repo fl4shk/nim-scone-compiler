@@ -21,9 +21,9 @@ module:
 funcDecl:
 	'def' ident
 	( '[' genericDeclList ']' )?
-	'(' funcArgDeclList? ')' '->' typeWithOptPreKwVar '('
+	'(' funcArgDeclList? ')' '->' typeWithOptPreKwVar '{'
 		stmtList
-	')' ';'
+	'}' ';'
 	;
 
 funcArgDeclList:
