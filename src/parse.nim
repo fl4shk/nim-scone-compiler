@@ -75,24 +75,28 @@ template doChkTokSet(
   #result = none(SppResultMain)
   #result = SppResult(foundTok: none(TokKind))
   result.tokSet = argTokSet
-  result.foundTok = none(TokKind)
-  let hiddenMyTok = self.lexAndCheck(chk=chk, argTokSet)
+  #result.foundTok = none(TokKind)
+  #let hiddenMyTok = 
+  result.foundTok = (
+    self.lexAndCheck(chk=chk, argTokSet)
+  )
   if chk:
-    if hiddenMyTok.isSome:
-      #return some(SppResultMain(
-      #  tokSet: argTokSet,
-      #  foundTok: hiddenMyTok.get(),
-      #))
-      #return SppResult(
-      #  tokSet: argTokSet,
-      #  foundTok: hiddenMyTok,
-      #)
-      result.foundTok = hiddenMyTok
+    #if result.foundTok.isSome:
+    #  #return some(SppResultMain(
+    #  #  tokSet: argTokSet,
+    #  #  foundTok: hiddenMyTok.get(),
+    #  #))
+    #  #return SppResult(
+    #  #  tokSet: argTokSet,
+    #  #  foundTok: hiddenMyTok,
+    #  #)
+    #  result.foundTok = hiddenMyTok
     #else:
     #  #return none(SppResultMain)
     #  return
     return
-  hiddenMyTok
+  ##hiddenMyTok
+  result
 
 template doChkTok(
   argTok: untyped,
@@ -111,13 +115,15 @@ template doChkSpp(
   let hiddenMySppRet = selProc(self=self, chk=chk)
   if chk:
     return hiddenMySppRet
-  hiddenMySppRet
+  result = hiddenMySppRet
+  result
 
 template doChkSelParse(
   someSppSeq: untyped,
   optLastTokSet: untyped,
 ): untyped = 
   result.foundTok = none(TokKind)
+  #echo "doChkSelParse(): begin: chk:" & $chk
   let hiddenMySpp = self.selParse(
     chk=false,
     #sppSeq @[
@@ -126,13 +132,16 @@ template doChkSelParse(
     #],
     someSppSeq
   )
+  #echo "doChkSelParse(): post selParse: " & $self.lexMain
   if chk:
     if hiddenMySpp[1].foundTok.isSome:
+      #echo "doChkSelParse(): chk==true, returning: " & $hiddenMySpp
       return hiddenMySpp[1]
   elif hiddenMySpp[1].foundTok.isSome:
     discard hiddenMySpp[0](self=self, chk=chk)
   else:
     # this will be an error
+    #echo "this will be an error"
     if optLastTokSet.isSome:
       self.lexAndExpect(
         tokSet=hiddenMySpp[1].tokSet.union(optLastTokSet.get())
@@ -159,7 +168,12 @@ proc optParse(
   result = selProc(self=self, chk=true)
   if result.foundTok.isSome:
     if not chk:
-      result = selProc(self=self, chk=false)
+      #self.unstackSavedIlp()
+      #echo "optParse(): foundTok.isSome: not chk: returning"
+      return selProc(self=self, chk=false)
+  #echo "optParse(): chk: returning"
+  #self.unstackSavedIlp()
+      
   #let sppRet = selProc(self=self, chk=true)
   #if sppRet.foundTok.isSome:
   #  if chk:
@@ -169,37 +183,54 @@ proc optParse(
   #    return selProc(self=self, chk=false)
   #self.unstackSavedIlp()
 
-proc optParseThenExpect(
+proc optParseThenExpectTokSet(
   self: var Scone,
   chk: bool,
   selProc: SelParseProc,
   postTokSet: HashSet[TokKind],
 ): SppResult =
-  result = self.optParse(
-    chk=true,
-    selProc=selProc,
-  )
-  result.tokSet = result.tokSet.union(postTokSet)
-  self.stackSavedIlp()
-  self.lexAndExpect(result.tokSet)
-  self.unstackSavedIlp()
-  discard self.optParse(
-    chk=chk,
-    selProc=selProc,
-  )
+  #result = self.optParse(
+  #  chk=true,
+  #  selProc=selProc,
+  #)
   #if not result.foundTok.isSome:
   #  result.tokSet = result.tokSet.union(postTokSet)
   #  self.lexAndExpect(result.tokSet)
   #else:
   #  self.lexAndExpect(postTokSet)
 
-proc optParseThenExpect(
+  #result = self.optParse(
+  #  chk=true,
+  #  selProc=selProc,
+  #)
+  result = selProc(self=self, chk=true)
+  if chk:
+    #let postResult = postSelProc(self=self, chk=true)
+    let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
+    if result.foundTok.isSome:
+      discard
+    elif postFoundTok.isSome:
+      result.foundTok = postFoundTok
+    result.tokSet = result.tokSet.union(postTokSet)
+  else: # if not chk:
+    if not result.foundTok.isSome:
+      let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
+      if not postFoundTok.isSome:
+        # this will be an error
+        self.lexAndExpect(tokSet=result.tokSet.union(postTokSet))
+      else: # if postFoundTok.isSome:
+        self.lexAndExpect(tokSet=postTokSet)
+    else: # if result.foundTok.isSome:
+      result = selProc(self=self, chk=false)
+      self.lexAndExpect(tokSet=postTokSet)
+
+proc optParseThenExpectTokSeq(
   self: var Scone,
   chk: bool,
   selProc: SelParseProc,
   postTokSeq: seq[TokKind],
 ): SppResult =
-  result = self.optParseThenExpect(
+  result = self.optParseThenExpectTokSet(
     chk=chk,
     selProc=selProc,
     postTokSet=toHashSet(postTokSeq),
@@ -215,16 +246,58 @@ proc optParseThenExpectSpp(
   #  chk=true,
   #  selProc=selProc,
   #)
-  let temp = postSelProc(
-    self=self,
-    chk=true
-  )
-  #result.tokSet = result.tokSet.union(temp.tokSet)
-  result = self.optParseThenExpect(
-    chk=chk,
-    selProc=selProc,
-    postTokSet=temp.tokSet,
-  )
+  #let temp = postSelProc(
+  #  self=self,
+  #  chk=true
+  #)
+  ##result.tokSet = result.tokSet.union(temp.tokSet)
+  #result = self.optParseThenExpectTokSet(
+  #  chk=chk,
+  #  selProc=selProc,
+  #  postTokSet=temp.tokSet,
+  #)
+
+  #result = self.optParse(
+  #  chk=true,
+  #  selProc=selProc,
+  #)
+  result = selProc(self=self, chk=true)
+  if chk:
+    let postResult = postSelProc(self=self, chk=true)
+    if result.foundTok.isSome:
+      discard
+    elif postResult.foundTok.isSome:
+      result.foundTok = postResult.foundTok
+    result.tokSet = result.tokSet.union(postResult.tokSet)
+  else: # if not chk
+    #echo "not chk"
+    if not result.foundTok.isSome:
+      #echo "not result.foundTok.isSome: " & $result
+      #let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
+      let postResult = postSelProc(self=self, chk=true)
+      #echo "postResult: " & $postResult
+      if not postResult.foundTok.isSome:
+        #echo "postResult.foundTok.isSome == false"
+        # this will be an error
+        self.lexAndExpect(
+          tokSet=result.tokSet.union(postResult.tokSet),
+        )
+      else: # if postFoundTok.isSome:
+        #echo (
+        #  (
+        #    "postResult.foundTok.isSome == true: "
+        #  ) & (
+        #    #$postResult.foundTok.get()
+        #    $postResult & "  " & $self.lexMain
+        #  )
+        #)
+        #self.lexAndExpect(tokSet=postTokSet)
+        result = postSelProc(self=self, chk=false)
+    else: # if result.foundTok.isSome:
+      result = selProc(self=self, chk=false)
+      discard postSelProc(self=self, chk=false)
+      #self.lexAndExpect(tokSet=postTokSet)
+  #echo "following: " & $result & " " & $self.currTok
   
 
 
@@ -416,7 +489,7 @@ proc parseIdentList(
   chk: bool,
 ): SppResult =
   #discard doChkTok(tokIdent)
-  discard doChkSpp(parseIdent)
+  result = doChkSpp(parseIdent)
 
   if self.lexAndCheck(chk=true, tokComma).isSome:
     self.lex()
@@ -447,7 +520,9 @@ proc parseTypeArrDim(
   chk: bool,
 ): SppResult =
   discard doChkTok(tokLBracket)
+  #echo "parseTypeArrDim: lexMain: pre parseExpr: " & $self.lexMain
   discard self.parseExpr(chk=false)
+  #echo "parseTypeArrDim: lexMain: post parseExpr: " & $self.lexMain
   self.lexAndExpect(tokRBracket)
 
 proc parseTypeBuiltinScalar(
@@ -467,7 +542,7 @@ proc parseTypeToResolve(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkSpp(parseIdent)
+  result = doChkSpp(parseIdent)
   discard self.optParse(chk=false, selProc=spp subParseGenericImplList)
 
 proc parseTypeMain(
@@ -585,7 +660,7 @@ proc parseTypeWithOptPreKwVar(
     #self.lex()
     #echo "test 0: " & $self.currTok
     #self.unstackSavedIlp()
-    discard doChkSpp(parseTypeMain)
+    result = doChkSpp(parseTypeMain)
   
   #echo "haveVar:" & $haveVar & " ptrDim: " & $ptrDim
 
@@ -674,7 +749,7 @@ proc subParseFuncArgDeclList(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkSpp(parseIdentList)
+  result = doChkSpp(parseIdentList)
   self.lexAndExpect(tokColon)
   discard self.parseTypeWithOptPreKwVar(chk=false)
   self.lexAndExpect(tokComma)
@@ -692,7 +767,8 @@ proc parseFuncArgDeclList(
     discard self.lexAndCheck(chk=false, tok=tokColon)
     discard self.parseTypeWithOptPreKwVar(chk=false)
   else:
-    discard doChkSpp(subParseFuncArgDeclList)
+    result = doChkSpp(subParseFuncArgDeclList)
+    #echo "post result = doChkSpp(...)"
 
     discard self.loopSelParse(
       selProcSeq=(
@@ -709,7 +785,7 @@ proc parseFuncArgImplItem(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkSpp(parseIdent)
+  result = doChkSpp(parseIdent)
   self.lexAndExpect(tokAssign)
   discard self.parseExpr(chk=false)
 
@@ -784,10 +860,10 @@ proc parseExprFuncCallPostIdent(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  doAssert(
-    not chk,
-    "eek! " & $self.currTok
-  )
+  #doAssert(
+  #  not chk,
+  #  "eek! " & $self.currTok
+  #)
   #result = self.optParse(
   #  chk=true,
   #  selProc=subParseGenericImplList,
@@ -815,26 +891,52 @@ proc parseExprFuncCallPostIdent(
   #  chk=false,
   #  selProc=parseFuncArgImplList
   #)
-  result = self.optParseThenExpect(
-    chk=false,
+
+  #echo "parseExprFuncCallPostIdent(): pre: " & $self.lexMain
+  result = self.optParseThenExpectTokSeq(
+    chk=chk,
     selProc=subParseGenericImplList,
     postTokSeq=(@[tokLParen]),
   )
-  discard self.optParseThenExpect(
-    chk=false,
-    selProc=parseFuncArgImplList,
-    postTokSeq=(@[tokRParen]),
-  )
+  #echo "parseExprFuncCallPostIdent(): post: " & $self.lexMain
+  #if chk:
+  #  #echo "returning: " & $result
+  #  if not result.foundTok.isSome:
+  #    return
+  #echo "testificate: " & $result
+
+  if not chk:
+    #if not result.foundTok.isSome:
+    #  # this will be an error
+    #  self.lexAndExpect(result.tokSet)
+    #  #if result.foundTok.get() == tokLParen:
+    #  #  discard
+    #  #else:
+    #  #  discard
+    #echo "not chk"
+
+    discard self.optParseThenExpectTokSeq(
+      chk=chk,
+      selProc=parseFuncArgImplList,
+      postTokSeq=(@[tokRParen]),
+    )
 
 proc parseExprIdentOrFuncCall(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkSpp(parseIdent)
+  result = doChkSpp(parseIdent)
+  #echo "parseExprIdentOrFuncCall(): " & $chk & " " & $self.lexMain
   discard self.optParse(
     chk=false,
     selProc=spp parseExprFuncCallPostIdent,
   )
+
+proc parseU64Lit(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokU64Lit)
 
 proc subParseParenExpr(
   self: var Scone,
@@ -848,13 +950,15 @@ proc parseExprLowestNonOp(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkSelParse(
+  #echo "parseExprLowestNonOp: " & "chk:" & $chk & " " & $self.lexMain
+  result = doChkSelParse(
     sppSeq @[
       parseExprIdentOrFuncCall,
+      parseU64Lit,
       subParseParenExpr,
     ],
     none(HashSet[TokKind]),
-  )
+  )[1]
 
 proc subOptParseExprBinop(
   self: var Scone,
@@ -867,12 +971,26 @@ proc subOptParseExprBinop(
   ): SppResult =
     discard doChkTokSet(tokSet)
 
-  result = self.optParse(
-    chk=false,
-    selProc=tempParseFunc, 
-  )
-  if result.foundTok.isSome:
-    discard self.parseExpr(chk=false)
+  #echo "subOptParseExprBinop(): pre: " & $self.lexMain
+  #result = self.optParse(
+  #  chk=false,
+  #  selProc=tempParseFunc, 
+  #)
+  #result = self.tempParseFunc(chk=true)
+  #discard doChkTokSet(tokSet)
+  result = self.tempParseFunc(chk=true)
+  #echo (
+  #  (
+  #    "subOptParseExprBinop(): post: "
+  #  ) & (
+  #    $result & " " & $self.lexMain
+  #  )
+  #)
+  if not chk:
+    if result.foundTok.isSome:
+      result = self.tempParseFunc(chk=false)
+      #echo "testificate"
+      discard self.parseExpr(chk=false)
 
 proc subOptParseExprBinop(
   self: var Scone,
@@ -898,9 +1016,45 @@ proc parsePrefixUnary(
   chk: bool,
 ): SppResult =
   discard doChkTokSet(toHashSet([
-    tokPlus, tokMinus, tokLogicNot, tokBitInvert,
+    tokPlus, 
+    tokMinus, tokLogicNot, tokBitInvert,
     tokAddr
   ]))
+
+proc parseExprSuffixFieldMethodAccess(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  #echo (
+  #  (
+  #    "parseExprSuffixFieldMethodAccess(): pre tokDot: "
+  #  ) & (
+  #    $chk & " " & $self.lexMain
+  #  )
+  #)
+  discard doChkTok(tokDot)
+  #echo (
+  #  (
+  #    "parseExprSuffixFieldMethodAccess(): post tokDot: "
+  #  ) & (
+  #    $chk & " " & $self.lexMain
+  #  )
+  #)
+  self.parseExprIdentOrFuncCall(chk=false)
+
+proc parseExprSuffixDeref(
+  self: var Scone,
+  chk: bool,
+): SppResult = 
+  discard doChkTok(tokDeref)
+
+proc parseExprSuffixArray(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokLBrace)
+  discard self.parseExpr(chk=false)
+  discard doChkTok(tokRBrace)
 
 proc parseExprFieldArrEtcChoice(
   self: var Scone,
@@ -908,14 +1062,30 @@ proc parseExprFieldArrEtcChoice(
 ): SppResult =
   #result = self.selParse(
   #)
-  discard
+  let temp = self.selParse(
+    chk=chk,
+    selProcSeq=(
+      sppSeq @[
+        parseExprSuffixFieldMethodAccess,
+        parseExprSuffixDeref,
+        parseExprSuffixArray,
+      ]
+    )
+  )
+  if chk:
+    result = temp[1]
+  else: # if not chk:
+    result.foundTok = temp[0](self=self, chk=false).foundTok
+
+  #echo "parseExprFieldArrEtcChoice: post selParse: " & $chk & " " & $temp
+  #result = temp[1]
 
 proc parseExprFieldArrEtc(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkSpp(parseExprLowestNonOp)
-  self.loopSelParse(
+  result = doChkSpp(parseExprLowestNonOp)
+  discard self.loopSelParse(
     selProcSeq=(
       sppSeq @[parseExprFieldArrEtcChoice]
     ),
@@ -925,17 +1095,19 @@ proc parseExprUnary(
   self: var Scone,
   chk: bool,
 ): SppResult = 
+  #echo "parseExprUnary: lexMain: pre: " & $self.lexMain
   result = self.optParseThenExpectSpp(
     chk=chk,
     selProc=parsePrefixUnary,
     postSelProc=parseExprFieldArrEtc,
   )
+  #echo "parseExprUnary: lexMain: post: " & $self.lexMain
 
 proc parseExprMulDivMod(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprUnary)
+  result = doChkSpp(parseExprUnary)
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokMul, tokDiv, tokMod]),
@@ -945,7 +1117,7 @@ proc parseExprAddSub(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprMulDivMod)
+  result = doChkSpp(parseExprMulDivMod)
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokPlus, tokMinus]),
@@ -955,7 +1127,7 @@ proc parseExprBitShift(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprAddSub)
+  result = doChkSpp(parseExprAddSub)
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokBitShl, tokBitShr]),
@@ -965,7 +1137,7 @@ proc parseExprCmpIneq(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprBitShift)
+  result = doChkSpp(parseExprBitShift)
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokCmpLt, tokCmpLe, tokCmpGt, tokCmpGe]),
@@ -975,7 +1147,7 @@ proc parseExprCmpEqNe(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprCmpIneq)
+  result = doChkSpp(parseExprCmpIneq)
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokCmpEq, tokCmpNe]),
@@ -985,7 +1157,7 @@ proc parseExprBitAnd(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprCmpEqNe)
+  result = doChkSpp(parseExprCmpEqNe)
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokBitAnd,
@@ -995,7 +1167,7 @@ proc parseExprBitXor(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprBitAnd)
+  result = doChkSpp(parseExprBitAnd)
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokBitXor,
@@ -1005,7 +1177,7 @@ proc parseExprBitOr(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprBitXor)
+  result = doChkSpp(parseExprBitXor)
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokBitOr,
@@ -1015,7 +1187,7 @@ proc parseExprLogicAnd(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprBitOr)
+  result = doChkSpp(parseExprBitOr)
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokLogicAnd,
@@ -1025,7 +1197,7 @@ proc parseExprLogicOr(
   self: var Scone,
   chk: bool,
 ): SppResult = 
-  discard doChkSpp(parseExprLogicAnd)
+  result = doChkSpp(parseExprLogicAnd)
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokLogicOr,

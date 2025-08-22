@@ -13,7 +13,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   #("tokLineComent", none(string)),    # start of line comment
   #--------
   ("tokIdent", none(string)),  # identifiers
-  ("tokUInt64Lit", none(string)), # 0-9, hex numbers, binary numbers, etc.
+  ("tokU64Lit", none(string)), # 0-9, hex numbers, binary numbers, etc.
   ("tokStrLit", none(string)), # string literals
   #--------
   ("tokTrue", some("true")),

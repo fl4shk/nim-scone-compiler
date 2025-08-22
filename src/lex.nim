@@ -18,11 +18,16 @@ proc lex*(
     amount: int=1,
     doIncrLocInLine: bool=true,
   ) =
+    #doAssert(
+    #  self.inpChar != '2'
+    #)
     #echo (
     #  (
     #    "incrInpIdx(): "
     #  ) & (
     #    "inpIdx:" & $self.inpIdx & " locInLine:" & $self.locInLine
+    #  ) & (
+    #    "   inpChar:" & self.inpChar & " amount:" & $amount
     #  )
     #)
     if doIncrLocInLine:
@@ -47,7 +52,7 @@ proc lex*(
           self.lineNum += 1
           self.locInLine() = 1
 
-        self.incrInpIdx(doIncrLocInLine=tempCond)
+        self.incrInpIdx(doIncrLocInLine=not tempCond)
         #if tempCond:
         #  self.locInLine = 1
       else:
@@ -55,9 +60,9 @@ proc lex*(
     if self.inpIdx >= self.inp.len():
       return true
 
-  while true:
-    if self.eatWhitespace():
-      break
+  while not self.eatWhitespace():
+    #if self.eatWhitespace():
+    #  break
     if self.inpChar == '#':
       self.incrInpIdx(doIncrLocInLine=true)
       var tempCond = false
@@ -113,11 +118,13 @@ proc lex*(
       #  )
       #)
       self.incrInpIdx(amount=prevLongestSize[0])
+      #echo "kwTempStr[1][0] debug: " & self.inpChar
       #echo "debug: " & self.inp[self.inpIdx .. ^1]
       return
 
   # check identifiers first
   if self.inpChar in IdentStartChars:
+    #echo "self.inpChar in IdentStartChars" 
     var tempStr: string
     tempStr.add self.inpChar
     #self.inpIdx += 1
@@ -158,14 +165,16 @@ proc lex*(
   proc handleDigits(
     self: var Scone,
     myRangeEnd: Option[char],
+    doInitialIncr: bool=true,
   ) =
     #self.inpIdx += 1
-    self.incrInpIdx()
+    if doInitialIncr:
+      self.incrInpIdx()
     if self.inpIdx >= self.inp.len():
       return
 
     self.currTok() = (
-      mkCurrTok(tokUInt64Lit, none(string), some(0u64))
+      mkCurrTok(tokU64Lit, none(string), some(0u64))
     )
 
     var tempMul: uint64 = 0u64
@@ -191,6 +200,8 @@ proc lex*(
     ):
       var toSubChar: int32 = int32('0')
       var myAddend: int32 = 0
+      toSubChar = int32('0')
+      myAddend = 0
       if not myRangeEnd.isSome:
         if self.inpChar in hexLowerDigits:
           #echo "have hexLowerDigits: " & self.inpChar
@@ -210,14 +221,33 @@ proc lex*(
       let tempCond = (
         tempInt32 >= 0 and tempInt32 < int32(tempMul)
       )
+      if myRangeEnd.isSome:
+        discard
+        #echo (
+        #  (
+        #    "debug: tempInt32, tempCond: "
+        #  ) & (
+        #    $(self.inpChar, tempInt32, tempCond)
+        #  )
+        #)
       if tempCond:
-        #echo $tempInt32 & " " & $tempU64
+        if myRangeEnd.isSome:
+          #echo "before: " & $tempInt32.uint64() & " " & $tempU64
+          discard
         tempU64 *= tempMul
         tempU64 += tempInt32.uint64()
+        if myRangeEnd.isSome:
+          #echo "after: " & $tempInt32 & " " & $tempU64
+          discard
       else:
+        if myRangeEnd.isSome:
+          #echo "break: " & $tempInt32 & " " & $tempU64
+          discard
+        #self.incrInpIdx()
         break
 
       #self.inpIdx += 1
+      #if not finish:
       self.incrInpIdx()
 
     self.currTok.optU64 = some(tempU64)
@@ -225,7 +255,11 @@ proc lex*(
 
   const postZeroDigits = {'1' .. '9'}
   if self.inpChar == '0':
+    self.currTok() = (
+      mkCurrTok(tokU64Lit, none(string), some(0u64))
+    )
     #self.inpIdx += 1
+    #self.currTok.optU64 = some(0u64)
 
     if self.inpIdx + 1 < self.inp.len():
       #self.inpIdx += 1
@@ -241,10 +275,17 @@ proc lex*(
       of 'b':
         self.handleDigits(myRangeEnd=some('1'))
       elif self.inpChar in postZeroDigits:
-        self.handleDigits(myRangeEnd=some('9'))
+        self.handleDigits(myRangeEnd=some('9'), doInitialIncr=false)
+    #echo "orig: self.inpChar == : '0': " & $self.currTok
     return
   elif self.inpChar in postZeroDigits:
-    self.handleDigits(myRangeEnd=some('9'))
+    self.currTok() = (
+      mkCurrTok(tokU64Lit, none(string), some(0u64))
+    )
+    self.handleDigits(myRangeEnd=some('9'), doInitialIncr=false)
+    #echo "self.inpChar in postZeroDigits: " & $self.currTok
+
+  #echo "post handleDigits(): \"" & self.inpChar & "\""
 
   if self.inpChar == '"':
     discard

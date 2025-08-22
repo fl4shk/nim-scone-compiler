@@ -154,7 +154,7 @@ assignStmt:
 	;
 //--------
 exprLowestNonOp:
-	exprIdentOrFuncCall | /*literal |*/ '(' expr ')'
+	exprIdentOrFuncCall | literal | '(' expr ')'
 	;
 
 expr:
@@ -264,7 +264,7 @@ exprFieldArrEtc:
 	exprLowestNonOp exprFieldArrEtcChoice*
 	;
 exprFieldArrEtcChoice:
-	exprSuffixFieldAccess
+	exprSuffixFieldMethodAccess
 	//| exprSuffixMethodCall
 	| exprSuffixDeref
 	| exprSuffixArray
