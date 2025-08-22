@@ -1079,6 +1079,7 @@ proc parseStructDecl(
     selProcSeq=(
       sppSeq @[parseVarDeclEtcMost]
     ),
+    sepTok=some(tokSemicolon)
   )
   self.lexAndExpect(tokRBrace)
   self.lexAndExpect(tokSemicolon)

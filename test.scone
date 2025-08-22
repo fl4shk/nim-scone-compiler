@@ -13,6 +13,6 @@ def dot[T](a: Vec2[T], b: Vec2[T]) -> T {
 };
 
 struct Vec2[T] {
-	#x: T;
-	#y: T;
+	x: T;
+	y: T;
 };
