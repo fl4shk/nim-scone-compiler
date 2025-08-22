@@ -376,6 +376,7 @@ proc loopSelParse(
   sepTok: Option[TokKind]=none(TokKind),
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
+  haveForcedEndSepTok: bool=false,
 ): SppResult =
   #result = self.selParse(chk=true, selProcSet=selProcSet)[1]
   result.foundTok = none(TokKind)
@@ -402,23 +403,40 @@ proc loopSelParse(
     mySpp = self.selParse(chk=true, selProcSet=selProcSet)
 
   if not result.foundTok.isSome and not didBreak and haveOptEndSepTok:
+      doAssert(
+        not haveForcedEndSepTok
+      )
+      doAssert(
+        sepTok.isSome
+      )
+      self.stackSavedIlp()
+      self.lex()
+      let haveSepTok = (
+        self.currTok.tok == sepTok.get()
+      )
+      self.unstackSavedIlp()
+      if haveSepTok:
+        self.lex()
+  if haveForcedEndSepTok:
+    #echo "inside if haveForcedEndSepTok: " & $self.lexMain
+    doAssert(
+      not haveOptEndSepTok
+    )
     doAssert(
       sepTok.isSome
     )
-    self.stackSavedIlp()
-    self.lex()
-    let haveSepTok = (
-      self.currTok.tok == sepTok.get()
-    )
-    self.unstackSavedIlp()
-    if haveSepTok:
-      self.lex()
+    if didBreak:
+      self.lexAndExpect(sepTok.get())
+    else:
+      self.expect(sepTok.get())
+      
 
 proc loopSelParse(
   self: var Scone,
   selProcSeq: seq[SelParseProc],
   sepTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
+  haveForcedEndSepTok: bool=false,
 ): SppResult =
   #var tempSelProcSeq: seq[SelParseProc]
   #for selProc in selProcArr:
@@ -427,6 +445,7 @@ proc loopSelParse(
     selProcSet=toHashSet(selProcSeq),
     sepTok=sepTok,
     haveOptEndSepTok=haveOptEndSepTok,
+    haveForcedEndSepTok=haveForcedEndSepTok,
   )
 
 # `req` is short for `required`
@@ -437,12 +456,14 @@ proc reqLoopSelParse(
   sepTok: Option[TokKind]=none(TokKind),
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
+  haveForcedEndSepTok: bool=false,
 ): SppResult = 
   #echo "reqLoopSelParse(): " & $self.currTok
   result = self.loopSelParse(
     selProcSet=selProcSet,
     sepTok=sepTok,
     haveOptEndSepTok=haveOptEndSepTok,
+    haveForcedEndSepTok=haveForcedEndSepTok,
   )
   if not result.foundTok.isSome:
     #echo "not result.foundTok.isSome: " & $result & " " & $self.currTok
@@ -1075,11 +1096,13 @@ proc parseStructDecl(
 
   self.lexAndExpect(tokLBrace)
   # fields go here
+  #echo "test"
   discard self.loopSelParse(
     selProcSeq=(
       sppSeq @[parseVarDeclEtcMost]
     ),
-    sepTok=some(tokSemicolon)
+    sepTok=some(tokSemicolon),
+    haveForcedEndSepTok=true,
   )
   self.lexAndExpect(tokRBrace)
   self.lexAndExpect(tokSemicolon)
@@ -1452,6 +1475,7 @@ proc parseSrcFile*(
       mySppSeq
     )
   else:
+    # this *may* be an error
     self.lexAndExpect(
       temp[1].tokSet.union(toHashSet([tokEof]))
     )
