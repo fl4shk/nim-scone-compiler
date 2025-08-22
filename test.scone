@@ -1,8 +1,13 @@
 module test;
 
-def main{T}(a, b: Vec2{T=u32}[+!ba[].f(t=24) + 0x13], result: i32)(
-	#var c: i32;
-);
+#def main{T}(a, b: Vec2{T=T}[+(!ba)[].f(t=24) + 0x13], result: i32)(
+#	#var c: i32;
+#);
 
-struct Vec2{T}(
-);
+def dot[T](a, b: array[3; Vec2[T=T]]) -> T {
+	#return a.x * b.x + a.y * b.y;
+};
+
+struct Vec2[T] {
+	#x, y: T;
+};

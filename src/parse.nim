@@ -502,10 +502,14 @@ proc parseExpr(
   self: var Scone,
   chk: bool,
 ): SppResult
-proc parseTypeWithOptPreKwVar(
+proc parseType(
   self: var Scone,
   chk: bool,
 ): SppResult
+#proc parseTypeWithOptPreKwVar(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult
 proc subParseGenericImplList(
   self: var Scone,
   chk: bool,
@@ -722,7 +726,8 @@ proc parseGenericImplItem(
   if chk:
     return
   self.lexAndExpect(tokAssign)
-  discard self.parseTypeWithOptPreKwVar(chk=false)
+  #discard self.parseTypeWithOptPreKwVar(chk=false)
+  discard self.parseType(chk=false)
 
 proc parseGenericImplList(
   self: var Scone,
@@ -752,7 +757,7 @@ proc subParseFuncArgDeclList(
   result = doChkSpp(parseIdentList)
   self.lexAndExpect(tokColon)
   discard self.parseTypeWithOptPreKwVar(chk=false)
-  self.lexAndExpect(tokComma)
+  #self.lexAndExpect(tokComma)
 
 proc parseFuncArgDeclList(
   self: var Scone,
@@ -760,13 +765,17 @@ proc parseFuncArgDeclList(
 ): SppResult =
   let haveNoArgs = self.lexAndCheck(
     chk=true,
-    tok=tokResult,
+    tok=(
+      #tokResult
+      tokRParen
+    ),
   )
   if haveNoArgs.isSome:
-    discard doChkTok(tokResult)
-    discard self.lexAndCheck(chk=false, tok=tokColon)
-    discard self.parseTypeWithOptPreKwVar(chk=false)
-  else:
+    #discard doChkTok(tokResult)
+    #discard self.lexAndCheck(chk=false, tok=tokColon)
+    #discard self.parseTypeWithOptPreKwVar(chk=false)
+    discard
+  else: # if not haveNoArgs.isSome:
     result = doChkSpp(subParseFuncArgDeclList)
     #echo "post result = doChkSpp(...)"
 
@@ -777,9 +786,9 @@ proc parseFuncArgDeclList(
       sepTok=some(tokComma),
       haveOptEndSepTok=true,
     )
-    discard self.lexAndCheck(chk=false, tok=tokResult)
-    discard self.lexAndCheck(chk=false, tok=tokColon)
-    discard self.parseTypeWithOptPreKwVar(chk=false)
+    #discard self.lexAndCheck(chk=false, tok=tokResult)
+    #discard self.lexAndCheck(chk=false, tok=tokColon)
+    #discard self.parseTypeWithOptPreKwVar(chk=false)
 
 proc parseFuncArgImplItem(
   self: var Scone,
@@ -824,6 +833,8 @@ proc parseFuncDecl(
   # args go here
   discard self.parseFuncArgDeclList(chk=false)
   self.lexAndExpect(tokRParen)
+  self.lexAndExpect(tokFuncReturnTypePrefix)
+  discard self.parseTypeWithOptPreKwVar(chk=false)
 
   self.lexAndExpect(tokLParen)
   # stmts go here

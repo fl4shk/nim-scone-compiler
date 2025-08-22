@@ -20,32 +20,38 @@ module:
 
 funcDecl:
 	'def' ident
-	( '{' genericDeclList '}' )?
-	'(' funcArgDeclList ')' '('
+	( '[' genericDeclList ']' )?
+	'(' funcArgDeclList? ')' '->' typeWithOptPreKwVar '('
 		stmtList
 	')' ';'
 	;
 
 funcArgDeclList:
-	( identList ':' typeWithOptPreKwVar ',' )* 
-	'result' ':' typeWithOptPreKwVar //typeWithoutOptPreKwVar
+	( identList ':' typeWithOptPreKwVar ',' )+
+	//'result' ':' type //typeWithoutOptPreKwVar
 	;
 
-funcArgImplList:
-	funcArgImplItem ( ',' funcArgImplItem )* ',' ?
+funcNamedArgImplList:
+	//'$' 
+	funcNamedArgImplItem (',' funcNamedArgImplItem )* ',' ?
+	//| expr (',' expr)* (',') ?
 	//| expr
 	;
 
-funcArgImplItem:
+funcNamedArgImplItem:
 	ident '=' expr
+	;
+
+funcUnnamedArgList:
+	expr (',' expr)* (',')?
 	;
 
 structDecl:
 	'struct' ident
-	( '{' genericDeclList '}' )?
-	'('
+	( '[' genericDeclList ']' )?
+	'{'
 		( varEtcDeclMost ';' )*
-	')'
+	'}'
 	;
 
 identList:
@@ -54,7 +60,7 @@ identList:
 
 
 varEtcDeclMost: // "Most" is short for "Most of it"
-	identList ':' typeWithOptPreKwVar
+	identList ':' typeWithoutOptPreKwVar
 	;
 
 //--------
@@ -89,52 +95,52 @@ continueStmt:
 	;
 
 forStmt:
-	'for' '(' ident 'in' expr ('to' | 'until') expr ')' '('
+	'for' '(' ident 'in' expr ('to' | 'until') expr ')' '{'
 		stmtList
-	')'
+	'}'
 	;
 
 whileStmt:
-	'while' '(' expr ')' '('
+	'while' '(' expr ')' '{'
 		stmtList
-	')'
+	'}'
 	;
 
 ifStmt:
-	'if' '(' expr ')' '('
+	'if' '(' expr ')' '{'
 		stmtList
-	')'
+	'}'
 	elifStmt*
 	elseStmt?
 	;
 elifStmt:
-	'elif' '(' expr ')' '('
+	'elif' '(' expr ')' '{'
 		stmtList
-	')'
+	'}'
 	;
 elseStmt:
-	'else' '('
+	'else' '{'
 		stmtList
-	')'
+	'}'
 	;
 
 switchStmt:
 	'switch' '('
 		expr
-	')' '('
+	')' '{'
 		caseStmt*
 		defaultStmt?
-	')'
+	'}'
 	;
 caseStmt:
-	'case' '(' expr ')' '('
+	'case' '(' expr ')' '{'
 		stmtList
-	')'
+	'}'
 	;
 defaultStmt:
-	'default' '('
+	'default' '{'
 		stmtList
-	')'
+	'}'
 	;
 
 returnStmt:
@@ -157,6 +163,10 @@ exprLowestNonOp:
 	exprIdentOrFuncCall | literal | '(' expr ')'
 	;
 
+//exprList:
+//	expr (',' expr)* ','
+//	;
+
 expr:
 	//exprLowestNonOp
 	//| 
@@ -164,75 +174,35 @@ expr:
 	;
 
 exprLogicOr:
-	exprLogicAnd
-	(
-		'||'
-		expr
-	)?
+	exprLogicAnd ('||' expr)?
 	;
 exprLogicAnd:
-	exprBitOr
-	(
-		'&&'
-		expr
-	)?
+	exprBitOr ('&&' expr)?
 	;
 exprBitOr:
-	exprBitXor
-	(
-		'|'
-		expr
-	)?
+	exprBitXor ('|' expr)?
 	;
 exprBitXor:
-	exprBitAnd
-	(
-		'^'
-		expr
-	)?
+	exprBitAnd ('^' expr)?
 	;
 exprBitAnd:
-	exprCmpEqNe
-	(
-		'&'
-		expr
-	)?
+	exprCmpEqNe ('&' expr)?
 	;
 exprCmpEqNe:
-	exprCmpIneq
-	(
-		('==' | '!=')
-		expr
-	)?
+	exprCmpIneq (('==' | '!=') expr)?
 	;
 exprCmpIneq:
 	//exprCmpEqNe
-	exprBitShift
-	(
-		('<' | '<=' | '>' | '>=')
-		expr
-	)?
+	exprBitShift (('<' | '<=' | '>' | '>=') expr)?
 	;
 exprBitShift:
-	exprAddSub
-	(
-		('<<' | '>>')
-		expr
-	)?
+	exprAddSub (('<<' | '>>') expr)?
 	;
 exprAddSub:
-	exprMulDivMod
-	(
-		('+' | '-')
-		expr
-	)?
+	exprMulDivMod (('+' | '-') expr)?
 	;
 exprMulDivMod:
-	exprUnary
-	(
-		('*' | '/' | '%')
-		expr
-	)?
+	exprUnary (('*' | '/' | '%') expr)?
 	;
 
 exprUnary:
@@ -295,92 +265,48 @@ exprIdentOrFuncCall:
 							// a function or method
 	;
 exprFuncCallPostIdent:
-	( '{' genericImplList '}' )? 
-	'('
-		funcArgImplList?
+	//( '[' genericImplList ']' )? 
+	genericFullImplList?
+	(
+		'$(' funcNamedArgImplList?
+		| '(' funcUnnamedArgList?
+	)
 	')'
 	;
-
-//exprFuncCallMain:
-//	ident ( '{' genericImplList '}' )? 
-//	'('
-//		funcArgImplList?
-//	')'
-//	;
-
-
-//exprFieldArrEtc:
-//	(
-//		exprPrefixUnary expr
-//	) | (
-//		exprPrio1
-//		(
-//			exprSuffixFieldAccess
-//			| exprSuffixMethodCall
-//			| exprSuffixDeref
-//			| exprSuffixArray
-//		)*
-//	)
-//	;
-//--------
-
-//	;
-
-//expr:
-//	exprPrio1
-//	(
-//		(
-//			'.' ident // struct field access
-//			'.@' exprFuncCall
-//		)
-//		expr
-//	)?
-//	;
-//expr:
-//	exprPrio1
-//	(
-//		(
-//			'.' ident				// struct field access
-//			| '[]'					// pointer dereference
-//			| ( '[' expr ']' )	// array access
-//			| ( '@' exprFuncCall )	// function call
-//			//| ( '$' exprMacroCall	) // macro call (add this later)
-//		)
-//		expr
-//	)?
-//	;
-//
-//exprPrio1:
-//	exprPrio2
-//	(
-//		expr
-//	)?
-//	;
-
 //--------
 
 typeMain:
 	typeBuiltinScalar
 	| typeToResolve
+	| typeArray
+	//| 'array' '[' expr (',' expr)* ':' typeWithoutOptPreKwVar ']'
 	//| 'array' '{'
 	//	('dim' '=')? expr ','
 	//	('ElemT' '=')? typeWithoutOptPreKwVar
 	//'}'
 	;
 
-
-typeArrDim:
-	'[' expr ']'
+typeArray:
+	'array' '[' expr (',' expr)* ';' typeWithoutOptPreKwVar ']'
 	;
 
-//typeWithoutOptPreKwVar:
-//	('ptr')* typeMain typeArrDim*
+
+typeWithoutOptPreKwVar:
+	('ptr')* typeMain //typeArrDim*
+	;
 typeWithOptPreKwVar:
-	('var' | 'ptr'+ )? typeMain typeArrDim*
+	('var' | 'ptr'+ )?
+	(
+		typeMain //typeArrDim*
+	)
 	;
 
 typeToResolve:
-	ident ( '{' genericImplList '}' )?
+	ident
+	(
+		//'[' genericImplList ']' 
+		genericFullImplList
+	)?
 	;
 
 typeBuiltinScalar:
@@ -400,14 +326,22 @@ genericDeclItem:
 	ident
 	;
 
-genericImplList:
-	genericImplItem ( ',' genericImplItem )* ',' ?
+genericFullImplList:
+	(
+		'$[' genericNamedImplList 
+		| '[' genericUnnamedImplList
+	)
+	']'
+
+genericNamedImplList:
+	genericNamedImplItem ( ',' genericNamedImplItem )* ',' ?
 	;
 
-genericImplItem:
-	ident '=' typeWithOptPreKwVar
-	// `var` will simply be ignored if this `genericImplList` is for a
-	// `struct` field
+genericNamedImplItem:
+	ident '=' typeWithoutOptPreKwVar
+	;
+genericUnnamedImplList:
+	typeWithoutOptPreKwVar (',' typeWithoutOptPreKwVar)* ',' ?
 	;
 
 ident:

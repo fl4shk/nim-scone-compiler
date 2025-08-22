@@ -37,6 +37,10 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokVar", some("var")),
   ("tokConst", some("const")),
   ("tokDef", some("def")),
+  ("tokFuncReturnTypePrefix", some("->")),
+  ("tokFuncNamedArgListStart", some("$(")),
+  ("tokGenericNamedArgListStart", some("[")),
+  ("tokArray", some("array")),
   #("tokMacro", some("macro")),
       # Maybe save `macro` for the bootstrapped compiler?
       # I'm not sure I outright need macros for this version of the
