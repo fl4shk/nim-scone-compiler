@@ -42,8 +42,8 @@ funcNamedArgImplItem:
 	ident '=' expr
 	;
 
-funcUnnamedArgList:
-	expr (',' expr)* (',')?
+funcUnnamedArgImplList:
+	expr (',' expr)*
 	;
 
 structDecl:
@@ -267,12 +267,19 @@ exprIdentOrFuncCall:
 exprFuncCallPostIdent:
 	//( '[' genericImplList ']' )? 
 	genericFullImplList?
-	(
-		'$(' funcNamedArgImplList?
-		| '(' funcUnnamedArgList?
-	)
+	exprFuncCallPostGeneric
+	;
+exprFuncCallPostGeneric:
+	//'$(' funcNamedArgImplList? ')'
+	//| '(' funcUnnamedArgImplList? ')'
+	'(' 
+		(
+			funcUnnamedArgImplList (',' funcNamedArgImplList?)?
+			| funcNamedArgImplList
+		)?
 	')'
 	;
+	
 //--------
 
 typeMain:
@@ -328,20 +335,27 @@ genericDeclItem:
 
 genericFullImplList:
 	(
-		'$[' genericNamedImplList 
-		| '[' genericUnnamedImplList
+		//'$[' genericNamedImplList 
+		//| '[' genericUnnamedImplList
+		'['
+			(
+				genericUnnamedImplList (',' genericNamedImplList?)?
+				| genericNamedImplList
+			)
+		']'
 	)
-	']'
+	//']'
+	;
 
 genericNamedImplList:
-	genericNamedImplItem ( ',' genericNamedImplItem )* ',' ?
+	genericNamedImplItem (',' genericNamedImplItem)* ',' ?
 	;
 
 genericNamedImplItem:
 	ident '=' typeWithoutOptPreKwVar
 	;
 genericUnnamedImplList:
-	typeWithoutOptPreKwVar (',' typeWithoutOptPreKwVar)* ',' ?
+	typeWithoutOptPreKwVar (',' typeWithoutOptPreKwVar)* //',' ?
 	;
 
 ident:

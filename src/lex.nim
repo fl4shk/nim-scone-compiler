@@ -10,7 +10,17 @@ proc inpChar(
 ): char =
   result = self.inp[self.inpIdx]
 
+proc lexInternal*(
+  self: var Scone,
+)
+
 proc lex*(
+  self: var Scone,
+) =
+  self.lexInternal()
+  #echo "lex result: " & $self.lexMain
+  
+proc lexInternal*(
   self: var Scone,
 ) =
   proc incrInpIdx(
@@ -50,9 +60,9 @@ proc lex*(
         if tempCond:
           #echo "increment lineNum: " & $self.lineNum & " " & $self.locInLine
           self.lineNum += 1
-          self.locInLine() = 1
+          self.locInLine() = 0
 
-        self.incrInpIdx(doIncrLocInLine=not tempCond)
+        self.incrInpIdx(doIncrLocInLine=true)
         #if tempCond:
         #  self.locInLine = 1
       else:
@@ -60,16 +70,18 @@ proc lex*(
     if self.inpIdx >= self.inp.len():
       return true
 
-  while not self.eatWhitespace():
-    #if self.eatWhitespace():
-    #  break
+  while true: #not self.eatWhitespace():
+    if self.eatWhitespace():
+      break
     if self.inpChar == '#':
       self.incrInpIdx(doIncrLocInLine=true)
       var tempCond = false
       while (self.inpIdx < self.inp.len()) and not tempCond:
         if self.inpChar == '\n':
           tempCond = true
-        self.incrInpIdx(doIncrLocInLine=true)
+        self.incrInpIdx(doIncrLocInLine=false)
+      self.lineNum += 1
+      self.locInLine() = 1
     else:
       break
 
@@ -348,15 +360,16 @@ proc lexAndCheck*(
   #someSpp: SelParseProc,
 ): Option[TokKind] =
   result = none(TokKind)
-  if chk:
-    self.stackSavedIlp()
-    self.lex()
-    #if not someSpp(self=self, chk=chk):
-    #  result = true
-    if self.currTok.tok in tokSet:
-      result = some(self.currTok.tok)
-    self.unstackSavedIlp()
-  else:
+  #if chk:
+  self.stackSavedIlp()
+  self.lex()
+  #if not someSpp(self=self, chk=chk):
+  #  result = true
+  if self.currTok.tok in tokSet:
+    result = some(self.currTok.tok)
+  self.unstackSavedIlp()
+  if not chk:
+  #else:
     self.lexAndExpect(tokSet)
 
 proc lexAndCheck*(

@@ -4,7 +4,10 @@ module test;
 #	#var c: i32;
 #);
 
-def dot[T](a, b: array[3; Vec2[T=T]]) -> T {
+#def dot[T](a, b: array[3; Vec2[T=T]]) -> T {
+#	#return a.x * b.x + a.y * b.y;
+#};
+def dot[T](a, i, b: ptr array[2; ptr Vec2[T]]) -> T {
 	#return a.x * b.x + a.y * b.y;
 };
 

@@ -42,6 +42,7 @@ type
   SppResult* = object
     tokSet*: HashSet[TokKind]
     foundTok*: Option[TokKind]
+    foundTok1*: Option[TokKind]
   #SppResult* = SppResult
 
 type
@@ -317,6 +318,7 @@ proc selParse(
     result[1].tokSet = result[1].tokSet.union(sppRet.tokSet)
 
     if sppRet.foundTok.isSome:
+      result[0] = selProc
       if chk:
         result[1].foundTok = sppRet.foundTok
       else:
@@ -375,17 +377,19 @@ proc loopSelParse(
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
 ): SppResult =
-  result = self.selParse(chk=true, selProcSet=selProcSet)[1]
+  #result = self.selParse(chk=true, selProcSet=selProcSet)[1]
+  result.foundTok = none(TokKind)
+  result.foundTok1 = none(TokKind)
   #echo "loopSelParse: result:" & $result
 
-  var mySpp = self.selParse(chk=false, selProcSet=selProcSet)
+  var mySpp = self.selParse(chk=true, selProcSet=selProcSet)
   #echo "mySpp:" & $mySpp
 
   # result is if we found any valid token at all
   var didBreak: bool = false
   #var limitCnt: int = -1
   while mySpp[1].foundTok.isSome:
-    discard mySpp[0](self=self, chk=false)
+    result = mySpp[0](self=self, chk=false)
     if sepTok.isSome:
       self.stackSavedIlp()
       self.lex()
@@ -395,7 +399,7 @@ proc loopSelParse(
         break
       self.unstackSavedIlp()
       self.lex()
-    mySpp = self.selParse(chk=false, selProcSet=selProcSet)
+    mySpp = self.selParse(chk=true, selProcSet=selProcSet)
 
   if not result.foundTok.isSome and not didBreak and haveOptEndSepTok:
     doAssert(
@@ -484,6 +488,27 @@ proc parseIdent(
   #echo "parseIdent(): adding this ident: " & tempStr
   self.identStrS2d[^1].add tempStr
 
+proc subParseIdentAssign(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  if chk:
+    result.foundTok = none(TokKind)
+    result.foundTok1 = none(TokKind)
+
+    self.stackSavedIlp()
+    self.lex()
+    if self.currTok.tok == tokIdent:
+      self.lex()
+      if self.currTok.tok == tokAssign:
+        result.foundTok = some(tokIdent)
+        result.foundTok1 = some(tokAssign)
+    self.unstackSavedIlp()
+  else:
+    #self.lexAndExpect(tokIdent)
+    result = self.parseIdent(chk=false)
+    self.lexAndExpect(tokAssign)
+
 proc parseIdentList(
   self: var Scone,
   chk: bool,
@@ -502,32 +527,36 @@ proc parseExpr(
   self: var Scone,
   chk: bool,
 ): SppResult
-proc parseType(
-  self: var Scone,
-  chk: bool,
-): SppResult
-#proc parseTypeWithOptPreKwVar(
+#proc parseType(
 #  self: var Scone,
 #  chk: bool,
 #): SppResult
-proc subParseGenericImplList(
+proc parseTypeWithOptPreKwVar(
   self: var Scone,
   chk: bool,
 ): SppResult
-proc parseGenericImplList(
+proc parseTypeWithoutOptPreKwVar(
+  self: var Scone,
+  chk: bool,
+): SppResult
+proc parseGenericFullImplList(
+  self: var Scone,
+  chk: bool,
+): SppResult
+proc parseGenericNamedImplList(
   self: var Scone,
   #chk: bool,
 )
 
-proc parseTypeArrDim(
-  self: var Scone,
-  chk: bool,
-): SppResult =
-  discard doChkTok(tokLBracket)
-  #echo "parseTypeArrDim: lexMain: pre parseExpr: " & $self.lexMain
-  discard self.parseExpr(chk=false)
-  #echo "parseTypeArrDim: lexMain: post parseExpr: " & $self.lexMain
-  self.lexAndExpect(tokRBracket)
+#proc parseTypeArrDim(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  discard doChkTok(tokLBracket)
+#  #echo "parseTypeArrDim: lexMain: pre parseExpr: " & $self.lexMain
+#  discard self.parseExpr(chk=false)
+#  #echo "parseTypeArrDim: lexMain: post parseExpr: " & $self.lexMain
+#  self.lexAndExpect(tokRBracket)
 
 proc parseTypeBuiltinScalar(
   self: var Scone,
@@ -546,8 +575,28 @@ proc parseTypeToResolve(
   self: var Scone,
   chk: bool,
 ): SppResult =
+  #echo "parseTypeToResolve() begin: chk:" & $chk
   result = doChkSpp(parseIdent)
-  discard self.optParse(chk=false, selProc=spp subParseGenericImplList)
+  #discard self.parseIdent(chk=false)
+  #echo "parseTypeToResolve() post ident `result`: " & $result
+  #echo "parseTypeToResolve() post ident `lexMain`: " & $self.lexMain
+  discard self.optParse(chk=false, selProc=spp parseGenericFullImplList)
+
+proc parseTypeArray(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokArray)
+  self.lexAndExpect(tokLBracket)
+
+  discard self.loopSelParse(
+    selProcSeq=sppSeq @[parseExpr],
+    sepTok=some(tokComma),
+    haveOptEndSepTok=false,
+  )
+  self.lexAndExpect(tokSemicolon)
+  discard self.parseTypeWithoutOptPreKwVar(chk=false)
+  self.lexAndExpect(tokRBracket)
 
 proc parseTypeMain(
   self: var Scone,
@@ -576,10 +625,12 @@ proc parseTypeMain(
   #else:
   #  # this will be an error
   #  self.lexAndExpect(tokSet=mySpp[1].tokSet)
+  #echo "debug: parseTypeMain(): start"
   discard doChkSelParse(
     sppSeq @[
       parseTypeBuiltinScalar,
       parseTypeToResolve,
+      parseTypeArray,
     ],
     none(HashSet[TokKind])
   )
@@ -605,27 +656,12 @@ proc parseTypeWithOptPreKwVar(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  #proc doParseVarPtr(
-  #  self: var Scone,
-  #  chk: bool,
-  #): bool =
-  #  result = false
-  #  #var myTok = doChkTok([tokVar, tokPtr])
-  #  #if myTok.isSome:
-  #  #  if myTok.get == tokPtr:
-  #  #    myTok = self.lexAndCheck(chk=true, tok=tokPtr)
-  #  #    result = true
-
-  #result = none(SppResultMain)
   result.foundTok = none(TokKind)
 
   var haveVar: bool = false
   var ptrDim: uint = 0
   var haveEither: bool = false
-  #self.stackSavedIlp()
-  #self.lex()
-  #echo "test 2: " & $self.currTok
-  #self.unstackSavedIlp()
+
   let myVpTokSet = toHashSet([tokVar, tokPtr])
   result.tokSet = result.tokSet.union(myVpTokSet)
 
@@ -635,7 +671,6 @@ proc parseTypeWithOptPreKwVar(
   )
 
   if myTok.isSome:
-    #echo "myTok.isSome: before: " & $myTok
     haveEither = true
     if myTok.get == tokVar:
       haveVar = true
@@ -649,9 +684,7 @@ proc parseTypeWithOptPreKwVar(
         result.foundTok = some(myTok.get)
         return
       else: # if not chk:
-        #echo "test: tokPtr: begin"
         while myTok.isSome:
-          #echo $myTok
           myTok = self.selParse(
             selTokSet=toHashSet([tokPtr])
           )
@@ -659,28 +692,50 @@ proc parseTypeWithOptPreKwVar(
             self.lex()
           ptrDim += 1
   if chk and not haveEither:
-    #echo "chk and not haveEither: begin"
-    #self.stackSavedIlp()
-    #self.lex()
-    #echo "test 0: " & $self.currTok
-    #self.unstackSavedIlp()
     result = doChkSpp(parseTypeMain)
   
-  #echo "haveVar:" & $haveVar & " ptrDim: " & $ptrDim
-
-  #self.stackSavedIlp()
-  #self.lex()
-  #echo "test 1: " & $self.currTok
-  #self.unstackSavedIlp()
   discard self.parseTypeMain(chk=false)
-  discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
+  #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
 
-  #echo "test 4: " & $self.currTok
+proc parseTypeWithoutOptPreKwVar(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result.foundTok = none(TokKind)
 
-  #self.stackSavedIlp()
-  #self.lex()
-  #echo "test 3: " & $self.currTok
-  #self.unstackSavedIlp()
+  #var haveVar: bool = false
+  var ptrDim: uint = 0
+  var haveEither: bool = false
+
+  let myVpTokSet = toHashSet([
+    #tokVar, 
+    tokPtr
+  ])
+  result.tokSet = result.tokSet.union(myVpTokSet)
+
+  var myTok = self.lexAndCheck(
+    chk=true,
+    tokSet=myVpTokSet,
+  )
+
+  if myTok.isSome:
+    haveEither = true
+    if chk:
+      result.foundTok = some(myTok.get)
+      return
+    else: # if not chk:
+      while myTok.isSome:
+        myTok = self.selParse(
+          selTokSet=toHashSet([tokPtr])
+        )
+        if myTok.isSome:
+          self.lex()
+        ptrDim += 1
+  if chk and not haveEither:
+    result = doChkSpp(parseTypeMain)
+  
+  discard self.parseTypeMain(chk=false)
+  #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
 
 
 #proc parseVarDeclEtcMost(
@@ -712,41 +767,102 @@ proc subParseGenericDeclList(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkTok(tokLBrace)
+  discard doChkTok(tokLBracket)
   self.parseGenericDeclList(
     #chk=false
   )
-  self.lexAndExpect(tokRBrace)
+  self.lexAndExpect(tokRBracket)
 
-proc parseGenericImplItem(
+proc parseGenericNamedImplItem(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  result = self.parseIdent(chk=chk)
-  if chk:
-    return
-  self.lexAndExpect(tokAssign)
-  #discard self.parseTypeWithOptPreKwVar(chk=false)
-  discard self.parseType(chk=false)
+  #result = self.parseIdent(chk=chk)
+  #if chk:
+  #  return
+  #self.lexAndExpect(tokAssign)
+  result = self.subParseIdentAssign(chk=chk)
+  if not chk:
+    discard self.parseTypeWithOptPreKwVar(chk=false)
+  #discard self.parseType(chk=false)
 
-proc parseGenericImplList(
+proc parseGenericNamedImplList(
   self: var Scone,
   #chk: bool,
 ) =
   discard self.loopSelParse(
-    selProcSeq=sppSeq @[parseGenericImplItem],
+    selProcSeq=sppSeq @[parseGenericNamedImplItem],
     sepTok=some(tokComma),
-    haveOptEndSepTok=true,
+    haveOptEndSepTok=false,
   )
 
-proc subParseGenericImplList(
+proc parseGenericUnnamedImplItem(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkTok(tokLBrace)
-  self.parseGenericImplList()
+  result = self.parseTypeWithoutOptPreKwVar(chk=true)
+  let haveNamed = self.subParseIdentAssign(chk=true)
+  if chk:
+    if not haveNamed.foundTok.isSome:
+      return
+    else:
+      result.foundTok = none(TokKind)
+      result.foundTok1 = none(TokKind)
+  else: # if not chk:
+    #if not haveNamed.foundTok.isSome:
+    result = self.parseTypeWithoutOptPreKwVar(chk=false)
+    #else:
+    #  result
+    #else:
+    #  #result.tokSet
+    #  #result.foundTok = none(TokKind)
+
+proc parseGenericUnnamedImplList(
+  self: var Scone,
+  #chk: bool,
+) =
+  discard self.loopSelParse(
+    selProcSeq=sppSeq @[parseGenericUnnamedImplItem],
+    sepTok=some(tokComma),
+    haveOptEndSepTok=(
+      #true
+      false
+    ),
+  )
+
+proc parseGenericFullImplList(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  #echo "debug start: chk:" & $chk & " " & $self.lexMain
+  #discard doChkTokSet(
+  #  toHashSet([tokGenericNamedArgListStart, tokLBracket])
+  #)
+  discard doChkTok(tokLBracket)
+  #echo "debug: " & $result
+  #echo "debug more: " & $self.lexMain
+
+  #if result.foundTok.get() == tokGenericNamedArgListStart:
+  #  self.parseGenericNamedImplList()
+  #else: # if result.foundTok.get() == tokLBracket
+  #  self.parseGenericUnnamedImplList()
+
+  let haveNamed = self.subParseIdentAssign(chk=true)
+  if not haveNamed.foundTok.isSome:
+    self.parseGenericUnnamedImplList()
+    if self.lexAndCheck(chk=true, tok=tokComma).isSome:
+      self.lex()
+      #discard self.optParse(
+      #  chk=false,
+      #  selProc=spp parseGenericNamedImplList,
+      #)
+      self.parseGenericNamedImplList()
+  else:
+    self.parseGenericNamedImplList()
+
+
   #self.lexAndCheck(chk=false, tok=tokRBrace)
-  self.lexAndExpect(tokRBrace)
+  self.lexAndExpect(tokRBracket)
 
 
 
@@ -790,30 +906,122 @@ proc parseFuncArgDeclList(
     #discard self.lexAndCheck(chk=false, tok=tokColon)
     #discard self.parseTypeWithOptPreKwVar(chk=false)
 
-proc parseFuncArgImplItem(
+#proc parseFuncArgUnnamedImplItem(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  result = self.parseTypeWithoutOptPreKwVar(chk=true)
+#  let haveNamed = self.subParseIdentAssign(chk=true)
+#  if chk:
+#    if not haveNamed.foundTok.isSome:
+#      return
+#    else:
+#      result.foundTok = none(TokKind)
+#      result.foundTok1 = none(TokKind)
+#  else: # if not chk:
+#    #if not haveNamed.foundTok.isSome:
+#    result = self.parseTypeWithoutOptPreKwVar(chk=false)
+#    #else:
+#    #  result
+#    #else:
+#    #  #result.tokSet
+#    #  #result.foundTok = none(TokKind)
+
+#proc parseFuncArgImplItem(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  result = doChkSpp(parseIdent)
+#  self.lexAndExpect(tokAssign)
+#  discard self.parseExpr(chk=false)
+proc parseFuncNamedArgImplItem(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  result = doChkSpp(parseIdent)
-  self.lexAndExpect(tokAssign)
-  discard self.parseExpr(chk=false)
+  #result = self.parseIdent(chk=chk)
+  #if chk:
+  #  return
+  #self.lexAndExpect(tokAssign)
+  result = self.subParseIdentAssign(chk=chk)
+  if not chk:
+    discard self.parseTypeWithOptPreKwVar(chk=false)
+  #discard self.parseType(chk=false)
 
-proc parseFuncArgImplList(
+proc parseFuncNamedArgImplList(
   self: var Scone,
-  chk: bool,
-): SppResult =
-  result = self.parseFuncArgImplItem(chk=true)
-
-  if chk:
-    return
-
-  result = self.loopSelParse(
-    selProcSeq=(
-      sppSeq @[parseFuncArgImplItem]
-    ),
+  #chk: bool,
+) =
+  discard self.loopSelParse(
+    selProcSeq=sppSeq @[parseFuncNamedArgImplItem],
     sepTok=some(tokComma),
-    haveOptEndSepTok=true,
+    haveOptEndSepTok=false,
   )
+
+proc parseFuncUnnamedArgImplItem(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = self.parseTypeWithoutOptPreKwVar(chk=true)
+  let haveNamed = self.subParseIdentAssign(chk=true)
+  if chk:
+    if not haveNamed.foundTok.isSome:
+      return
+    else:
+      result.foundTok = none(TokKind)
+      result.foundTok1 = none(TokKind)
+  else: # if not chk:
+    #if not haveNamed.foundTok.isSome:
+    result = self.parseTypeWithoutOptPreKwVar(chk=false)
+    #else:
+    #  result
+    #else:
+    #  #result.tokSet
+    #  #result.foundTok = none(TokKind)
+proc parseFuncUnnamedArgImplList(
+  self: var Scone,
+  #chk: bool,
+) =
+  discard self.loopSelParse(
+    selProcSeq=sppSeq @[parseFuncUnnamedArgImplItem],
+    sepTok=some(tokComma),
+    haveOptEndSepTok=(
+      #true
+      false
+    ),
+  )
+
+proc parseExprFuncCallPostGeneric(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  #result = self.parseFuncArgImplItem(chk=true)
+  discard doChkTok(tokLParen)
+
+  #if chk:
+  #  return
+
+  #result = self.loopSelParse(
+  #  selProcSeq=(
+  #    sppSeq @[parseFuncArgImplItem]
+  #  ),
+  #  sepTok=some(tokComma),
+  #  haveOptEndSepTok=true,
+  #)
+
+  let haveNamed = self.subParseIdentAssign(chk=true)
+  if not haveNamed.foundTok.isSome:
+    self.parseFuncUnnamedArgImplList()
+    if self.lexAndCheck(chk=true, tok=tokComma).isSome:
+      self.lex()
+      #discard self.optParse(
+      #  chk=false,
+      #  selProc=spp parseFuncNamedArgImplList,
+      #)
+      self.parseFuncNamedArgImplList()
+  else:
+    self.parseFuncNamedArgImplList()
+
+  self.lexAndExpect(tokRParen)
 
 
 
@@ -836,9 +1044,9 @@ proc parseFuncDecl(
   self.lexAndExpect(tokFuncReturnTypePrefix)
   discard self.parseTypeWithOptPreKwVar(chk=false)
 
-  self.lexAndExpect(tokLParen)
+  self.lexAndExpect(tokLBrace)
   # stmts go here
-  self.lexAndExpect(tokRParen)
+  self.lexAndExpect(tokRBrace)
 
   self.lexAndExpect(tokSemicolon)
 
@@ -850,9 +1058,9 @@ proc parseStructDecl(
   discard self.parseIdent(chk=false)
   discard self.optParse(chk=false, selProc=spp subParseGenericDeclList)
 
-  self.lexAndExpect(tokLParen)
+  self.lexAndExpect(tokLBrace)
   # fields go here
-  self.lexAndExpect(tokRParen)
+  self.lexAndExpect(tokRBrace)
   self.lexAndExpect(tokSemicolon)
 
 proc parseModule(
@@ -871,43 +1079,16 @@ proc parseExprFuncCallPostIdent(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  #doAssert(
-  #  not chk,
-  #  "eek! " & $self.currTok
-  #)
-  #result = self.optParse(
-  #  chk=true,
-  #  selProc=subParseGenericImplList,
-  #)
-  #result.tokSet = haveGenerics.tokSet
-  #if result.foundTok.isSome:
-  #  discard
-  #result = self.selParse(
-  #  chk=true,
-  #  selProcSeq=sppSeq @[subParseGenericImplList],
-  #)[1]
-  #var haveGeneric: bool = false
-  #if result.foundTok.isSome:
-
-  #result = self.optParse(
-  #  chk=false,
-  #  selProc=subParseGenericImplList,
-  #)
-  #if not result.foundTok.isSome:
-  #  result.tokSet = result.tokSet.union(toHashSet([tokLParen]))
-  #  self.lexAndExpect(result.tokSet)
-  #else:
-  #  self.lexAndExpect(tokLParen)
-  #discard self.optParse(
-  #  chk=false,
-  #  selProc=parseFuncArgImplList
-  #)
 
   #echo "parseExprFuncCallPostIdent(): pre: " & $self.lexMain
-  result = self.optParseThenExpectTokSeq(
+  #result = self.optParseThenExpectTokSeq(
+  #  chk=chk,
+  #  selProc=parseGenericFullImplList,
+  #  postTokSeq=(@[tokFuncNamedArgListStart, tokLParen]),
+  #)
+  result = self.optParse(
     chk=chk,
-    selProc=subParseGenericImplList,
-    postTokSeq=(@[tokLParen]),
+    selProc=parseGenericFullImplList,
   )
   #echo "parseExprFuncCallPostIdent(): post: " & $self.lexMain
   #if chk:
@@ -915,22 +1096,25 @@ proc parseExprFuncCallPostIdent(
   #  if not result.foundTok.isSome:
   #    return
   #echo "testificate: " & $result
+  #result.tokSet = result.tokSet.union(toHashSet([tokLParen]))
+  let temp = self.parseExprFuncCallPostGeneric(chk=true)
+  result.tokSet = result.tokSet.union(temp.tokSet)
 
-  if not chk:
-    #if not result.foundTok.isSome:
-    #  # this will be an error
-    #  self.lexAndExpect(result.tokSet)
-    #  #if result.foundTok.get() == tokLParen:
-    #  #  discard
-    #  #else:
-    #  #  discard
-    #echo "not chk"
-
-    discard self.optParseThenExpectTokSeq(
-      chk=chk,
-      selProc=parseFuncArgImplList,
-      postTokSeq=(@[tokRParen]),
-    )
+  if chk:
+    if result.foundTok.isSome:
+      return
+    else:
+      result.foundTok = self.lexAndCheck(chk=true, tokSet=result.tokSet)
+  else: # if not chk:
+    if result.foundTok.isSome or temp.foundTok.isSome:
+      result = self.parseExprFuncCallPostGeneric(chk=false)
+    else:
+      self.lexAndExpect(tokSet=result.tokSet)
+    #discard self.optParseThenExpectTokSeq(
+    #  chk=chk,
+    #  selProc=parseExprFuncCallPostGeneric,
+    #  postTokSeq=(@[tokRParen]),
+    #)
 
 proc parseExprIdentOrFuncCall(
   self: var Scone,

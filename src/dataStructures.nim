@@ -38,8 +38,8 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokConst", some("const")),
   ("tokDef", some("def")),
   ("tokFuncReturnTypePrefix", some("->")),
-  ("tokFuncNamedArgListStart", some("$(")),
-  ("tokGenericNamedArgListStart", some("[")),
+  #("tokFuncNamedArgListStart", some("$(")),
+  #("tokGenericNamedArgListStart", some("$[")),
   ("tokArray", some("array")),
   #("tokMacro", some("macro")),
       # Maybe save `macro` for the bootstrapped compiler?
