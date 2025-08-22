@@ -7,10 +7,12 @@ module test;
 #def dot[T](a, b: array[3; Vec2[T=T]]) -> T {
 #	#return a.x * b.x + a.y * b.y;
 #};
-def dot[T](a, i, b: ptr array[2; ptr Vec2[T]]) -> T {
+
+def dot[T](a: Vec2[T], b: Vec2[T]) -> T {
 	#return a.x * b.x + a.y * b.y;
 };
 
 struct Vec2[T] {
-	#x, y: T;
+	#x: T;
+	#y: T;
 };

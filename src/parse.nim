@@ -892,7 +892,7 @@ proc parseFuncArgDeclList(
     #discard self.parseTypeWithOptPreKwVar(chk=false)
     discard
   else: # if not haveNoArgs.isSome:
-    result = doChkSpp(subParseFuncArgDeclList)
+    #result = doChkSpp(subParseFuncArgDeclList)
     #echo "post result = doChkSpp(...)"
 
     discard self.loopSelParse(

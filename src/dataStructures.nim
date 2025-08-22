@@ -65,6 +65,7 @@ const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
   ("tokContinue", some("continue")),
   ("tokBreak", some("break")),
   ("tokResult", some("result")),
+  ("tokReturn", some("return")),
   #--------
   ("tokType", some("type")),
   #("tokArray", some("array")),
