@@ -305,7 +305,7 @@ proc optParseThenExpectSpp(
 proc selParse(
   self: var Scone,
   chk: bool,
-  selProcSet: HashSet[SelParseProc],
+  selProcSet: OrderedSet[SelParseProc],
 ): (SelParseProc, SppResult) =
   #for myProc in selProcSet:
   #  if myProc[](self, true):
@@ -334,7 +334,7 @@ proc selParse(
   chk: bool,
   selProcSeq: seq[SelParseProc],
 ): (SelParseProc, SppResult) =
-  result = self.selParse(chk=chk, selProcSet=toHashSet(selProcSeq))
+  result = self.selParse(chk=chk, selProcSet=toOrderedSet(selProcSeq))
   #self.stackSavedIlp()
   #self.lex()
   #echo "selParse test: " & $self.currTok
@@ -372,7 +372,7 @@ proc selParse(
 proc loopSelParse(
   self: var Scone,
   #chk: bool,
-  selProcSet: HashSet[SelParseProc],
+  selProcSet: OrderedSet[SelParseProc],
   sepTok: Option[TokKind]=none(TokKind),
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
@@ -443,7 +443,7 @@ proc loopSelParse(
   #for selProc in selProcArr:
   #  tempSelProcSeq.add sppSeq(selProc)
   result = self.loopSelParse(
-    selProcSet=toHashSet(selProcSeq),
+    selProcSet=toOrderedSet(selProcSeq),
     sepTok=sepTok,
     haveOptEndSepTok=haveOptEndSepTok,
     haveForcedEndSepTok=haveForcedEndSepTok,
@@ -453,7 +453,7 @@ proc loopSelParse(
 proc reqLoopSelParse(
   self: var Scone,
   #chk: bool,
-  selProcSet: HashSet[SelParseProc],
+  selProcSet: OrderedSet[SelParseProc],
   sepTok: Option[TokKind]=none(TokKind),
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
@@ -477,7 +477,7 @@ proc reqLoopSelParse(
   haveOptEndSepTok: bool=false,
 ): SppResult =
   result = self.reqLoopSelParse(
-    selProcSet=toHashSet(selProcSeq),
+    selProcSet=toOrderedSet(selProcSeq),
     sepTok=sepTok,
     haveOptEndSepTok=haveOptEndSepTok,
   )
