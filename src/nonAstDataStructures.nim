@@ -5,121 +5,122 @@ type
   Mode* = enum
     mdOneFile,
 
-const `helperTokKindSeq`*: seq[(string, Option[string])] = @[
+
+const `helperTokKindSeq`*: seq[(string, Option[string], bool)] = @[
   #--------
-  ("tokInternalAstStart", none(string)), # fake token indicating the beginning of the AST
-  ("tokBad", none(string)),           # invalid input!
-  ("tokEof", none(string)),           # end of file
-  #("tokLineComent", none(string)),    # start of line comment
+  ("InternalAstStart", none(string), true), # fake token indicating the beginning of the AST
+  ("Bad", none(string), true),           # invalid input!
+  ("Eof", none(string), true),           # end of file
+  #("LineComent", none(string)),    # start of line comment
   #--------
-  ("tokIdent", none(string)),  # identifiers
-  ("tokU64Lit", none(string)), # 0-9, hex numbers, binary numbers, etc.
-  ("tokStrLit", none(string)), # string literals
+  ("Ident", none(string), true),  # identifiers
+  ("U64Lit", none(string), true), # 0-9, hex numbers, binary numbers, etc.
+  ("StrLit", none(string), true), # string literals
   #--------
-  ("tokTrue", some("true")),
-  ("tokFalse", some("false")),
+  ("True", some("true"), true),
+  ("False", some("false"), true),
   #--------
-  ("tokLParen", some("(")),
-  ("tokRParen", some(")")),
-  ("tokLBracket", some("[")),
-  ("tokRBracket", some("]")),
-  ("tokLBrace", some("{")),
-  ("tokRBrace", some("}")),
-  ("tokComma", some(",")),
-  ("tokSemicolon", some(";")),
-  ("tokColon", some(":")),
+  ("LParen", some("("), false),
+  ("RParen", some(")"), false),
+  ("LBracket", some("["), false),
+  ("RBracket", some("]"), false),
+  ("LBrace", some("{"), false),
+  ("RBrace", some("}"), false),
+  ("Comma", some(","), false),
+  ("Semicolon", some(";"), false),
+  ("Colon", some(":"), false),
   #--------
-  ("tokPtr", some("ptr")),
-  ("tokAddr", some("addr")),
-  ("tokDeref", some("@")), # pointer dereference
-  ("tokDot", some(".")),
+  ("Ptr", some("ptr"), true),
+  ("Addr", some("addr"), true),
+  ("Deref", some("@"), true), # pointer dereference
+  ("Dot", some("."), true),
   #--------
-  ("tokVar", some("var")),
-  ("tokConst", some("const")),
-  ("tokDef", some("def")),
-  ("tokFuncReturnTypePrefix", some("->")),
-  #("tokFuncNamedArgListStart", some("$(")),
-  #("tokGenericNamedArgListStart", some("$[")),
-  #("tokGenericArgListStart", some("#[")),
-  ("tokArray", some("array")),
-  #("tokMacro", some("macro")),
+  ("Var", some("var"), true),
+  ("Const", some("const"), true),
+  ("Def", some("def"), true),
+  ("FuncReturnTypePrefix", some("->"), false),
+  #("FuncNamedArgListStart", some("$(")),
+  #("GenericNamedArgListStart", some("$[")),
+  #("GenericArgListStart", some("#[")),
+  #("Array", some("array")),
+  #("Macro", some("macro")),
       # Maybe save `macro` for the bootstrapped compiler?
       # I'm not sure I outright need macros for this version of the
       # compiler
-  ("tokModule", some("module")),
-  ("tokStruct", some("struct")),
-  ("tokEnum", some("enum")),
-  ("tokExtern", some("extern")),
-  ("tokCextern", some("cextern")),
-  ("tokImport", some("import")),
-  ("tokCImport", some("cimport")),
+  ("Module", some("module"), true),
+  ("Struct", some("struct"), true),
+  ("Enum", some("enum"), true),
+  ("Extern", some("extern"), true),
+  ("Cextern", some("cextern"), true),
+  ("Import", some("import"), true),
+  ("CImport", some("cimport"), true),
   #--------
-  ("tokScope", some("scope")),
-  ("tokIf", some("if")),
-  ("tokElif", some("elif")),
-  ("tokElse", some("else")),
-  ("tokSwitch", some("switch,")),
-  ("tokCase", some("case")),
-  ("tokDefault", some("default")),
-  ("tokFor", some("for")),
-  ("tokWhile", some("while")),
-  ("tokContinue", some("continue")),
-  ("tokBreak", some("break")),
-  ("tokResult", some("result")),
-  ("tokReturn", some("return")),
+  ("Scope", some("scope"), true),
+  ("If", some("if"), true),
+  ("Elif", some("elif"), true),
+  ("Else", some("else"), true),
+  ("Switch", some("switch"), true),
+  ("Case", some("case"), true),
+  ("Default", some("default"), true),
+  ("For", some("for"), true),
+  ("While", some("while"), true),
+  ("Continue", some("continue"), true),
+  ("Break", some("break"), true),
+  ("Result", some("result"), true),
+  ("Return", some("return"), true),
   #--------
-  ("tokType", some("type")),
-  #("tokArray", some("array")),
-  ("tokVoid", some("void")),
-  ("tokBool", some("bool")),
-  ("tokU8", some("u8")),
-  ("tokI8", some("i8")),
-  ("tokU16", some("u16")),
-  ("tokI16", some("i16")),
-  ("tokU32", some("u32")),
-  ("tokI32", some("i32")),
-  ("tokU64", some("u64")),
-  ("tokI64", some("i64")),
-  ("tokF32", some("f32")),
-  ("tokF64", some("f64")),
-  ("tokChar", some("char")),
-  ("tokString", some("string")),
+  #("Type", some("type")),
+  ("Array", some("array"), true),
+  ("Void", some("void"), true),
+  ("Bool", some("bool"), true),
+  ("U8", some("u8"), true),
+  ("I8", some("i8"), true),
+  ("U16", some("u16"), true),
+  ("I16", some("i16"), true),
+  ("U32", some("u32"), true),
+  ("I32", some("i32"), true),
+  ("U64", some("u64"), true),
+  ("I64", some("i64"), true),
+  ("F32", some("f32"), true),
+  ("F64", some("f64"), true),
+  ("Char", some("char"), true),
+  ("String", some("string"), true),
   #--------
-  ("tokCmpEq", some("==")),
-  ("tokCmpNe", some("!=")),
-  ("tokCmpLt", some("<")),
-  ("tokCmpGt", some(">")),
-  ("tokCmpLe", some("<=")),
-  ("tokCmpGe", some(">=")),
+  ("CmpEq", some("=="), true),
+  ("CmpNe", some("!="), true),
+  ("CmpLt", some("<"), true),
+  ("CmpGt", some(">"), true),
+  ("CmpLe", some("<="), true),
+  ("CmpGe", some(">="), true),
   #--------
-  ("tokPlus", some("+")),
-  ("tokMinus", some("-")),
-  ("tokMul", some("*")),
-  ("tokDiv", some("/")),
-  ("tokMod", some("%")),
-  ("tokBitAnd", some("&")),
-  ("tokBitOr", some("|")),
-  ("tokBitXor", some("^")),
-  ("tokBitInvert", some("~")),
-  ("tokLogicAnd", some("&&")),
-  ("tokLogicOr", some("||")),
-  ("tokLogicNot", some("!")),
-  ("tokBitShl", some("<<")),
-  ("tokBitShr", some(">>")),
+  ("Plus", some("+"), true),
+  ("Minus", some("-"), true),
+  ("Mul", some("*"), true),
+  ("Div", some("/"), true),
+  ("Mod", some("%"), true),
+  ("BitAnd", some("&"), true),
+  ("BitOr", some("|"), true),
+  ("BitXor", some("^"), true),
+  ("BitInvert", some("~"), true),
+  ("LogicAnd", some("&&"), true),
+  ("LogicOr", some("||"), true),
+  ("LogicNot", some("!"), true),
+  ("BitShl", some("<<"), true),
+  ("BitShr", some(">>"), true),
   #--------
-  ("tokAssign", some("=")),
-  ("tokAssignPlus", some("+=")),
-  ("tokAssignMinus", some("-=")),
-  ("tokAssignMul", some("*=")),
-  ("tokAssignDiv", some("/=")),
-  ("tokAssignMod", some("%=")),
-  ("tokAssignBitAnd", some("&=")),
-  ("tokAssignBitOr", some("|=")),
-  ("tokAssignBitXor", some("^=")),
-  ("tokAssignBitShl", some("<<=")),
-  ("tokAssignBitShr", some(">>=")),
+  ("Assign", some("="), true),
+  ("AssignPlus", some("+="), true),
+  ("AssignMinus", some("-="), true),
+  ("AssignMul", some("*="), true),
+  ("AssignDiv", some("/="), true),
+  ("AssignMod", some("%="), true),
+  ("AssignBitAnd", some("&="), true),
+  ("AssignBitOr", some("|="), true),
+  ("AssignBitXor", some("^="), true),
+  ("AssignBitShl", some("<<="), true),
+  ("AssignBitShr", some(">>="), true),
   #--------
-  #("tokLim", none(string)),
+  #("Lim", none(string)),
 ]
 
 #dumpTree:
@@ -169,7 +170,7 @@ macro mkEnumTokKind(): untyped =
   var tempSeq: seq[NimNode]
 
   for idx in 0 ..< helperTokKindSeq.len():
-    tempSeq.add ident(helperTokKindSeq[idx][0])
+    tempSeq.add ident("tok" & helperTokKindSeq[idx][0])
     
   result = newEnum(
     name=ident("TokKind"),
@@ -180,6 +181,20 @@ macro mkEnumTokKind(): untyped =
 
 mkEnumTokKind()
 
+macro mkEnumAstKind(): untyped =
+  var tempSeq: seq[NimNode]
+  for idx in 0 ..< helperTokKindSeq.len():
+    if helperTokKindSeq[idx][2]:
+      tempSeq.add ident("ast" & helperTokKindSeq[idx][0])
+
+  result = newEnum(
+    name=ident("AstKind"),
+    fields=tempSeq,
+    public=true,
+    pure=false,
+  )
+
+mkEnumAstKind()
 
 #let temp = tokAssignDiv
 
@@ -297,35 +312,26 @@ type
                         # more than 1 << 32 types, right?
     initValAstIdx*: Option[uint64]  # index into the `seq[AstNode]`
                                     # indicating the initial value
-
 type
-  AstLitValKind* = enum
-    astLvKindI64,
-    astLvKindU64,
-    #astLvKindF32,
-    #astLvKindF64,
-    astLvKindStr,
-
-  AstLitVal* = object
-    case kind: AstLitValKind
-    of astLvKindI64:
-      i64Val: int64
-    of astLvKindU64:
-      u64Val: uint64
-    #of astLvKindF32:
-    #  f32Val: string
-    #of astLvKindF64:
-    #  f64Val: string
-    of astLvKindStr:
-      strVal: string
-
-type
-  AstNode* = object
+  CurrTok* = object
     tok*: TokKind
+    optStr*: Option[string]
+    optU64*: Option[uint64]
+
+proc mkCurrTok*(
+  tok: TokKind,
+  optStr: Option[string],
+  optU64: Option[uint64],
+): CurrTok = CurrTok(
+  tok: tok,
+  optStr: optStr,
+  optU64: optU64
+)
+
+type
+  LexMain* = object
+    locInLine*: uint64
     lineNum*: uint64
-    #u64Val*: uint64
-    #strVal*: string
-    litVal*: Option[AstLitVal]
-    symIdxSeq*: seq[uint64]
-    chIdxSeq*: seq[uint64]    # indices into `Scone.ast` children
-    parentIdx*: uint64
+    inpIdx*: int
+    currTok*: CurrTok
+      

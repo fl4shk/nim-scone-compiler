@@ -2,7 +2,7 @@ import std/sets
 import std/options
 import std/strutils
 
-import dataStructures
+import nonAstDataStructures
 import scone
 
 proc inpChar(
@@ -98,7 +98,7 @@ proc lexInternal*(
   var prevLongestSize: (int, Option[int]) = (0, none(int))
 
   var kwTempStr: array[2, string]
-  for idx, (tok, opt) in helperTokKindSeq:
+  for idx, (tok, opt, dontCare) in helperTokKindSeq:
     if opt.isSome:
       #echo "opt.isSome: " & opt.get()
       if self.inpIdx + opt.get.len() < self.inp.len():

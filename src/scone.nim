@@ -4,30 +4,8 @@ import std/tables
 import std/sets
 import std/options
 
-import dataStructures
-
-type
-  CurrTok* = object
-    tok*: TokKind
-    optStr*: Option[string]
-    optU64*: Option[uint64]
-
-proc mkCurrTok*(
-  tok: TokKind,
-  optStr: Option[string],
-  optU64: Option[uint64],
-): CurrTok = CurrTok(
-  tok: tok,
-  optStr: optStr,
-  optU64: optU64
-)
-
-type
-  LexMain* = object
-    locInLine*: uint64
-    lineNum*: uint64
-    inpIdx*: int
-    currTok*: CurrTok
+import nonAstDataStructures
+import ast
 
 type
   Scone* = object

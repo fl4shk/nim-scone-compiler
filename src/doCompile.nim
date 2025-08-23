@@ -4,7 +4,8 @@ import std/tables
 import std/sets
 import std/options
 
-import dataStructures
+import nonAstDataStructures
+import ast
 import scone
 import parse
 
@@ -41,9 +42,12 @@ proc mkScone*(
   result.mode = myMode
 
   result.ast.add AstNode(
-    tok: tokInternalAstStart,
-    lineNum: 0.uint64,
-    litVal: none(AstLitVal),
+    #tok: tokInternalAstStart,
+    #lineNum: 0.uint64,
+    lexMain: LexMain(
+      locInLine: 0,
+    )
+    #litVal: none(AstLitVal),
   )
   result.lexMain.locInLine = 1
   result.lexMain.lineNum = 1

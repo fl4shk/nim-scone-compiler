@@ -2,7 +2,8 @@ import std/tables
 import std/sets
 import std/options
 
-import dataStructures
+import nonAstDataStructures
+import ast
 import scone
 import lex
 
@@ -16,22 +17,22 @@ template parent(
 #  currAst.parent
   
 
-proc mkAst*(
-  self: var Scone,
-  tok: TokKind,
-  litVal: Option[AstLitVal],
-  symIdxSeq: seq[uint64],
-  parentIdx: uint64,
-) =
-  let toAdd = AstNode(
-    tok: tok,
-    lineNum: self.lineNum,
-    litVal: litVal,
-    symIdxSeq: symIdxSeq,
-    parentIdx: parentIdx,
-  )
-  toAdd.parent.chIdxSeq.add uint64(self.ast.len())
-  self.ast.add toAdd
+#proc mkAst*(
+#  self: var Scone,
+#  tok: TokKind,
+#  litVal: Option[AstLitVal],
+#  symIdxSeq: seq[uint64],
+#  parentIdx: uint64,
+#) =
+#  let toAdd = AstNode(
+#    tok: tok,
+#    lineNum: self.lineNum,
+#    litVal: litVal,
+#    symIdxSeq: symIdxSeq,
+#    parentIdx: parentIdx,
+#  )
+#  toAdd.parent.chIdxSeq.add uint64(self.ast.len())
+#  self.ast.add toAdd
 
 #proc unstackAst(
 #  self: var Scone,
