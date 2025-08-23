@@ -41,23 +41,32 @@ proc mkScone*(
 ): Scone =
   result.mode = myMode
 
-  result.ast.add AstNode(
-    #tok: tokInternalAstStart,
-    #lineNum: 0.uint64,
-    lexMain: LexMain(
-      locInLine: 0,
-    )
-    #litVal: none(AstLitVal),
-  )
   result.lexMain.locInLine = 1
   result.lexMain.lineNum = 1
+  result.lexMain.inpIdx = 0
+  result.astRoot = AstNode(
+    #tok: tokInternalAstStart,
+    #lineNum: 0.uint64,
+    lexMain: result.lexMain,
+    #litVal: none(AstLitVal),
+    parent: nil,
+    kind: astSrcFile,
+    #module: nil,
+    srcFileVal: AstSrcFile(
+      module: nil,
+    )
+  )
+  result.ast = result.astRoot
+  result.ast.parent = nil
 
-  var identStrSeq: seq[string]
-  result.identStrS2d.add identStrSeq
+  #result.ast.module = nil
+  #result.srcFileVal.
+
+  #var identStrSeq: seq[string]
+  #result.identStrS2d.add identStrSeq
 
   result.inputFname = inputFname
   result.inp = readFile(filename=inputFname)
-  result.lexMain.inpIdx = 0
   result.outp = ""
 
   case myMode:

@@ -1,0 +1,1370 @@
+StmtList
+  TypeSection
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstSrcFile"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "module"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "funcDeclSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "structDeclSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstIdent"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "strVal"
+            Ident "string"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstU64Lit"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "u64Val"
+            Ident "uint64"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstStrLit"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "strLitVal"
+            Ident "string"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstTrue"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstFalse"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstPtr"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstAddr"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstDeref"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstDot"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstVar"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "ident"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "myType"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "optExpr"
+            BracketExpr
+              Ident "Option"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstConst"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "ident"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "myType"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "expr"
+            Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstDef"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "ident"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "genericDeclSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "argDeclSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "stmtSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstModule"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "ident"
+            Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstStruct"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "genericDeclSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "fieldSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstEnum"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstExtern"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstCextern"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstImport"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstCImport"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstScope"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstIf"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "expr"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "stmtSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "optChild"
+            BracketExpr
+              Ident "Option"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstElif"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "expr"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "stmtSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "optChild"
+            BracketExpr
+              Ident "Option"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstElse"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "stmtSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstSwitch"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "expr"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "childSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstCase"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "expr"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "stmtSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstDefault"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "stmtSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstFor"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "ident"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "exprPre"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "exprPost"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "isUntil"
+            Ident "bool"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "stmtSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstWhile"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "expr"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "stmtSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstContinue"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstBreak"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstReturn"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "optExpr"
+            BracketExpr
+              Ident "Option"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstArray"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "dimSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "elemType"
+            Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstVoid"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstBool"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstU8"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstI8"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstU16"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstI16"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstU32"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstI32"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstU64"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstI64"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstF32"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstF64"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstChar"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstString"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstUnopKind"
+      Empty
+      EnumTy
+        Empty
+        Ident "unopPlus"
+        Ident "unopMinus"
+        Ident "unopLogicNot"
+        Ident "unopBitInvert"
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstUnop"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "kind"
+            Ident "AstUnopKind"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "child"
+            Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstBinopKind"
+      Empty
+      EnumTy
+        Empty
+        Ident "binopCmpEq"
+        Ident "binopCmpNe"
+        Ident "binopCmpLt"
+        Ident "binopCmpGt"
+        Ident "binopCmpLe"
+        Ident "binopCmpGe"
+        Ident "binopPlus"
+        Ident "binopMinus"
+        Ident "binopMul"
+        Ident "binopDiv"
+        Ident "binopMod"
+        Ident "binopBitAnd"
+        Ident "binopBitOr"
+        Ident "binopBitXor"
+        Ident "binopLogicAnd"
+        Ident "binopLogicOr"
+        Ident "binopBitShl"
+        Ident "binopBitShr"
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstBinop"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "kind"
+            Ident "AstBinopKind"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "left"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "right"
+            Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstAssignEtcKind"
+      Empty
+      EnumTy
+        Empty
+        Ident "assignEtcRegular"
+        Ident "assignEtcPlus"
+        Ident "assignEtcMinus"
+        Ident "assignEtcMul"
+        Ident "assignEtcDiv"
+        Ident "assignEtcMod"
+        Ident "assignEtcBitAnd"
+        Ident "assignEtcBitOr"
+        Ident "assignEtcBitXor"
+        Ident "assignEtcBitShl"
+        Ident "assignEtcBitShr"
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstAssignEtc"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "kind"
+            Ident "AstAssignEtcKind"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "left"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "right"
+            Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstNamedType"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "ident"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "genericImplSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstType"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "childSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstFuncCall"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "ident"
+            Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "genericImplSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "argImplSeq"
+            BracketExpr
+              Ident "seq"
+              Ident "AstNode"
+            Empty
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstNode"
+      Empty
+      RefTy
+        Ident "AstNodeObj"
+    TypeDef
+      Postfix
+        Ident "*"
+        Ident "AstNodeObj"
+      Empty
+      ObjectTy
+        Empty
+        Empty
+        RecList
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "lexMain"
+            Ident "LexMain"
+            Empty
+          IdentDefs
+            Postfix
+              Ident "*"
+              Ident "parent"
+            Ident "AstNode"
+            Empty
+          RecCase
+            IdentDefs
+              Postfix
+                Ident "*"
+                Ident "kind"
+              Ident "AstKind"
+              Empty
+            OfBranch
+              Ident "astSrcFile"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "srcFileVal"
+                Ident "AstSrcFile"
+                Empty
+            OfBranch
+              Ident "astIdent"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "identVal"
+                Ident "AstIdent"
+                Empty
+            OfBranch
+              Ident "astU64Lit"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "u64LitVal"
+                Ident "AstU64Lit"
+                Empty
+            OfBranch
+              Ident "astStrLit"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "strLitVal"
+                Ident "AstStrLit"
+                Empty
+            OfBranch
+              Ident "astTrue"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "trueVal"
+                Ident "AstTrue"
+                Empty
+            OfBranch
+              Ident "astFalse"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "falseVal"
+                Ident "AstFalse"
+                Empty
+            OfBranch
+              Ident "astPtr"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "ptrVal"
+                Ident "AstPtr"
+                Empty
+            OfBranch
+              Ident "astAddr"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "addrVal"
+                Ident "AstAddr"
+                Empty
+            OfBranch
+              Ident "astDeref"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "derefVal"
+                Ident "AstDeref"
+                Empty
+            OfBranch
+              Ident "astDot"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "dotVal"
+                Ident "AstDot"
+                Empty
+            OfBranch
+              Ident "astVar"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "varVal"
+                Ident "AstVar"
+                Empty
+            OfBranch
+              Ident "astConst"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "constVal"
+                Ident "AstConst"
+                Empty
+            OfBranch
+              Ident "astDef"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "defVal"
+                Ident "AstDef"
+                Empty
+            OfBranch
+              Ident "astModule"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "moduleVal"
+                Ident "AstModule"
+                Empty
+            OfBranch
+              Ident "astStruct"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "structVal"
+                Ident "AstStruct"
+                Empty
+            OfBranch
+              Ident "astEnum"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "enumVal"
+                Ident "AstEnum"
+                Empty
+            OfBranch
+              Ident "astExtern"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "externVal"
+                Ident "AstExtern"
+                Empty
+            OfBranch
+              Ident "astCextern"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "cexternVal"
+                Ident "AstCextern"
+                Empty
+            OfBranch
+              Ident "astImport"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "importVal"
+                Ident "AstImport"
+                Empty
+            OfBranch
+              Ident "astCImport"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "cImportVal"
+                Ident "AstCImport"
+                Empty
+            OfBranch
+              Ident "astScope"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "scopeVal"
+                Ident "AstScope"
+                Empty
+            OfBranch
+              Ident "astIf"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "ifVal"
+                Ident "AstIf"
+                Empty
+            OfBranch
+              Ident "astElif"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "elifVal"
+                Ident "AstElif"
+                Empty
+            OfBranch
+              Ident "astElse"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "elseVal"
+                Ident "AstElse"
+                Empty
+            OfBranch
+              Ident "astSwitch"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "switchVal"
+                Ident "AstSwitch"
+                Empty
+            OfBranch
+              Ident "astCase"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "caseVal"
+                Ident "AstCase"
+                Empty
+            OfBranch
+              Ident "astDefault"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "defaultVal"
+                Ident "AstDefault"
+                Empty
+            OfBranch
+              Ident "astFor"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "forVal"
+                Ident "AstFor"
+                Empty
+            OfBranch
+              Ident "astWhile"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "whileVal"
+                Ident "AstWhile"
+                Empty
+            OfBranch
+              Ident "astContinue"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "continueVal"
+                Ident "AstContinue"
+                Empty
+            OfBranch
+              Ident "astBreak"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "breakVal"
+                Ident "AstBreak"
+                Empty
+            OfBranch
+              Ident "astReturn"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "returnVal"
+                Ident "AstReturn"
+                Empty
+            OfBranch
+              Ident "astArray"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "arrayVal"
+                Ident "AstArray"
+                Empty
+            OfBranch
+              Ident "astVoid"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "voidVal"
+                Ident "AstVoid"
+                Empty
+            OfBranch
+              Ident "astBool"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "boolVal"
+                Ident "AstBool"
+                Empty
+            OfBranch
+              Ident "astU8"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "u8Val"
+                Ident "AstU8"
+                Empty
+            OfBranch
+              Ident "astI8"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "i8Val"
+                Ident "AstI8"
+                Empty
+            OfBranch
+              Ident "astU16"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "u16Val"
+                Ident "AstU16"
+                Empty
+            OfBranch
+              Ident "astI16"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "i16Val"
+                Ident "AstI16"
+                Empty
+            OfBranch
+              Ident "astU32"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "u32Val"
+                Ident "AstU32"
+                Empty
+            OfBranch
+              Ident "astI32"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "i32Val"
+                Ident "AstI32"
+                Empty
+            OfBranch
+              Ident "astU64"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "u64Val"
+                Ident "AstU64"
+                Empty
+            OfBranch
+              Ident "astI64"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "i64Val"
+                Ident "AstI64"
+                Empty
+            OfBranch
+              Ident "astF32"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "f32Val"
+                Ident "AstF32"
+                Empty
+            OfBranch
+              Ident "astF64"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "f64Val"
+                Ident "AstF64"
+                Empty
+            OfBranch
+              Ident "astChar"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "charVal"
+                Ident "AstChar"
+                Empty
+            OfBranch
+              Ident "astString"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "stringVal"
+                Ident "AstString"
+                Empty
+            OfBranch
+              Ident "astBinop"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "binopVal"
+                Ident "AstBinop"
+                Empty
+            OfBranch
+              Ident "astUnop"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "unopVal"
+                Ident "AstUnop"
+                Empty
+            OfBranch
+              Ident "astAssignEtc"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "assignEtcVal"
+                Ident "AstAssignEtc"
+                Empty
+            OfBranch
+              Ident "astNamedType"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "namedTypeVal"
+                Ident "AstNamedType"
+                Empty
+            OfBranch
+              Ident "astType"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "typeVal"
+                Ident "AstType"
+                Empty
+            OfBranch
+              Ident "astFuncCall"
+              IdentDefs
+                Postfix
+                  Ident "*"
+                  Ident "funcCallVal"
+                Ident "AstFuncCall"
+                Empty

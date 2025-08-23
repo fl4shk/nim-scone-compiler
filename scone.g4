@@ -324,7 +324,7 @@ typeMain:
 	;
 
 typeArray:
-	'array' '[' expr (',' expr)* ';' typeWithoutOptPreKwVar ']'
+	'array' '[' expr ';' typeWithoutOptPreKwVar ']'
 	;
 
 

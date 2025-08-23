@@ -5,40 +5,138 @@ type
   Mode* = enum
     mdOneFile,
 
+type
+  AstValKind* = enum
+    astValAstNode,
+    astValSeqAstNode,
+    astValOptAstNode,
+    astValString,
+    astValU64,
+    astValBool,
+    astValUnopKind,
+    astValBinopKind,
+    astValAssignEtcKind,
 
-const `helperTokKindSeq`*: seq[(string, Option[string], bool)] = @[
+  AstUnopKind* = enum
+    unopPlus,
+    unopMinus,
+    unopLogicNot,
+    unopBitInvert,
+
+  AstBinopKind* = enum
+    binopCmpEq,
+    binopCmpNe,
+    binopCmpLt,
+    binopCmpGt,
+    binopCmpLe,
+    binopCmpGe,
+    #--------
+    binopPlus,
+    binopMinus,
+    binopMul,
+    binopDiv,
+    binopMod,
+    binopBitAnd,
+    binopBitOr,
+    binopBitXor,
+    binopLogicAnd,
+    binopLogicOr,
+    binopBitShl,
+    binopBitShr,
+
+  AstAssignEtcKind* = enum
+    assignEtcRegular,
+    assignEtcPlus,
+    assignEtcMinus,
+    assignEtcMul,
+    assignEtcDiv,
+    assignEtcMod,
+    assignEtcBitAnd,
+    assignEtcBitOr,
+    assignEtcBitXor,
+    assignEtcBitShl,
+    assignEtcBitShr,
+
+const `helperTokKindSeq`*: seq[(
+  string, Option[string], bool,
+  seq[(string, AstValKind)]
+)] = @[
   #--------
-  ("InternalAstStart", none(string), true), # fake token indicating the beginning of the AST
-  ("Bad", none(string), true),           # invalid input!
-  ("Eof", none(string), true),           # end of file
+  (
+    "SrcFile", none(string), true,
+    @[
+      ("module", astValAstNode),
+      ("funcDeclSeq", astValSeqAstNode),
+      ("structDeclSeq", astValSeqAstNode),
+    ]
+  ), # fake token indicating the beginning of the AST
+  (
+    "Bad", none(string), false, @[]
+  ),           # invalid input!
+  ("Eof", none(string), false, @[]),           # end of file
   #("LineComent", none(string)),    # start of line comment
   #--------
-  ("Ident", none(string), true),  # identifiers
-  ("U64Lit", none(string), true), # 0-9, hex numbers, binary numbers, etc.
-  ("StrLit", none(string), true), # string literals
+  (
+    "Ident", none(string), true,
+    @[
+      ("strVal", astValString)
+    ]
+  ),  # identifiers
+  (
+    "U64Lit", none(string), true,
+    @[
+      ("u64Val", astValU64)
+    ]
+  ), # 0-9, hex numbers, binary numbers, etc.
+  (
+    "StrLit", none(string), true, @[]
+  ), # string literals
   #--------
-  ("True", some("true"), true),
-  ("False", some("false"), true),
+  ("True", some("true"), true, @[]),
+  ("False", some("false"), true, @[]),
   #--------
-  ("LParen", some("("), false),
-  ("RParen", some(")"), false),
-  ("LBracket", some("["), false),
-  ("RBracket", some("]"), false),
-  ("LBrace", some("{"), false),
-  ("RBrace", some("}"), false),
-  ("Comma", some(","), false),
-  ("Semicolon", some(";"), false),
-  ("Colon", some(":"), false),
+  ("LParen", some("("), false, @[]),
+  ("RParen", some(")"), false, @[]),
+  ("LBracket", some("["), false, @[]),
+  ("RBracket", some("]"), false, @[]),
+  ("LBrace", some("{"), false, @[]),
+  ("RBrace", some("}"), false, @[]),
+  ("Comma", some(","), false, @[]),
+  ("Semicolon", some(";"), false, @[]),
+  ("Colon", some(":"), false, @[]),
   #--------
-  ("Ptr", some("ptr"), true),
-  ("Addr", some("addr"), true),
-  ("Deref", some("@"), true), # pointer dereference
-  ("Dot", some("."), true),
+  ("Ptr", some("ptr"), true, @[]),
+  ("Addr", some("addr"), true, @[]),
+  ("Deref", some("@"), true, @[]), # pointer dereference
+  ("Dot", some("."), true, @[]),
   #--------
-  ("Var", some("var"), true),
-  ("Const", some("const"), true),
-  ("Def", some("def"), true),
-  ("FuncReturnTypePrefix", some("->"), false),
+  (
+    "Var", some("var"), true,
+    @[
+      ("ident", astValAstNode),           # `AstIdent` index
+      ("myType", astValAstNode),          # `AstType` index
+      ("optExpr", astValOptAstNode),      # optional expression index
+    ]
+  ),
+  (
+    "Const", some("const"), true,
+    @[
+      ("ident", astValAstNode),         # `AstIdent` index
+      ("myType", astValAstNode),        # `AstType` index
+      ("expr", astValAstNode),          # expression index
+    ]
+  ),
+  (
+    "Def", some("def"), true,
+    @[
+      
+      ("ident", astValAstNode),               # `AstIdent`
+      ("genericDeclSeq", astValSeqAstNode),   # seq of `AstIdent`
+      ("argDeclSeq", astValSeqAstNode),       # seq of `AstVar`
+      ("stmtSeq", astValSeqAstNode),
+    ],
+  ),
+  ("FuncReturnTypePrefix", some("->"), false, @[]),
   #("FuncNamedArgListStart", some("$(")),
   #("GenericNamedArgListStart", some("$[")),
   #("GenericArgListStart", some("#[")),
@@ -47,79 +145,239 @@ const `helperTokKindSeq`*: seq[(string, Option[string], bool)] = @[
       # Maybe save `macro` for the bootstrapped compiler?
       # I'm not sure I outright need macros for this version of the
       # compiler
-  ("Module", some("module"), true),
-  ("Struct", some("struct"), true),
-  ("Enum", some("enum"), true),
-  ("Extern", some("extern"), true),
-  ("Cextern", some("cextern"), true),
-  ("Import", some("import"), true),
-  ("CImport", some("cimport"), true),
+  (
+    "Module", some("module"), true,
+    @[
+      ("ident", astValAstNode),             # `AstIdent`
+    ],
+  ),
+  (
+    "Struct", some("struct"), true,
+    @[
+      ("genericDeclSeq", astValSeqAstNode),  # seq of `AstIdent`
+      ("fieldSeq", astValSeqAstNode),        # `seq` of `AstVar`
+    ],
+  ),
+  (
+    "Enum", some("enum"), true,
+    @[
+      # TODO: come back to this later
+    ]
+  ),
+  (
+    "Extern", some("extern"), true,
+    @[
+      # TODO: come back to this later
+    ]
+  ),
+  (
+    "Cextern", some("cextern"), true,
+    @[
+      # TODO: come back to this later
+    ]
+  ),
+  (
+    "Import", some("import"), true,
+    @[
+      # TODO: come back to this later
+    ]
+  ),
+  (
+    "CImport", some("cimport"), true,
+    @[
+      # TODO: come back to this later
+    ]
+  ),
   #--------
-  ("Scope", some("scope"), true),
-  ("If", some("if"), true),
-  ("Elif", some("elif"), true),
-  ("Else", some("else"), true),
-  ("Switch", some("switch"), true),
-  ("Case", some("case"), true),
-  ("Default", some("default"), true),
-  ("For", some("for"), true),
-  ("While", some("while"), true),
-  ("Continue", some("continue"), true),
-  ("Break", some("break"), true),
-  ("Result", some("result"), true),
-  ("Return", some("return"), true),
+  (
+    "Scope", some("scope"), true,
+    @[
+      # TODO: come back to this later
+    ]
+  ),
+  (
+    "If", some("if"), true,
+    @[
+      ("expr", astValAstNode),          # (condition) expression
+      ("stmtSeq", astValSeqAstNode),    # the list of statements
+                                        # within the scope
+      ("optChild", astValOptAstNode),   # optional `AstElif` or `AstElse`
+    ],
+  ),
+  (
+    "Elif", some("elif"), true,
+    @[
+      ("expr", astValAstNode),        # (condition) expression
+      ("stmtSeq", astValSeqAstNode),  # the list of statements 
+                                      # within the scope
+      ("optChild", astValOptAstNode), # optional `AstElif` or `AstElse`
+    ],
+  ),
+  (
+    "Else", some("else"), true,
+    @[
+      ("stmtSeq", astValSeqAstNode),  # the list of statements
+                                      # within the scope
+    ]
+  ),
+  (
+    "Switch", some("switch"), true,
+    @[
+      ("expr", astValAstNode),          # the condition
+      ("childSeq", astValSeqAstNode),   # the list of `case` or `default`
+    ]
+  ),
+  (
+    "Case", some("case"), true,
+    @[
+      ("expr", astValAstNode),        # the condition
+      ("stmtSeq", astValSeqAstNode),  # the list of statements
+                                      # within the scope
+    ],
+  ),
+  (
+    "Default", some("default"), true,
+    @[
+      ("stmtSeq", astValSeqAstNode),  # the list of statements
+                                      # within the scope
+    ]
+  ),
+  (
+    "For", some("for"), true,
+    @[
+      ("ident", astValAstNode),     # name of the indexing variable
+      ("exprPre", astValAstNode),
+      ("exprPost", astValAstNode),
+      ("isUntil", astValBool),
+      ("stmtSeq", astValSeqAstNode),
+    ],
+  ),
+  ("In", some("in"), false, @[]),
+  ("To", some("to"), false, @[]),
+  ("Until", some("until"), false, @[]),
+  (
+    "While", some("while"), true,
+    @[
+      ("expr", astValAstNode),        # (conditional) expression
+      ("stmtSeq", astValSeqAstNode),  # the list of statements
+                                      # within the scope
+    ],
+  ),
+  ("Continue", some("continue"), true, @[]),
+  ("Break", some("break"), true, @[]),
+  #("Result", some("result"), true),
+  (
+    "Return", some("return"), true,
+    @[
+      ("optExpr", astValOptAstNode)
+    ]
+  ),
   #--------
   #("Type", some("type")),
-  ("Array", some("array"), true),
-  ("Void", some("void"), true),
-  ("Bool", some("bool"), true),
-  ("U8", some("u8"), true),
-  ("I8", some("i8"), true),
-  ("U16", some("u16"), true),
-  ("I16", some("i16"), true),
-  ("U32", some("u32"), true),
-  ("I32", some("i32"), true),
-  ("U64", some("u64"), true),
-  ("I64", some("i64"), true),
-  ("F32", some("f32"), true),
-  ("F64", some("f64"), true),
-  ("Char", some("char"), true),
-  ("String", some("string"), true),
+  (
+    "Array", some("array"), true,
+    @[
+      ("dim", astValAstNode),
+      ("elemType", astValAstNode),
+    ]
+  ),
+  ("Void", some("void"), true, @[]),
+  ("Bool", some("bool"), true, @[]),
+  ("U8", some("u8"), true, @[]),
+  ("I8", some("i8"), true, @[]),
+  ("U16", some("u16"), true, @[]),
+  ("I16", some("i16"), true, @[]),
+  ("U32", some("u32"), true, @[]),
+  ("I32", some("i32"), true, @[]),
+  ("U64", some("u64"), true, @[]),
+  ("I64", some("i64"), true, @[]),
+  ("F32", some("f32"), true, @[]),
+  ("F64", some("f64"), true, @[]),
+  ("Char", some("char"), true, @[]),
+  ("String", some("string"), true, @[]),
   #--------
-  ("CmpEq", some("=="), true),
-  ("CmpNe", some("!="), true),
-  ("CmpLt", some("<"), true),
-  ("CmpGt", some(">"), true),
-  ("CmpLe", some("<="), true),
-  ("CmpGe", some(">="), true),
+  ("CmpEq", some("=="), false, @[]),
+  ("CmpNe", some("!="), false, @[]),
+  ("CmpLt", some("<"), false, @[]),
+  ("CmpGt", some(">"), false, @[]),
+  ("CmpLe", some("<="), false, @[]),
+  ("CmpGe", some(">="), false, @[]),
   #--------
-  ("Plus", some("+"), true),
-  ("Minus", some("-"), true),
-  ("Mul", some("*"), true),
-  ("Div", some("/"), true),
-  ("Mod", some("%"), true),
-  ("BitAnd", some("&"), true),
-  ("BitOr", some("|"), true),
-  ("BitXor", some("^"), true),
-  ("BitInvert", some("~"), true),
-  ("LogicAnd", some("&&"), true),
-  ("LogicOr", some("||"), true),
-  ("LogicNot", some("!"), true),
-  ("BitShl", some("<<"), true),
-  ("BitShr", some(">>"), true),
+  ("Plus", some("+"), false, @[]),
+  ("Minus", some("-"), false, @[]),
+  ("Mul", some("*"), false, @[]),
+  ("Div", some("/"), false, @[]),
+  ("Mod", some("%"), false, @[]),
+  ("BitAnd", some("&"), false, @[]),
+  ("BitOr", some("|"), false, @[]),
+  ("BitXor", some("^"), false, @[]),
+  ("BitInvert", some("~"), false, @[]),
+  ("LogicAnd", some("&&"), false, @[]),
+  ("LogicOr", some("||"), false, @[]),
+  ("LogicNot", some("!"), false, @[]),
+  ("BitShl", some("<<"), false, @[]),
+  ("BitShr", some(">>"), false, @[]),
   #--------
-  ("Assign", some("="), true),
-  ("AssignPlus", some("+="), true),
-  ("AssignMinus", some("-="), true),
-  ("AssignMul", some("*="), true),
-  ("AssignDiv", some("/="), true),
-  ("AssignMod", some("%="), true),
-  ("AssignBitAnd", some("&="), true),
-  ("AssignBitOr", some("|="), true),
-  ("AssignBitXor", some("^="), true),
-  ("AssignBitShl", some("<<="), true),
-  ("AssignBitShr", some(">>="), true),
+  ("Assign", some("="), false, @[]),
+  ("AssignPlus", some("+="), false, @[]),
+  ("AssignMinus", some("-="), false, @[]),
+  ("AssignMul", some("*="), false, @[]),
+  ("AssignDiv", some("/="), false, @[]),
+  ("AssignMod", some("%="), false, @[]),
+  ("AssignBitAnd", some("&="), false, @[]),
+  ("AssignBitOr", some("|="), false, @[]),
+  ("AssignBitXor", some("^="), false, @[]),
+  ("AssignBitShl", some("<<="), false, @[]),
+  ("AssignBitShr", some(">>="), false, @[]),
   #--------
+  #--------
+  # AST-only elements from here on
+  (
+    "Unop", none(string), true,
+    @[
+      ("kind", astValUnopKind),
+      ("child", astValAstNode),
+    ]
+  ),
+  (
+    "Binop", none(string), true,
+    @[
+      ("kind", astValBinopKind),
+      ("left", astValAstNode),
+      ("right", astValAstNode),
+    ]
+  ),
+  (
+    "AssignEtc", none(string), true,
+    @[
+      ("kind", astValAssignEtcKind),
+      ("left", astValAstNode),
+      ("right", astValAstNode),
+    ]
+  ),
+  (
+    "NamedType", none(string), true,
+    @[
+      ("ident", astValAstNode),
+      ("genericImplSeq", astValSeqAstNode),
+    ]
+  ),
+  (
+    "Type", none(string), true,
+    @[
+      ("childSeq", astValSeqAstNode),
+    ]
+  ),
+  (
+    "FuncCall", none(string), true,
+    @[
+      ("ident", astValAstNode),
+      ("genericImplSeq", astValSeqAstNode),
+      ("argImplSeq", astValSeqAstNode),
+    ]
+  ),
+  #("TypeUnresolved", none(string), true),
+  #("TypeResolved", none(string), true),
   #("Lim", none(string)),
 ]
 
@@ -195,8 +453,6 @@ macro mkEnumAstKind(): untyped =
   )
 
 mkEnumAstKind()
-
-#let temp = tokAssignDiv
 
 
 type

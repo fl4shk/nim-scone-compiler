@@ -10,8 +10,10 @@ import ast
 type
   Scone* = object
     mode*: Mode
-    ast*: seq[AstNode]
-    currAstIdx*: uint64
+    #ast*: seq[AstNode]
+    astRoot*: AstNode
+    ast*: AstNode
+    #currAstIdx*: uint64
     symSeq*: seq[Symbol]
     symNameToIdxTbl*: OrderedTable[string, uint64]
 
@@ -27,9 +29,8 @@ type
     #currTok*: CurrTok
     lexMain*: LexMain
     
-
     #line*: string
-    identStrS2d*: seq[seq[string]]
+    #identStrS2d*: seq[seq[string]]
     inputFname*: string
     inp*: string
     outp*: string

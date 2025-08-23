@@ -4,34 +4,219 @@ import std/macros
 import nonAstDataStructures
 
 
-type
-  AstLitValKind* = enum
-    astLvKindI64,
-    astLvKindU64,
-    #astLvKindF32,
-    #astLvKindF64,
-    astLvKindStr,
-
-  AstLitVal* = object
-    case kind: AstLitValKind
-    of astLvKindI64:
-      i64Val: int64
-    of astLvKindU64:
-      u64Val: uint64
-    #of astLvKindF32:
-    #  f32Val: string
-    #of astLvKindF64:
-    #  f64Val: string
-    of astLvKindStr:
-      strVal: string
+#type
+#  AstLitValKind* = enum
+#    astLvKindI64,
+#    astLvKindU64,
+#    #astLvKindF32,
+#    #astLvKindF64,
+#    astLvKindStr,
+#
+#  AstLitVal* = object
+#    case kind: AstLitValKind
+#    of astLvKindI64:
+#      i64Val: int64
+#    of astLvKindU64:
+#      u64Val: uint64
+#    #of astLvKindF32:
+#    #  f32Val: string
+#    #of astLvKindF64:
+#    #  f64Val: string
+#    of astLvKindStr:
+#      strVal: string
 
 #type
 #  AstIdent* = object
 #    
 
-
 type
-  AstNode* = object
+  AstSrcFile* = object
+    module*: AstNode
+    funcDeclSeq*: seq[AstNode]
+    structDeclSeq*: seq[AstNode]
+
+  AstIdent* = object
+    strVal*: string
+  AstU64Lit* = object
+    u64Val*: uint64
+  AstStrLit* = object
+    strLitVal*: string
+#--------
+  AstTrue* = object
+  AstFalse* = object
+#--------
+  #AstLBracket* = object
+  #AstRBracket* = object
+#--------
+  AstPtr* = object
+  AstAddr* = object
+  AstDeref* = object
+  AstDot* = object
+#--------
+  AstVar* = object
+    ident*: AstNode                # `AstIdent`
+    myType*: AstNode               # `AstType`
+    optExpr*: Option[AstNode]      # optional expression
+  AstConst* = object
+    ident*: AstNode                # `AstIdent`
+    myType*: AstNode               # `AstType`
+    expr*: AstNode                 # expression
+  AstDef* = object
+    ident*: AstNode                # `AstIdent`
+    genericDeclSeq*: seq[AstNode]  # seq of `AstIdent`
+    argDeclSeq*: seq[AstNode]      # seq of `AstVar`
+    stmtSeq*: seq[AstNode]
+
+#("Macro", some("macro")),
+    # Maybe save `macro` for the bootstrapped compiler?
+    # I'm not sure I outright need macros for this version of the
+    # compiler
+  AstModule* = object
+    ident*: AstNode                # `AstIdent`
+
+  AstStruct* = object
+    genericDeclSeq*: seq[AstNode]  # seq of `AstIdent`
+    fieldSeq*: seq[AstNode]        # `seq` of `AstVar`
+
+  AstEnum* = object
+    # TODO: come back to this later
+  AstExtern* = object
+    # TODO: come back to this later
+  AstCextern* = object
+    # TODO: come back to this later
+  AstImport* = object
+    # TODO: come back to this later
+  AstCImport* = object
+    # TODO: come back to this later
+#--------
+  AstScope* = object
+    # TODO: come back to this later
+  AstIf* = object
+    expr*: AstNode                 # (condition) expression
+    stmtSeq*: seq[AstNode]         # the list of statements within the scope
+    optChild*: Option[AstNode]     # optional `AstElif` or `AstElse`
+  AstElif* = object
+    expr*: AstNode                 # (condition) expression
+    stmtSeq*: seq[AstNode]         # the list of statements within the scope
+    optChild*: Option[AstNode]     # optional `AstElif` or `AstElse`
+  AstElse* = object
+    stmtSeq*: seq[AstNode]         # the list of statements within the scope
+  AstSwitch* = object
+    expr*: AstNode                 # the condition
+    childSeq*: seq[AstNode]        # the list of `case` or `default`
+  AstCase* = object
+    expr*: AstNode                 # the condition
+    stmtSeq*: seq[AstNode]         # the list of statements within the scope
+  AstDefault* = object
+    stmtSeq*: seq[AstNode]         # the list of statements within the scope
+  AstFor* = object
+    ident*: AstNode                # name of the indexing variable
+    exprPre*: AstNode              # 
+    exprPost*: AstNode             #
+    isUntil*: bool
+    stmtSeq*: seq[AstNode]
+  AstWhile* = object
+    expr*: AstNode                 # (conditional) expression
+    stmtSeq*: seq[AstNode]         # the list of statements within the scope
+  AstContinue* = object
+  AstBreak* = object
+  #AstResult* = object
+  AstReturn* = object
+    optExpr*: Option[AstNode]
+#--------
+  AstArray* = object
+    dim*: AstNode
+    elemType*: AstNode
+
+  AstVoid* = object
+  AstBool* = object
+  AstU8* = object
+  AstI8* = object
+  AstU16* = object
+  AstI16* = object
+  AstU32* = object
+  AstI32* = object
+  AstU64* = object
+  AstI64* = object
+  AstF32* = object
+  AstF64* = object
+  AstChar* = object
+  AstString* = object
+#--------
+
+  #AstUnopKind* = enum
+  #  unopPlus,
+  #  unopMinus,
+  #  unopLogicNot,
+  #  unopBitInvert,
+
+  AstUnop* = object
+    #tok*: TokKind
+    kind*: AstUnopKind
+    child*: AstNode
+
+
+  #AstBinopKind* = enum
+  #  binopCmpEq,
+  #  binopCmpNe,
+  #  binopCmpLt,
+  #  binopCmpGt,
+  #  binopCmpLe,
+  #  binopCmpGe,
+  #  #--------
+  #  binopPlus,
+  #  binopMinus,
+  #  binopMul,
+  #  binopDiv,
+  #  binopMod,
+  #  binopBitAnd,
+  #  binopBitOr,
+  #  binopBitXor,
+  #  binopLogicAnd,
+  #  binopLogicOr,
+  #  binopBitShl,
+  #  binopBitShr,
+
+  AstBinop* = object
+    #tok*: TokKind
+    kind*: AstBinopKind
+    left*: AstNode
+    right*: AstNode
+
+#--------
+  #AstAssignEtcKind* = enum
+  #  assignEtcRegular,
+  #  assignEtcPlus,
+  #  assignEtcMinus,
+  #  assignEtcMul,
+  #  assignEtcDiv,
+  #  assignEtcMod,
+  #  assignEtcBitAnd,
+  #  assignEtcBitOr,
+  #  assignEtcBitXor,
+  #  assignEtcBitShl,
+  #  assignEtcBitShr,
+  AstAssignEtc* = object
+    kind*: AstAssignEtcKind
+    left*: AstNode
+    right*: AstNode
+
+  AstNamedType* = object
+    ident*: AstNode
+    genericImplSeq*: seq[AstNode]
+
+  AstType* = object
+    #ident*: AstNode
+    #genericImplSeq*: seq[AstNode]
+    childSeq*: seq[AstNode]
+
+  AstFuncCall* = object
+    ident*: AstNode
+    genericImplSeq*: seq[AstNode]
+    argImplSeq*: seq[AstNode]
+
+  AstNode* = ref AstNodeObj
+  AstNodeObj* = object
     #tok*: TokKind
     #kind*: AstKind
     #lineNum*: uint64
@@ -41,8 +226,277 @@ type
     #litVal*: Option[AstLitVal]
     #symIdxSeq*: seq[uint64]
     #chIdxSeq*: seq[uint64]    # indices into `Scone.ast` children
-    parentIdx*: uint64
-    #case kind: AstKind:
-    #of astTrue:
-    #case kind*: AstKind:
-    #of
+    parent*: AstNode
+
+    case kind*: AstKind:
+    of astSrcFile: srcFileVal*: AstSrcFile
+    of astIdent: identVal*: AstIdent    # identifiers
+    of astU64Lit: u64LitVal*: AstU64Lit # 0-9, hex numbers, binary numbers, etc.
+    of astStrLit: strLitVal*: AstStrLit # string literals
+    #--------
+    of astTrue: trueVal*: AstTrue
+    of astFalse: falseVal*: AstFalse
+    #--------
+    #of astLBracket: lBracketVal*: AstLBracket
+    #of astRBracket: rBracketVal*: AstRBracket
+    #--------
+    of astPtr: ptrVal*: AstPtr
+    of astAddr: addrVal*: AstAddr
+    of astDeref: derefVal*: AstDeref # pointer dereference
+    of astDot: dotVal*: AstDot
+    #--------
+    of astVar: varVal*: AstVar
+    of astConst: constVal*: AstConst
+    of astDef: defVal*: AstDef
+    #("Macro", some("macro")),
+        # Maybe save `macro` for the bootstrapped compiler?
+        # I'm not sure I outright need macros for this version of the
+        # compiler
+    of astModule: moduleVal*: AstModule
+    of astStruct: structVal*: AstStruct
+    of astEnum: enumVal*: AstEnum
+    of astExtern: externVal*: AstExtern
+    of astCextern: cexternVal*: AstCextern
+    of astImport: importVal*: AstImport
+    of astCImport: cImportVal*: AstCImport
+    #--------
+    of astScope: scopeVal*: AstScope
+    of astIf: ifVal*: AstIf
+    of astElif: elifVal*: AstElif
+    of astElse: elseVal*: AstElse
+    of astSwitch: switchVal*: AstSwitch
+    of astCase: caseVal*: AstCase
+    of astDefault: defaultVal*: AstDefault
+    of astFor: forVal*: AstFor
+    of astWhile: whileVal*: AstWhile
+    of astContinue: continueVal*: AstContinue
+    of astBreak: breakVal*: AstBreak
+    #of astResult: resultVal*: AstResult
+    of astReturn: returnVal*: AstReturn
+    #--------
+    of astArray: arrayVal*: AstArray
+    of astVoid: voidVal*: AstVoid
+    of astBool: boolVal*: AstBool
+    of astU8: u8Val*: AstU8
+    of astI8: i8Val*: AstI8
+    of astU16: u16Val*: AstU16
+    of astI16: i16Val*: AstI16
+    of astU32: u32Val*: AstU32
+    of astI32: i32Val*: AstI32
+    of astU64: u64Val*: AstU64
+    of astI64: i64Val*: AstI64
+    of astF32: f32Val*: AstF32
+    of astF64: f64Val*: AstF64
+    of astChar: charVal*: AstChar
+    of astString: stringVal*: AstString
+    #--------
+    of astBinop: binopVal*: AstBinop
+    of astUnop: unopVal*: AstUnop
+    of astAssignEtc: assignEtcVal*: AstAssignEtc
+    of astNamedType: namedTypeVal*: AstNamedType
+    of astType: typeVal*: AstType
+    of astFuncCall: funcCallVal*: AstFuncCall
+
+proc tokToUnop*(
+  tok: TokKind,
+): Option[AstUnopKind] =
+  result = none(AstUnopKind)
+
+  case tok:
+  of tokPlus:
+    return some(unopPlus)
+  of tokMinus:
+    return some(unopMinus)
+  of tokLogicNot:
+    return some(unopLogicNot)
+  of tokBitInvert:
+    return some(unopBitInvert)
+  else:
+    return none(AstUnopKind)
+
+proc tokToBinop*(
+  tok: TokKind,
+): Option[AstBinopKind] =
+  result = none(AstBinopKind)
+  case tok:
+  of tokCmpEq:
+    return some(binopCmpEq)
+  of tokCmpNe:
+    return some(binopCmpNe)
+  of tokCmpLt:
+    return some(binopCmpLt)
+  of tokCmpGt:
+    return some(binopCmpGt)
+  of tokCmpLe:
+    return some(binopCmpLe)
+  of tokCmpGe:
+    return some(binopCmpGe)
+  #--------
+  of tokPlus:
+    return some(binopPlus)
+  of tokMinus:
+    return some(binopMinus)
+  of tokMul:
+    return some(binopMul)
+  of tokDiv:
+    return some(binopDiv)
+  of tokMod:
+    return some(binopMod)
+  of tokBitAnd:
+    return some(binopBitAnd)
+  of tokBitOr:
+    return some(binopBitOr)
+  of tokBitXor:
+    return some(binopBitXor)
+  of tokLogicAnd:
+    return some(binopLogicAnd)
+  of tokLogicOr:
+    return some(binopLogicOr)
+  of tokBitShl:
+    return some(binopBitShl)
+  of tokBitShr:
+    return some(binopBitShr)
+  else:
+    return none(AstBinopKind)
+proc tokToAssignEtc*(
+  tok: TokKind,
+): Option[AstAssignEtcKind] =
+  result = none(AstAssignEtcKind)
+
+  case tok:
+  of tokAssign:
+    return some(assignEtcRegular)
+  of tokAssignPlus:
+    return some(assignEtcPlus)
+  of tokAssignMinus:
+    return some(assignEtcMinus)
+  of tokAssignMul:
+    return some(assignEtcMul)
+  of tokAssignDiv:
+    return some(assignEtcDiv)
+  of tokAssignMod:
+    return some(assignEtcMod)
+  of tokAssignBitAnd:
+    return some(assignEtcBitAnd)
+  of tokAssignBitOr:
+    return some(assignEtcBitOr)
+  of tokAssignBitXor:
+    return some(assignEtcBitXor)
+  of tokAssignBitShl:
+    return some(assignEtcBitShl)
+  of tokAssignBitShr:
+    return some(assignEtcBitShr)
+  else:
+    return none(AstAssignEtcKind)
+
+proc doIndent(
+  indent: uint,
+): string =
+  for idx in 0 ..< indent:
+    result.add " "
+
+#macro toStr*(
+#  ast: AstNode
+#): untyped =
+#  #dumpTree(ast)
+#  case ast.kind:
+#  of 
+#  discard
+
+#proc toStr*(
+#  astSeq: seq[AstNode],
+#  indent: uint,
+#): string
+#proc toStr*(
+#  ast: AstNode,
+#  indent: uint,
+#): string =
+#  let x = indent + 2
+#  result.add doIndent(indent=indent)
+#  let i = doIndent(indent=x)
+#
+#  case ast.kind:
+#  of astSrcFile:
+#    result.add "(AstSrcFile\n"
+#    result.add(
+#      i & "(module " & ast.srcFileVal.module.toStr(x) & ")\n"
+#    )
+#    result.add(
+#      i & "(funcDeclSeq " & ast.srcFileVal.funcDeclSeq.toStr(x) & ")\n"
+#    )
+#    result.add(
+#      i & "(structDeclSeq " & ast.srcFileVal.structDeclSeq.toStr(x) & ")\n"
+#    )
+#    result.add ")\n"
+#  of astIdent:
+#    result.add "(AstIdent " & ast.identVal.strVal & ") "
+#  of astU64Lit:
+#    result.add "(AstU64Lit " & $ast.u64LitVal.u64Val & ") "
+#  of astStrLit:
+#    result.add "(AstStrLit \"" & ast.strLitVal.strLitVal & "\") "
+#  of astTrue:
+#    result.add "(" & helperTokKindSeq[uint(tokTrue)][1].get() & ") "
+#  of astFalse:
+#    result.add "(" & helperTokKindSeq[uint(tokFalse)][1].get() & ") "
+#  of astPtr:
+#    result.add "(" & helperTokKindSeq[uint(tokPtr)][1].get() & ") "
+#  of astAddr:
+#    result.add "(" & helperTokKindSeq[uint(tokAddr)][1].get() & ") "
+#  of astDeref:
+#    result.add "(" & helperTokKindSeq[uint(tokDeref)][1].get() & ") "
+#  of astDot:
+#    result.add "(" & helperTokKindSeq[uint(tokDot)][1].get() & ") "
+#  of astVar:
+#    result.add "(AstVar\n"
+#    result.add(
+#      i & "(ident " & ast.varVal.ident.toStr(x) & ")\n"
+#    )
+#    result.add(
+#      i & "(myType " & ast.varVal.myType.toStr(x) & ")\n"
+#    )
+#    if ast.varVal.optExpr.isSome:
+#      result.add(
+#        i & "(optExpr " & ast.varVal.optExpr.get().toStr(x) & ")\n"
+#      )
+#    else:
+#      result.add(
+#        i & "(not optExpr.isSome)\n"
+#      )
+#    result.add ")\n"
+#  of astConst:
+#    result.add "(AstConst\n"
+#    result.add(
+#      i & "(ident " & ast.constVal.ident.toStr(x) & ")\n"
+#    )
+#    result.add(
+#      i & "(myType " & ast.constVal.myType.toStr(x) & ")\n"
+#    )
+#    result.add(
+#      i & "(expr " & ast.constVal.expr.toStr(x) & ")\n"
+#    )
+#    result.add ")\n"
+#  of astDef:
+#    result.add "(AstDef\n"
+#    result.add(
+#      i & "(ident " & ast.defVal.ident.toStr(x) & ")\n"
+#    )
+#    result.add(
+#      i & "(genericDeclSeq " & ast.defVal.genericDeclSeq.toStr(x) & ")\n"
+#    )
+#    result.add(
+#      i & "(argDeclSeq " & ast.defVal.argDeclSeq.toStr(x) & ")\n"
+#    )
+#    result.add ")\n"
+#
+#proc toStr*(
+#  astSeq: seq[AstNode],
+#  indent: uint,
+#): string =
+#  let x = indent + 2
+#  result.add doIndent(indent=ident)
+#  #let i = doIndent(ident=x)
+#
+#  result.add "[\n"
+#  for idx in 0 ..< astSeq.len():
+#    result.add astSeq[idx].toStr(x) & ",\n"
+#  result.add "]\n"
