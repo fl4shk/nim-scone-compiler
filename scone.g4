@@ -164,8 +164,8 @@ exprLowestNonOp:
 	(
 		//ident exprFuncCallPostIdent?
 		exprIdentOrFuncCall
-		| literal exprFuncCall?
-		| '(' expr ')' exprFuncCall?
+		| literal //exprFuncCall?
+		| '(' expr ')' //exprFuncCall?
 	)
 	//exprFuncCallPostIdent?
 	;
@@ -216,8 +216,12 @@ exprUnary:
 	exprPrefixUnary? exprFieldArrEtc
 	;
 
-exprSuffixFieldMethodAccess:
+exprSuffixFieldMethodAccessDotExpr:
 	'.' exprIdentOrFuncCall
+	;
+exprSuffixFieldMethodAccess:
+	exprSuffixFieldMethodAccessDotExpr
+	| exprBinopFuncCall
 	;
 //exprSuffixMethodCall:
 //	'->' exprFuncCallMain
@@ -281,6 +285,13 @@ exprFuncCallPostIdent:
 	genericFullImplList?
 	exprFuncCallPostGeneric
 	;
+
+exprBinopFuncCall:
+	ident
+	genericFullImplList?
+	expr
+	;
+
 //exprFuncCallPostGenericBinop:
 //	ident
 //	;
@@ -288,7 +299,7 @@ exprFuncCallPostGeneric:
 	//'$(' funcNamedArgImplList? ')'
 	//| '(' funcUnnamedArgImplList? ')'
 	exprFuncCallPostGenericMain
-	| expr
+	//| expr
 	;
 exprFuncCallPostGenericMain:
 	'(' 

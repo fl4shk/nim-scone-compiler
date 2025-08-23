@@ -22,5 +22,5 @@ def plus(left: i32, right: i32) -> i32 {
 };
 
 struct Temp {
-	x: array[a(plus 3); u32];
+	x: array[a plus c; u32];
 };

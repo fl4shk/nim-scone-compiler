@@ -1055,13 +1055,14 @@ proc parseExprFuncCallPostGeneric(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  result = doChkSelParse(
-    sppSeq @[
-      parseExprFuncCallPostGenericMain,
-      parseExpr,
-    ],
-    none(HashSet[TokKind]),
-  )[1]
+  result = self.parseExprFuncCallPostGenericMain(chk=chk)
+  #result = doChkSelParse(
+  #  sppSeq @[
+  #    parseExprFuncCallPostGenericMain,
+  #    #parseExpr,
+  #  ],
+  #  none(HashSet[TokKind]),
+  #)[1]
 
 
 
@@ -1174,6 +1175,17 @@ proc parseExprIdentOrFuncCall(
     chk=false,
     selProc=spp parseExprFuncCallPostIdent,
   )
+
+proc parseBinopExprFuncCall(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = doChkSpp(parseIdent)
+  discard self.optParse(
+    chk=false,
+    selProc=spp parseGenericFullImplList,
+  )
+  discard self.parseExpr(chk=false)
 
 proc parseExprFuncCall(
   self: var Scone,
@@ -1301,13 +1313,13 @@ proc parsePrefixUnary(
     tokAddr
   ]))
 
-proc parseExprSuffixFieldMethodAccess(
+proc parseExprSuffixFieldMethodAccessDotExpr(
   self: var Scone,
   chk: bool,
 ): SppResult =
   #echo (
   #  (
-  #    "parseExprSuffixFieldMethodAccess(): pre tokDot: "
+  #    "parseExprSuffixFieldMethodAccessDotExpr(): pre tokDot: "
   #  ) & (
   #    $chk & " " & $self.lexMain
   #  )
@@ -1315,12 +1327,23 @@ proc parseExprSuffixFieldMethodAccess(
   discard doChkTok(tokDot)
   #echo (
   #  (
-  #    "parseExprSuffixFieldMethodAccess(): post tokDot: "
+  #    "parseExprSuffixFieldMethodAccessDotExpr(): post tokDot: "
   #  ) & (
   #    $chk & " " & $self.lexMain
   #  )
   #)
   self.parseExprIdentOrFuncCall(chk=false)
+proc parseExprSuffixFieldMethodAccess(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = doChkSelParse(
+    sppSeq @[
+      parseExprSuffixFieldMethodAccessDotExpr,
+      parseBinopExprFuncCall,
+    ],
+    none(HashSet[TokKind]),
+  )[1]
 
 proc parseExprSuffixDeref(
   self: var Scone,
