@@ -2,7 +2,7 @@ import std/tables
 import std/sets
 import std/options
 
-import nonAstDataStructures
+import dataStructuresMisc
 import ast
 import scone
 import lex

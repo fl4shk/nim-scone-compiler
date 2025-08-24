@@ -2,7 +2,7 @@ import std/sets
 import std/options
 import std/strutils
 
-import nonAstDataStructures
+import dataStructuresMisc
 import scone
 
 proc inpChar(
