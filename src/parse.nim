@@ -51,6 +51,20 @@ proc mkAst*(
       kind: kind,
       #ast,
     )
+  #echo myAst.repr()
+  #echo "mkAst(): begin:"
+  #echo result.toStr(0)
+  #echo "mkAst(): end:"
+
+proc mkAstAndStack*(
+  self: var Scone,
+  kind: AstKind,
+  optParent: Option[AstNode]=none(AstNode),
+): AstNode =
+  result = self.mkAst(
+    kind=kind,
+    optParent=optParent,
+  ).stack()
 
 #proc mkAst*(
 #  self: var Scone,
@@ -1164,13 +1178,20 @@ proc parseModule(
   #  kind: astModule,
   #)
   #myAst.srcFileVal.module = module
-  self.mkAst(astModule).stack().myModule.ident = (
+  template tempModule(): untyped = 
+    self.astRoot.mySrcFile.module
+
+  tempModule = (
+    self.mkAstAndStack(astModule, some(self.astRoot))
+  )
+  tempModule.myModule.ident = (
     self.parseIdent(chk=false).ast
   )
+  #self.astRoot.mySrcFile.module = myAst
   #echo myAst.repr()
   #echo myAst.toStr(0)
   discard unstack()
-  #myAst.toStr()
+  #echo myAst.toStr(0)
 
   self.lexAndExpect(tokSemicolon)
 
@@ -1599,6 +1620,7 @@ proc parseSrcFile*(
     )
 
   self.lexAndExpect(tokEof)
+  echo self.astRoot.toStr(0)
   #let temp = self.loopSelParse()
   #if not temp.foundTok.isSome:
   #  discard

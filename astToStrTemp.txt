@@ -1,0 +1,643 @@
+      CaseStmt
+        DotExpr
+          Ident "ast"
+          Ident "kind"
+        OfBranch
+          Ident "astSrcFile"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit "(AstSrcFile\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(module "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "mySrcFile"
+                        Ident "module"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(funcDeclSeq "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "mySrcFile"
+                        Ident "funcDeclSeq"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(structDeclSeq "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "mySrcFile"
+                        Ident "structDeclSeq"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit ")\n"
+        OfBranch
+          Ident "astIdent"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "(AstIdent "
+                  DotExpr
+                    DotExpr
+                      Ident "ast"
+                      Ident "myIdent"
+                    Ident "strVal"
+                StrLit ") "
+        OfBranch
+          Ident "astU64Lit"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "(AstU64Lit "
+                  Prefix
+                    Ident "$"
+                    DotExpr
+                      DotExpr
+                        Ident "ast"
+                        Ident "myU64Lit"
+                      Ident "u64Val"
+                StrLit ") "
+        OfBranch
+          Ident "astStrLit"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "(AstStrLit \""
+                  DotExpr
+                    DotExpr
+                      Ident "ast"
+                      Ident "myStrLit"
+                    Ident "strLitVal"
+                StrLit "\") "
+        OfBranch
+          Ident "astTrue"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "("
+                  Call
+                    DotExpr
+                      BracketExpr
+                        BracketExpr
+                          Ident "helperTokKindSeq"
+                          Call
+                            Ident "uint"
+                            Ident "tokTrue"
+                        IntLit 1
+                      Ident "get"
+                StrLit ") "
+        OfBranch
+          Ident "astFalse"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "("
+                  Call
+                    DotExpr
+                      BracketExpr
+                        BracketExpr
+                          Ident "helperTokKindSeq"
+                          Call
+                            Ident "uint"
+                            Ident "tokFalse"
+                        IntLit 1
+                      Ident "get"
+                StrLit ") "
+        OfBranch
+          Ident "astPtr"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "("
+                  Call
+                    DotExpr
+                      BracketExpr
+                        BracketExpr
+                          Ident "helperTokKindSeq"
+                          Call
+                            Ident "uint"
+                            Ident "tokPtr"
+                        IntLit 1
+                      Ident "get"
+                StrLit ") "
+        OfBranch
+          Ident "astAddr"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "("
+                  Call
+                    DotExpr
+                      BracketExpr
+                        BracketExpr
+                          Ident "helperTokKindSeq"
+                          Call
+                            Ident "uint"
+                            Ident "tokAddr"
+                        IntLit 1
+                      Ident "get"
+                StrLit ") "
+        OfBranch
+          Ident "astDeref"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "("
+                  Call
+                    DotExpr
+                      BracketExpr
+                        BracketExpr
+                          Ident "helperTokKindSeq"
+                          Call
+                            Ident "uint"
+                            Ident "tokDeref"
+                        IntLit 1
+                      Ident "get"
+                StrLit ") "
+        OfBranch
+          Ident "astDot"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  StrLit "("
+                  Call
+                    DotExpr
+                      BracketExpr
+                        BracketExpr
+                          Ident "helperTokKindSeq"
+                          Call
+                            Ident "uint"
+                            Ident "tokDot"
+                        IntLit 1
+                      Ident "get"
+                StrLit ") "
+        OfBranch
+          Ident "astVar"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit "(AstVar\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(ident "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "myVar"
+                        Ident "ident"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(myType "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "myVar"
+                        Ident "myType"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            IfStmt
+              ElifBranch
+                DotExpr
+                  DotExpr
+                    DotExpr
+                      Ident "ast"
+                      Ident "myVar"
+                    Ident "optExpr"
+                  Ident "isSome"
+                StmtList
+                  Call
+                    DotExpr
+                      Ident "result"
+                      Ident "add"
+                    Infix
+                      Ident "&"
+                      Infix
+                        Ident "&"
+                        Infix
+                          Ident "&"
+                          Ident "i"
+                          StrLit "(optExpr "
+                        Call
+                          DotExpr
+                            Call
+                              DotExpr
+                                DotExpr
+                                  DotExpr
+                                    Ident "ast"
+                                    Ident "myVar"
+                                  Ident "optExpr"
+                                Ident "get"
+                            Ident "toStr"
+                          Ident "x"
+                      StrLit ")\n"
+              Else
+                StmtList
+                  Call
+                    DotExpr
+                      Ident "result"
+                      Ident "add"
+                    Infix
+                      Ident "&"
+                      Ident "i"
+                      StrLit "(not optExpr.isSome)\n"
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit ")\n"
+        OfBranch
+          Ident "astConst"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit "(AstConst\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(ident "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "myConst"
+                        Ident "ident"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(myType "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "myConst"
+                        Ident "myType"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(expr "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "myConst"
+                        Ident "expr"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit ")\n"
+        OfBranch
+          Ident "astDef"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit "(AstDef\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(ident "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "myDef"
+                        Ident "ident"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(genericDeclSeq "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "myDef"
+                        Ident "genericDeclSeq"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Call
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Infix
+                Ident "&"
+                Infix
+                  Ident "&"
+                  Infix
+                    Ident "&"
+                    Ident "i"
+                    StrLit "(argDeclSeq "
+                  Call
+                    DotExpr
+                      DotExpr
+                        DotExpr
+                          Ident "ast"
+                          Ident "myDef"
+                        Ident "argDeclSeq"
+                      Ident "toStr"
+                    Ident "x"
+                StrLit ")\n"
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit ")\n"
+        OfBranch
+          Ident "astModule"
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit "(AstModule\n"
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              Call
+                DotExpr
+                  DotExpr
+                    DotExpr
+                      Ident "ast"
+                      Ident "myModule"
+                    Ident "ident"
+                  Ident "toStr"
+                Ident "x"
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit ")\n"
+        Else
+          StmtList
+            Command
+              DotExpr
+                Ident "result"
+                Ident "add"
+              StrLit "(Other)"
+  ProcDef
+    Postfix
+      Ident "*"
+      Ident "toStr"
+    Empty
+    Empty
+    FormalParams
+      Ident "string"
+      IdentDefs
+        Ident "astSeq"
+        BracketExpr
+          Ident "seq"
+          Ident "AstNode"
+        Empty
+      IdentDefs
+        Ident "indent"
+        Ident "uint"
+        Empty
+    Empty
+    Empty
+    StmtList
+      LetSection
+        IdentDefs
+          Ident "x"
+          Empty
+          Infix
+            Ident "+"
+            Ident "indent"
+            IntLit 2
+      Command
+        DotExpr
+          Ident "result"
+          Ident "add"
+        Call
+          Ident "doIndent"
+          ExprEqExpr
+            Ident "indent"
+            Ident "indent"
+      Command
+        DotExpr
+          Ident "result"
+          Ident "add"
+        StrLit "[\n"
+      ForStmt
+        Ident "idx"
+        Infix
+          Ident "..<"
+          IntLit 0
+          Call
+            DotExpr
+              Ident "astSeq"
+              Ident "len"
+        StmtList
+          Command
+            DotExpr
+              Ident "result"
+              Ident "add"
+            Infix
+              Ident "&"
+              Call
+                DotExpr
+                  BracketExpr
+                    Ident "astSeq"
+                    Ident "idx"
+                  Ident "toStr"
+                Ident "x"
+              StrLit ",\n"
+      Command
+        DotExpr
+          Ident "result"
+          Ident "add"
+        StrLit "]\n"
+
