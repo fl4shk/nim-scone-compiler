@@ -89,7 +89,10 @@ const `helperTokKindSeq`*: seq[(
     ]
   ), # 0-9, hex numbers, binary numbers, etc.
   (
-    "StrLit", none(string), true, @[]
+    "StrLit", none(string), true,
+    @[
+      ("strLitVal", astValString)
+    ]
   ), # string literals
   #--------
   ("True", some("true"), true, @[]),

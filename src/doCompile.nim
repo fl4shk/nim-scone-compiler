@@ -52,7 +52,7 @@ proc mkScone*(
     parent: nil,
     kind: astSrcFile,
     #module: nil,
-    srcFileVal: AstSrcFile(
+    mySrcFile: AstSrcFile(
       module: nil,
     )
   )

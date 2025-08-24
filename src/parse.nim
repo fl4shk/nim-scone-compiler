@@ -19,13 +19,13 @@ import lex
 template myAst(): untyped =
   self.ast
 
-template stackAst(
+template stack(
   arg: untyped
 ): untyped =
   myAst = arg
   myAst
 
-template unstackAst(): untyped =
+template unstack(): untyped =
   myAst = myAst.parent
   myAst
   
@@ -547,7 +547,7 @@ proc parseIdent(
   #echo "parseIdent(): adding this ident: " & tempStr
   #self.identStrS2d[^1].add tempStr
   result.ast = self.mkAst(astIdent)
-  result.ast.identVal.strVal = tempStr
+  result.ast.myIdent.strVal = tempStr
 
 proc subParseIdentAssign(
   self: var Scone,
@@ -1164,10 +1164,12 @@ proc parseModule(
   #  kind: astModule,
   #)
   #myAst.srcFileVal.module = module
-  self.mkAst(astModule).stackAst().moduleVal.ident = (
+  self.mkAst(astModule).stack().myModule.ident = (
     self.parseIdent(chk=false).ast
   )
-  discard unstackAst()
+  #echo myAst.repr()
+  #echo myAst.toStr(0)
+  discard unstack()
   #myAst.toStr()
 
   self.lexAndExpect(tokSemicolon)
