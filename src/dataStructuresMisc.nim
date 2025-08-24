@@ -368,7 +368,11 @@ const `helperTokKindSeq`*: seq[(
   (
     "Type", none(string), true,
     @[
-      ("childSeq", astValSeqAstNode),
+      #("childSeq", astValSeqAstNode),
+      #("varPtr", astValAstNode),
+      ("kwVar", astValBool),
+      ("ptrDim", astValU64),
+      ("child", astValAstNode),
     ]
   ),
   (

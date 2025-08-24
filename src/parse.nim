@@ -56,7 +56,7 @@ proc mkAst*(
   #echo result.toStr(0)
   #echo "mkAst(): end:"
 
-proc mkAstAndStack*(
+proc mkAstAndStackMain*(
   self: var Scone,
   kind: AstKind,
   optParent: Option[AstNode]=none(AstNode),
@@ -65,6 +65,12 @@ proc mkAstAndStack*(
     kind=kind,
     optParent=optParent,
   ).stack()
+
+template mkAstAndStack(
+  kind: AstKind,
+  optParent: Option[AstNode]=none(AstNode),
+): untyped =
+  self.mkAstAndStackMain(kind, optParent)
 
 #proc mkAst*(
 #  self: var Scone,
@@ -160,11 +166,14 @@ template doChkTok(
 
 template doChkSpp(
   selProc: untyped,
+  optTokSet: Option[HashSet[TokKind]]=none(HashSet[TokKind]),
 ): untyped =
   #result = none(SppResultMain)
   #result = SppResult(foundTok: none(TokKind))
   result.foundTok = none(TokKind)
-  let hiddenMySppRet = selProc(self=self, chk=chk)
+  var hiddenMySppRet = selProc(self=self, chk=chk)
+  if optTokSet.isSome:
+    hiddenMySppRet.tokSet = hiddenMySppRet.tokSet.union(optTokSet.get())
   if chk:
     return hiddenMySppRet
   result = hiddenMySppRet
@@ -662,6 +671,9 @@ proc parseTypeArray(
   chk: bool,
 ): SppResult =
   discard doChkTok(tokArray)
+  #defer: discard unstack
+  result.ast = mkAstAndStack(kind=astArray)
+
   self.lexAndExpect(tokLBracket)
 
   #discard self.loopSelParse(
@@ -669,10 +681,13 @@ proc parseTypeArray(
   #  sepTok=some(tokComma),
   #  haveOptEndSepTok=false,
   #)
-  discard self.parseExpr(chk=false)
+  result.ast.myArray.dim = self.parseExpr(chk=false).ast
   self.lexAndExpect(tokSemicolon)
-  discard self.parseTypeWithoutOptPreKwVar(chk=false)
+  result.ast.myArray.elemType = (
+    self.parseTypeWithoutOptPreKwVar(chk=false).ast
+  )
   self.lexAndExpect(tokRBracket)
+  discard unstack()
 
 proc parseTypeMain(
   self: var Scone,
@@ -740,6 +755,9 @@ proc parseTypeWithOptPreKwVar(
 
   let myVpTokSet = toHashSet([tokVar, tokPtr])
   result.tokSet = result.tokSet.union(myVpTokSet)
+  let tempTokSet = result.tokSet.union(
+    self.parseTypeMain(chk=true).tokSet
+  )
 
   var myTok = self.lexAndCheck(
     chk=true,
@@ -752,6 +770,7 @@ proc parseTypeWithOptPreKwVar(
       haveVar = true
       if chk:
         result.foundTok = some(myTok.get)
+        result.tokSet = result.tokSet.union(tempTokSet)
         return
       else: # if not chk:
         self.lex()
@@ -768,16 +787,25 @@ proc parseTypeWithOptPreKwVar(
             self.lex()
           ptrDim += 1
   if chk and not haveEither:
-    result = doChkSpp(parseTypeMain)
+    result = doChkSpp(parseTypeMain, some(tempTokSet))
   
-  discard self.parseTypeMain(chk=false)
+  #discard self.parseTypeMain(chk=false)
   #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
+  result.ast = mkAstAndStack(kind=astType)
+  defer: discard unstack()
+  if haveEither:
+    if ptrDim == 0:
+      result.ast.myType.kwVar = true
+    else:
+      result.ast.myType.ptrDim = ptrDim
+  result.ast.myType.child = self.parseTypeMain(chk=false).ast
 
 proc parseTypeWithoutOptPreKwVar(
   self: var Scone,
   chk: bool,
 ): SppResult =
   result.foundTok = none(TokKind)
+  #defer: discard unstack()
 
   #var haveVar: bool = false
   var ptrDim: uint = 0
@@ -787,7 +815,10 @@ proc parseTypeWithoutOptPreKwVar(
     #tokVar, 
     tokPtr
   ])
-  result.tokSet = result.tokSet.union(myVpTokSet)
+  #result.tokSet = result.tokSet.union(myVpTokSet)
+  let tempTokSet = result.tokSet.union(
+    self.parseTypeMain(chk=true).tokSet
+  )
 
   var myTok = self.lexAndCheck(
     chk=true,
@@ -798,6 +829,9 @@ proc parseTypeWithoutOptPreKwVar(
     haveEither = true
     if chk:
       result.foundTok = some(myTok.get)
+      #result.tokSet = result.tokSet.union(
+      #)
+      #result.tokSet = tempTokSet
       return
     else: # if not chk:
       while myTok.isSome:
@@ -807,10 +841,20 @@ proc parseTypeWithoutOptPreKwVar(
         if myTok.isSome:
           self.lex()
         ptrDim += 1
+      result.tokSet = tempTokSet
   if chk and not haveEither:
-    result = doChkSpp(parseTypeMain)
+    result = doChkSpp(parseTypeMain, some(tempTokSet))
   
-  discard self.parseTypeMain(chk=false)
+  result.ast = mkAstAndStack(kind=astType)
+  defer: discard unstack()
+  if haveEither:
+    if ptrDim == 0:
+      #result.ast.myType.varPtrSeq.add self.mkAst(astVar)
+      #result.ast.myType.kwVar = true
+      discard
+    else:
+      result.ast.myType.ptrDim = ptrDim
+  result.ast.myType.child = self.parseTypeMain(chk=false).ast
   #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
 
 
@@ -1182,7 +1226,7 @@ proc parseModule(
     self.astRoot.mySrcFile.module
 
   tempModule = (
-    self.mkAstAndStack(astModule, some(self.astRoot))
+    mkAstAndStack(astModule, some(self.astRoot))
   )
   tempModule.myModule.ident = (
     self.parseIdent(chk=false).ast

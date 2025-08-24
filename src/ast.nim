@@ -923,7 +923,7 @@ proc toStr*(
     #dumpTree result
     #echo "<-- -->"
 
-    echo result.repr()
+    #echo result.repr()
   doCaseStmt()
 
   #case ast.kind:
