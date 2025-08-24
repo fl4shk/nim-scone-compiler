@@ -7,7 +7,7 @@ import std/cmdline
 #import mode
 #import std/options
 
-import nonAstDataStructures
+import dataStructuresMisc
 import doCompile
 
 #proc isSpace(c: char): bool =

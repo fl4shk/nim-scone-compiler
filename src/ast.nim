@@ -2,7 +2,7 @@ import std/options
 import std/macros
 import std/strutils
 
-import nonAstDataStructures
+import dataStructuresMisc
 
 
 #type
@@ -690,65 +690,6 @@ proc toStr*(
   indent: uint,
 ): string
 
-#CaseStmt
-#  DotExpr
-#    Ident "ast"
-#    Ident "kind"
-#  OfBranch
-#    Ident "astSrcFile"
-#    StmtList
-#      Command
-#        DotExpr
-#          Ident "result"
-#          Ident "add"
-#        StrLit "(AstSrcFile\n"
-#      Call
-#        DotExpr
-#          Ident "result"
-#          Ident "add"
-#        Infix
-#          Ident "&"
-#          Infix
-#            Ident "&"
-#            Infix
-#              Ident "&"
-#              Ident "i"
-#              StrLit "(module "
-#            Call
-#              DotExpr
-#                DotExpr
-#                  DotExpr
-#                    Ident "ast"
-#                    Ident "mySrcFile"
-#                  Ident "module"
-#                Ident "toStr"
-#              Ident "x"
-#          StrLit ")\n"
-
-
-#            Call
-#              DotExpr
-#                Ident "result"
-#                Ident "add"
-#              Infix
-#                Ident "&"
-#                Infix
-#                  Ident "&"
-#                  Infix
-#                    Ident "&"
-#                    Ident "i"
-#                    StrLit "(structDeclSeq "
-#                  Call
-#                    DotExpr
-#                      DotExpr
-#                        DotExpr
-#                          Ident "ast"
-#                          Ident "mySrcFile"
-#                        Ident "structDeclSeq"
-#                      Ident "toStr"
-#                    Ident "x"
-#                StrLit ")\n"
-
 proc toStr*(
   ast: AstNode,
   indent: uint,
@@ -923,7 +864,7 @@ proc toStr*(
     #dumpTree result
     #echo "<-- -->"
 
-    echo result.repr()
+    #echo result.repr()
   doCaseStmt()
 
   #case ast.kind:

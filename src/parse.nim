@@ -2,7 +2,7 @@ import std/tables
 import std/sets
 import std/options
 
-import nonAstDataStructures
+import dataStructuresMisc
 import ast
 import scone
 import lex
@@ -20,7 +20,7 @@ template myAst(): untyped =
   self.ast
 
 template stack(
-  arg: untyped
+  arg: untyped,
 ): untyped =
   myAst = arg
   myAst
@@ -28,7 +28,7 @@ template stack(
 template unstack(): untyped =
   myAst = myAst.parent
   myAst
-  
+
 proc mkAst*(
   self: var Scone,
   kind: AstKind,
@@ -40,16 +40,12 @@ proc mkAst*(
       lexMain: self.lexMain,
       parent: optParent.get(),
       kind: kind,
-      #ast,
     )
-    #result.parent = optParent.get()
   else:
-    #result.parent = self.ast
     result = AstNode(
       lexMain: self.lexMain,
       parent: myAst,
       kind: kind,
-      #ast,
     )
   #echo myAst.repr()
   #echo "mkAst(): begin:"
@@ -102,6 +98,12 @@ type
     chk: bool,
   ): SppResult {.closure.}
 
+type
+  AppendProc = proc(
+    self: AstNode,
+    toAdd: AstNode,
+  )
+
 #template SelParseProc(): untyped = 
 #  proc(self: var Scone, chk: bool): bool
 #template sppSeq(
@@ -109,14 +111,18 @@ type
 #): untyped =
 #  SelParseProc(someProc)
 
-template spp(
-  someProc: untyped
-): untyped =
-  SelParseProc someProc
+proc spp[T, U](
+  #somePair: untyped,
+  #appendProc: untyped
+  selProc: T,
+  appendProc: U,
+): (SelParseProc, AppendProc) =
+  (SelParseProc selProc, AppendProc appendProc)
+
 template sppSeq(
   someSppSeq: untyped
 ): untyped =
-  var hiddenOutpSeq: seq[SelParseProc]
+  var hiddenOutpSeq: seq[(SelParseProc, AppendProc)]
   for mySpp in someSppSeq:
     hiddenOutpSeq.add spp(mySpp)
   hiddenOutpSeq
@@ -190,7 +196,8 @@ template doChkSelParse(
       #echo "doChkSelParse(): chk==true, returning: " & $hiddenMySpp
       return hiddenMySpp[1]
   elif hiddenMySpp[1].foundTok.isSome:
-    discard hiddenMySpp[0](self=self, chk=chk)
+    let tempRet = hiddenMySpp[0][0](self=self, chk=chk)
+    hiddenMySpp[0][1](self=self.ast, toAdd=tempRet.ast)
   else:
     # this will be an error
     #echo "this will be an error"
@@ -212,17 +219,19 @@ template doChkSelParse(
 proc optParse(
   self: var Scone,
   chk: bool,
-  selProc: SelParseProc,
+  selPair: (SelParseProc, AppendProc),
 ): SppResult =
   #result = SppResult(foundTok: none(TokKind))
   #result.foundTok = none(TokKind)
   #self.stackSavedIlp()
-  result = selProc(self=self, chk=true)
+  #template selProc(): untyped = selPair[0]
+  result = selPair[0](self=self, chk=true)
   if result.foundTok.isSome:
     if not chk:
       #self.unstackSavedIlp()
       #echo "optParse(): foundTok.isSome: not chk: returning"
-      return selProc(self=self, chk=false)
+      result = selPair[0](self=self, chk=false)
+      selPair[1](self=self.ast, toAdd=result.ast)
   #echo "optParse(): chk: returning"
   #self.unstackSavedIlp()
       
@@ -238,12 +247,12 @@ proc optParse(
 proc optParseThenExpectTokSet(
   self: var Scone,
   chk: bool,
-  selProc: SelParseProc,
+  selPair: (SelParseProc, AppendProc),
   postTokSet: HashSet[TokKind],
 ): SppResult =
   #result = self.optParse(
   #  chk=true,
-  #  selProc=selProc,
+  #  selPair=selProc,
   #)
   #if not result.foundTok.isSome:
   #  result.tokSet = result.tokSet.union(postTokSet)
@@ -253,9 +262,9 @@ proc optParseThenExpectTokSet(
 
   #result = self.optParse(
   #  chk=true,
-  #  selProc=selProc,
+  #  selPair=selProc,
   #)
-  result = selProc(self=self, chk=true)
+  result = selPair[0](self=self, chk=true)
   if chk:
     #let postResult = postSelProc(self=self, chk=true)
     let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
@@ -273,30 +282,31 @@ proc optParseThenExpectTokSet(
       else: # if postFoundTok.isSome:
         self.lexAndExpect(tokSet=postTokSet)
     else: # if result.foundTok.isSome:
-      result = selProc(self=self, chk=false)
+      result = selPair[0](self=self, chk=false)
+      selPair[1](self=self.ast, toAdd=result.ast)
       self.lexAndExpect(tokSet=postTokSet)
 
 proc optParseThenExpectTokSeq(
   self: var Scone,
   chk: bool,
-  selProc: SelParseProc,
+  selPair: (SelParseProc, AppendProc),
   postTokSeq: seq[TokKind],
 ): SppResult =
   result = self.optParseThenExpectTokSet(
     chk=chk,
-    selProc=selProc,
+    selPair=selPair,
     postTokSet=toHashSet(postTokSeq),
   )
 
 proc optParseThenExpectSpp(
   self: var Scone,
   chk: bool,
-  selProc: SelParseProc,
+  selPair: (SelParseProc, AppendProc),
   postSelProc: SelParseProc,
 ): SppResult =
   #result = self.optParse(
   #  chk=true,
-  #  selProc=selProc,
+  #  selPair=selProc,
   #)
   #let temp = postSelProc(
   #  self=self,
@@ -305,15 +315,15 @@ proc optParseThenExpectSpp(
   ##result.tokSet = result.tokSet.union(temp.tokSet)
   #result = self.optParseThenExpectTokSet(
   #  chk=chk,
-  #  selProc=selProc,
+  #  selPair=selProc,
   #  postTokSet=temp.tokSet,
   #)
 
   #result = self.optParse(
   #  chk=true,
-  #  selProc=selProc,
+  #  selPair=selProc,
   #)
-  result = selProc(self=self, chk=true)
+  result = selPair[0](self=self, chk=true)
   if chk:
     let postResult = postSelProc(self=self, chk=true)
     if result.foundTok.isSome:
@@ -346,7 +356,8 @@ proc optParseThenExpectSpp(
         #self.lexAndExpect(tokSet=postTokSet)
         result = postSelProc(self=self, chk=false)
     else: # if result.foundTok.isSome:
-      result = selProc(self=self, chk=false)
+      result = selPair[0](self=self, chk=false)
+      selPair[1](self=self.ast, toAdd=result.ast)
       discard postSelProc(self=self, chk=false)
       #self.lexAndExpect(tokSet=postTokSet)
   #echo "following: " & $result & " " & $self.currTok
@@ -356,25 +367,26 @@ proc optParseThenExpectSpp(
 proc selParse(
   self: var Scone,
   chk: bool,
-  selProcSet: OrderedSet[SelParseProc],
-): (SelParseProc, SppResult) =
-  #for myProc in selProcSet:
+  selPairSet: OrderedSet[(SelParseProc, AppendProc)],
+): ((SelParseProc, AppendProc), SppResult) =
+  #for myProc in selPairSet:
   #  if myProc[](self, true):
   #    return myProc
-  #for idx in 0 ..< selProcSet.len():
+  #for idx in 0 ..< selPairSet.len():
   result[1].foundTok = none(TokKind)
-  for selProc in selProcSet:
+  for (selProc, appendProc) in selPairSet:
     self.stackSavedIlp()
     let sppRet = selProc(self=self, chk=true)
     result[1].tokSet = result[1].tokSet.union(sppRet.tokSet)
 
     if sppRet.foundTok.isSome:
-      result[0] = selProc
+      result[0][0] = selProc
+      result[0][1] = appendProc
       if chk:
         result[1].foundTok = sppRet.foundTok
       else:
         self.unstackSavedIlp()
-        return (selProc, sppRet)
+        return ((selProc, appendProc), sppRet)
         
     self.unstackSavedIlp()
     
@@ -383,9 +395,9 @@ proc selParse(
 proc selParse(
   self: var Scone,
   chk: bool,
-  selProcSeq: seq[SelParseProc],
-): (SelParseProc, SppResult) =
-  result = self.selParse(chk=chk, selProcSet=toOrderedSet(selProcSeq))
+  selPairSeq: seq[(SelParseProc, AppendProc)],
+): ((SelParseProc, AppendProc), SppResult) =
+  result = self.selParse(chk=chk, selPairSet=toOrderedSet(selPairSeq))
   #self.stackSavedIlp()
   #self.lex()
   #echo "selParse test: " & $self.currTok
@@ -423,18 +435,18 @@ proc selParse(
 proc loopSelParse(
   self: var Scone,
   #chk: bool,
-  selProcSet: OrderedSet[SelParseProc],
+  selPairSet: OrderedSet[(SelParseProc, AppendProc)],
   sepTok: Option[TokKind]=none(TokKind),
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
   haveForcedEndSepTok: bool=false,
 ): SppResult =
-  #result = self.selParse(chk=true, selProcSet=selProcSet)[1]
+  #result = self.selParse(chk=true, selPairSet=selPairSet)[1]
   result.foundTok = none(TokKind)
   result.foundTok1 = none(TokKind)
   #echo "loopSelParse: result:" & $result
 
-  var mySpp = self.selParse(chk=true, selProcSet=selProcSet)
+  var mySpp = self.selParse(chk=true, selPairSet=selPairSet)
   let foundFirst = mySpp[1].foundTok.isSome
   #echo "mySpp:" & $mySpp
 
@@ -442,7 +454,8 @@ proc loopSelParse(
   var didBreak: bool = false
   #var limitCnt: int = -1
   while mySpp[1].foundTok.isSome:
-    result = mySpp[0](self=self, chk=false)
+    result = mySpp[0][0](self=self, chk=false)
+    mySpp[0][1](self=self.ast, toAdd=result.ast)
     if sepTok.isSome:
       self.stackSavedIlp()
       self.lex()
@@ -452,7 +465,7 @@ proc loopSelParse(
         break
       self.unstackSavedIlp()
       self.lex()
-    mySpp = self.selParse(chk=true, selProcSet=selProcSet)
+    mySpp = self.selParse(chk=true, selPairSet=selPairSet)
 
   if not result.foundTok.isSome and not didBreak and haveOptEndSepTok:
       doAssert(
@@ -485,7 +498,7 @@ proc loopSelParse(
 
 proc loopSelParse(
   self: var Scone,
-  selProcSeq: seq[SelParseProc],
+  selPairSeq: seq[(SelParseProc, AppendProc)],
   sepTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
   haveForcedEndSepTok: bool=false,
@@ -494,7 +507,7 @@ proc loopSelParse(
   #for selProc in selProcArr:
   #  tempSelProcSeq.add sppSeq(selProc)
   result = self.loopSelParse(
-    selProcSet=toOrderedSet(selProcSeq),
+    selPairSet=toOrderedSet(selPairSeq),
     sepTok=sepTok,
     haveOptEndSepTok=haveOptEndSepTok,
     haveForcedEndSepTok=haveForcedEndSepTok,
@@ -504,7 +517,7 @@ proc loopSelParse(
 proc reqLoopSelParse(
   self: var Scone,
   #chk: bool,
-  selProcSet: OrderedSet[SelParseProc],
+  selPairSet: OrderedSet[(SelParseProc, AppendProc)],
   sepTok: Option[TokKind]=none(TokKind),
   #endTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
@@ -512,7 +525,7 @@ proc reqLoopSelParse(
 ): SppResult =
   #echo "reqLoopSelParse(): " & $self.currTok
   result = self.loopSelParse(
-    selProcSet=selProcSet,
+    selPairSet=selPairSet,
     sepTok=sepTok,
     haveOptEndSepTok=haveOptEndSepTok,
     haveForcedEndSepTok=haveForcedEndSepTok,
@@ -523,19 +536,19 @@ proc reqLoopSelParse(
 
 proc reqLoopSelParse(
   self: var Scone,
-  selProcSeq: seq[SelParseProc],
+  selPairSeq: seq[(SelParseProc, AppendProc)],
   sepTok: Option[TokKind]=none(TokKind),
   haveOptEndSepTok: bool=false,
 ): SppResult =
   result = self.reqLoopSelParse(
-    selProcSet=toOrderedSet(selProcSeq),
+    selPairSet=toOrderedSet(selPairSeq),
     sepTok=sepTok,
     haveOptEndSepTok=haveOptEndSepTok,
   )
 
 #proc optLoopSelParse(
 #  self: var Scone,
-#  selProcSet: HashSet[SelParseProc],
+#  selPairSet: HashSet[SelParseProc],
 #  sepTok: Option[TokKind],
 #  haveOptEndSepTok: bool
 #) =
@@ -547,7 +560,7 @@ proc reqLoopSelParse(
 #  selTokSeq: seq[TokKind],
 #  sepTok: Option[TokKind]=none(TokKind)
 #) =
-#  var selProcSet: seq[SelParseProc]
+#  var selPairSet: seq[SelParseProc]
 
 
 proc parseIdent(
@@ -594,7 +607,7 @@ proc subParseIdentAssign(
 #  if self.lexAndCheck(chk=true, tokComma).isSome:
 #    self.lex()
 #    discard self.loopSelParse(
-#      selProcSeq=(sppSeq @[parseIdent]),
+#      selPairSeq=(sppSeq @[parseIdent]),
 #      sepTok=some(tokComma),
 #      haveOptEndSepTok=false,
 #    )
@@ -655,7 +668,10 @@ proc parseTypeToResolve(
   #discard self.parseIdent(chk=false)
   #echo "parseTypeToResolve() post ident `result`: " & $result
   #echo "parseTypeToResolve() post ident `lexMain`: " & $self.lexMain
-  discard self.optParse(chk=false, selProc=spp parseGenericFullImplList)
+  discard self.optParse(
+    chk=false,
+    selPair=spp parseGenericFullImplList
+  )
 
 proc parseTypeArray(
   self: var Scone,
@@ -665,7 +681,7 @@ proc parseTypeArray(
   self.lexAndExpect(tokLBracket)
 
   #discard self.loopSelParse(
-  #  selProcSeq=sppSeq @[parseExpr],
+  #  selPairSeq=sppSeq @[parseExpr],
   #  sepTok=some(tokComma),
   #  haveOptEndSepTok=false,
   #)
@@ -771,7 +787,7 @@ proc parseTypeWithOptPreKwVar(
     result = doChkSpp(parseTypeMain)
   
   discard self.parseTypeMain(chk=false)
-  #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
+  #discard self.optParse(chk=false, selPair=spp parseTypeArrDim)
 
 proc parseTypeWithoutOptPreKwVar(
   self: var Scone,
@@ -811,7 +827,7 @@ proc parseTypeWithoutOptPreKwVar(
     result = doChkSpp(parseTypeMain)
   
   discard self.parseTypeMain(chk=false)
-  #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
+  #discard self.optParse(chk=false, selPair=spp parseTypeArrDim)
 
 
 proc parseVarEtcDeclMost(
@@ -835,7 +851,7 @@ proc parseGenericDeclList(
   #chk: bool,
 ) =
   discard self.reqLoopSelParse(
-    selProcSeq=(
+    selPairSeq=(
       sppSeq @[parseGenericDeclItem]
     ),
     sepTok=some(tokComma),
@@ -870,7 +886,7 @@ proc parseGenericNamedImplList(
   #chk: bool,
 ) =
   discard self.loopSelParse(
-    selProcSeq=sppSeq @[parseGenericNamedImplItem],
+    selPairSeq=sppSeq @[parseGenericNamedImplItem],
     sepTok=some(tokComma),
     haveOptEndSepTok=false,
   )
@@ -901,7 +917,7 @@ proc parseGenericUnnamedImplList(
   #chk: bool,
 ) =
   discard self.loopSelParse(
-    selProcSeq=sppSeq @[parseGenericUnnamedImplItem],
+    selPairSeq=sppSeq @[parseGenericUnnamedImplItem],
     sepTok=some(tokComma),
     haveOptEndSepTok=(
       #true
@@ -933,7 +949,7 @@ proc parseGenericFullImplList(
       self.lex()
       #discard self.optParse(
       #  chk=false,
-      #  selProc=spp parseGenericNamedImplList,
+      #  selPair=spp parseGenericNamedImplList,
       #)
       self.parseGenericNamedImplList()
   else:
@@ -975,7 +991,7 @@ proc parseFuncArgDeclList(
     #echo "post result = doChkSpp(...)"
 
     discard self.loopSelParse(
-      selProcSeq=(
+      selPairSeq=(
         sppSeq @[subParseFuncArgDeclList]
       ),
       sepTok=some(tokComma),
@@ -1032,7 +1048,7 @@ proc parseFuncNamedArgImplList(
   #chk: bool,
 ) =
   discard self.loopSelParse(
-    selProcSeq=sppSeq @[parseFuncNamedArgImplItem],
+    selPairSeq=sppSeq @[parseFuncNamedArgImplItem],
     sepTok=some(tokComma),
     haveOptEndSepTok=false,
   )
@@ -1064,7 +1080,7 @@ proc parseFuncUnnamedArgImplList(
   #chk: bool,
 ) =
   discard self.loopSelParse(
-    selProcSeq=sppSeq @[parseFuncUnnamedArgImplItem],
+    selPairSeq=sppSeq @[parseFuncUnnamedArgImplItem],
     sepTok=some(tokComma),
     haveOptEndSepTok=(
       #true
@@ -1083,7 +1099,7 @@ proc parseExprFuncCallPostGenericMain(
   #  return
 
   #result = self.loopSelParse(
-  #  selProcSeq=(
+  #  selPairSeq=(
   #    sppSeq @[parseFuncArgImplItem]
   #  ),
   #  sepTok=some(tokComma),
@@ -1097,7 +1113,7 @@ proc parseExprFuncCallPostGenericMain(
       self.lex()
       #discard self.optParse(
       #  chk=false,
-      #  selProc=spp parseFuncNamedArgImplList,
+      #  selPair=spp parseFuncNamedArgImplList,
       #)
       self.parseFuncNamedArgImplList()
   else:
@@ -1124,15 +1140,16 @@ proc parseFuncDecl(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  #echo "parseFuncDecl(): begin: chk:" & $chk
   discard doChkTok(tokDef)
-  #echo "parseFuncDecl(): post `tokDef`"
+  defer: discard unstack()
+  result.ast = self.mkAstAndStack(
+    astDef
+  )
   discard self.parseIdent(chk=false)
-  #echo "parseFuncDecl(): " & $self.currIdentStrSeq
-  #discard self.subParseGenericDeclList(chk=false)
-  discard self.optParse(chk=false, selProc=spp subParseGenericDeclList)
+  discard self.optParse(chk=false, selPair=spp subParseGenericDeclList)
 
   self.lexAndExpect(tokLParen)
+
   # args go here
   discard self.parseFuncArgDeclList(chk=false)
   self.lexAndExpect(tokRParen)
@@ -1151,13 +1168,13 @@ proc parseStructDecl(
 ): SppResult =
   discard doChkTok(tokStruct)
   discard self.parseIdent(chk=false)
-  discard self.optParse(chk=false, selProc=spp subParseGenericDeclList)
+  discard self.optParse(chk=false, selPair=spp subParseGenericDeclList)
 
   self.lexAndExpect(tokLBrace)
   # fields go here
   #echo "test"
   discard self.loopSelParse(
-    selProcSeq=(
+    selPairSeq=(
       sppSeq @[parseVarEtcDeclMost]
     ),
     sepTok=some(tokSemicolon),
@@ -1171,13 +1188,7 @@ proc parseModule(
   chk: bool,
 ) =
   self.lexAndExpect(tokModule)
-  #self.lexAndExpect(tokIdent)
-  #var module = AstNode(
-  #  lexMain: self.lexMain,
-  #  parent: myAst,
-  #  kind: astModule,
-  #)
-  #myAst.srcFileVal.module = module
+  defer: discard unstack()
   template tempModule(): untyped = 
     self.astRoot.mySrcFile.module
 
@@ -1190,7 +1201,6 @@ proc parseModule(
   #self.astRoot.mySrcFile.module = myAst
   #echo myAst.repr()
   #echo myAst.toStr(0)
-  discard unstack()
   #echo myAst.toStr(0)
 
   self.lexAndExpect(tokSemicolon)
@@ -1207,12 +1217,12 @@ proc parseExprFuncCallPostIdent(
   #echo "parseExprFuncCallPostIdent(): pre: " & $self.lexMain
   #result = self.optParseThenExpectTokSeq(
   #  chk=chk,
-  #  selProc=parseGenericFullImplList,
+  #  selPair=parseGenericFullImplList,
   #  postTokSeq=(@[tokFuncNamedArgListStart, tokLParen]),
   #)
   result = self.optParse(
     chk=chk,
-    selProc=parseGenericFullImplList,
+    selPair=parseGenericFullImplList,
   )
   #echo "parseExprFuncCallPostIdent(): post: " & $self.lexMain
   #if chk:
@@ -1236,7 +1246,7 @@ proc parseExprFuncCallPostIdent(
       self.lexAndExpect(tokSet=result.tokSet)
     #discard self.optParseThenExpectTokSeq(
     #  chk=chk,
-    #  selProc=parseExprFuncCallPostGeneric,
+    #  selPair=parseExprFuncCallPostGeneric,
     #  postTokSeq=(@[tokRParen]),
     #)
 
@@ -1248,7 +1258,7 @@ proc parseExprIdentOrFuncCall(
   #echo "parseExprIdentOrFuncCall(): " & $chk & " " & $self.lexMain
   discard self.optParse(
     chk=false,
-    selProc=spp parseExprFuncCallPostIdent,
+    selPair=spp parseExprFuncCallPostIdent,
   )
 
 proc parseBinopExprFuncCall(
@@ -1258,7 +1268,7 @@ proc parseBinopExprFuncCall(
   result = doChkSpp(parseIdent)
   discard self.optParse(
     chk=false,
-    selProc=spp parseGenericFullImplList,
+    selPair=spp parseGenericFullImplList,
   )
   discard self.parseExpr(chk=false)
 
@@ -1282,7 +1292,7 @@ proc parseU64LitWithOptFuncCall(
   #)
   let temp = self.optParse(
     chk=false,
-    selProc=spp parseExprFuncCall,
+    selPair=spp parseExprFuncCall,
   )
   #echo (
   #  (
@@ -1309,7 +1319,7 @@ proc subParseParenExpr(
   self.lexAndExpect(tokRParen)
   discard self.optParse(
     chk=false,
-    selProc=spp parseExprFuncCall,
+    selPair=spp parseExprFuncCall,
   )
 
 proc parseExprLowestNonOp(
@@ -1341,7 +1351,7 @@ proc subOptParseExprBinop(
   #echo "subOptParseExprBinop(): pre: " & $self.lexMain
   #result = self.optParse(
   #  chk=false,
-  #  selProc=tempParseFunc, 
+  #  selPair=tempParseFunc, 
   #)
   #result = self.tempParseFunc(chk=true)
   #discard doChkTokSet(tokSet)
@@ -1442,7 +1452,7 @@ proc parseExprFieldArrEtcChoice(
   #)
   let temp = self.selParse(
     chk=chk,
-    selProcSeq=(
+    selPairSeq=(
       sppSeq @[
         parseExprSuffixFieldMethodAccess,
         parseExprSuffixDeref,
@@ -1464,7 +1474,7 @@ proc parseExprFieldArrEtc(
 ): SppResult =
   result = doChkSpp(parseExprLowestNonOp)
   discard self.loopSelParse(
-    selProcSeq=(
+    selPairSeq=(
       sppSeq @[parseExprFieldArrEtcChoice]
     ),
   )
@@ -1476,7 +1486,7 @@ proc parseExprUnary(
   #echo "parseExprUnary: lexMain: pre: " & $self.lexMain
   result = self.optParseThenExpectSpp(
     chk=chk,
-    selProc=parsePrefixUnary,
+    selPair=parsePrefixUnary,
     postSelProc=parseExprFieldArrEtc,
   )
   #echo "parseExprUnary: lexMain: post: " & $self.lexMain
