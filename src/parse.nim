@@ -19,17 +19,17 @@ import lex
 template myAst(): untyped =
   self.ast
 
-template stack(
-  arg: untyped
-): untyped =
-  myAst = arg
-  myAst
-
-template unstack(): untyped =
-  myAst = myAst.parent
-  myAst
+#template stack(
+#  arg: untyped
+#): untyped =
+#  myAst = arg
+#  myAst
+#
+#template unstack(): untyped =
+#  myAst = myAst.parent
+#  myAst
   
-proc mkAst*(
+proc mkAstMain*(
   self: var Scone,
   kind: AstKind,
   optParent: Option[AstNode]=none(AstNode),
@@ -55,22 +55,27 @@ proc mkAst*(
   #echo "mkAst(): begin:"
   #echo result.toStr(0)
   #echo "mkAst(): end:"
-
-proc mkAstAndStackMain*(
-  self: var Scone,
-  kind: AstKind,
-  optParent: Option[AstNode]=none(AstNode),
-): AstNode =
-  result = self.mkAst(
-    kind=kind,
-    optParent=optParent,
-  ).stack()
-
-template mkAstAndStack(
+template mkAst*(
   kind: AstKind,
   optParent: Option[AstNode]=none(AstNode),
 ): untyped =
-  self.mkAstAndStackMain(kind, optParent)
+  self.mkAstMain(kind, optParent)
+
+#proc mkAstAndStackMain*(
+#  self: var Scone,
+#  kind: AstKind,
+#  optParent: Option[AstNode]=none(AstNode),
+#): AstNode =
+#  result = self.mkAst(
+#    kind=kind,
+#    optParent=optParent,
+#  ).stack()
+
+#template mkAstAndStack(
+#  kind: AstKind,
+#  optParent: Option[AstNode]=none(AstNode),
+#): untyped =
+#  self.mkAstAndStackMain(kind, optParent)
 
 #proc mkAst*(
 #  self: var Scone,
@@ -176,8 +181,9 @@ template doChkSpp(
     hiddenMySppRet.tokSet = hiddenMySppRet.tokSet.union(optTokSet.get())
   if chk:
     return hiddenMySppRet
-  result = hiddenMySppRet
-  result
+  #result = hiddenMySppRet
+  #result
+  hiddenMySppRet
 
 template doChkSelParse(
   someSppSeq: untyped,
@@ -569,7 +575,7 @@ proc parseIdent(
   let tempStr = self.currTok.optStr.get()
   #echo "parseIdent(): adding this ident: " & tempStr
   #self.identStrS2d[^1].add tempStr
-  result.ast = self.mkAst(astIdent)
+  result.ast = mkAst(astIdent)
   result.ast.myIdent.strVal = tempStr
 
 proc subParseIdentAssign(
@@ -642,7 +648,7 @@ proc parseGenericNamedImplList(
 #  #echo "parseTypeArrDim: lexMain: post parseExpr: " & $self.lexMain
 #  self.lexAndExpect(tokRBracket)
 
-proc parseTypeBuiltinScalar(
+proc parseTypeBasicBuiltin(
   self: var Scone,
   chk: bool,
 ): SppResult =
@@ -654,6 +660,38 @@ proc parseTypeBuiltinScalar(
       tokString, tokChar, tokVoid
     ])
   )
+  case result.foundTok.get():
+  of tokU8:
+    result.ast = mkAst(astU8)
+  of tokU16:
+    result.ast = mkAst(astU16)
+  of tokU32:
+    result.ast = mkAst(astU32)
+  of tokU64:
+    result.ast = mkAst(astU64)
+  of tokI8:
+    result.ast = mkAst(astI8)
+  of tokI16:
+    result.ast = mkAst(astI16)
+  of tokI32:
+    result.ast = mkAst(astI32)
+  of tokI64:
+    result.ast = mkAst(astI64)
+  of tokF32:
+    result.ast = mkAst(astF32)
+  of tokF64:
+    result.ast = mkAst(astF64)
+  of tokString:
+    result.ast = mkAst(astString)
+  of tokChar:
+    result.ast = mkAst(astChar)
+  of tokVoid:
+    result.ast = mkAst(astVoid)
+  else:
+    doAssert(
+      false,
+      "eek! " & $result
+    )
 
 proc parseTypeToResolve(
   self: var Scone,
@@ -671,8 +709,8 @@ proc parseTypeArray(
   chk: bool,
 ): SppResult =
   discard doChkTok(tokArray)
+  result.ast = mkAst(kind=astArray)
   #defer: discard unstack
-  result.ast = mkAstAndStack(kind=astArray)
 
   self.lexAndExpect(tokLBracket)
 
@@ -687,7 +725,7 @@ proc parseTypeArray(
     self.parseTypeWithoutOptPreKwVar(chk=false).ast
   )
   self.lexAndExpect(tokRBracket)
-  discard unstack()
+  #discard unstack()
 
 proc parseTypeMain(
   self: var Scone,
@@ -719,7 +757,7 @@ proc parseTypeMain(
   #echo "debug: parseTypeMain(): start"
   discard doChkSelParse(
     sppSeq @[
-      parseTypeBuiltinScalar,
+      parseTypeBasicBuiltin,
       parseTypeToResolve,
       parseTypeArray,
     ],
@@ -777,6 +815,7 @@ proc parseTypeWithOptPreKwVar(
     else: # if myTok.get == tokPtr
       if chk:
         result.foundTok = some(myTok.get)
+        result.tokSet = result.tokSet.union(tempTokSet)
         return
       else: # if not chk:
         while myTok.isSome:
@@ -791,8 +830,8 @@ proc parseTypeWithOptPreKwVar(
   
   #discard self.parseTypeMain(chk=false)
   #discard self.optParse(chk=false, selProc=spp parseTypeArrDim)
-  result.ast = mkAstAndStack(kind=astType)
-  defer: discard unstack()
+  result.ast = mkAst(kind=astType)
+  #defer: discard unstack()
   if haveEither:
     if ptrDim == 0:
       result.ast.myType.kwVar = true
@@ -845,8 +884,8 @@ proc parseTypeWithoutOptPreKwVar(
   if chk and not haveEither:
     result = doChkSpp(parseTypeMain, some(tempTokSet))
   
-  result.ast = mkAstAndStack(kind=astType)
-  defer: discard unstack()
+  result.ast = mkAst(kind=astType)
+  #defer: discard unstack()
   if haveEither:
     if ptrDim == 0:
       #result.ast.myType.varPtrSeq.add self.mkAst(astVar)
@@ -862,7 +901,7 @@ proc parseVarEtcDeclMost(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard doChkSpp(parseIdent)
+  result = doChkSpp(parseIdent)
   self.lexAndExpect(tokColon)
   discard self.parseTypeWithoutOptPreKwVar(chk=false)
 
@@ -1222,11 +1261,12 @@ proc parseModule(
   #  kind: astModule,
   #)
   #myAst.srcFileVal.module = module
+  #defer: discard unstack()
   template tempModule(): untyped = 
     self.astRoot.mySrcFile.module
 
   tempModule = (
-    mkAstAndStack(astModule, some(self.astRoot))
+    mkAst(astModule, some(self.astRoot))
   )
   tempModule.myModule.ident = (
     self.parseIdent(chk=false).ast
@@ -1234,7 +1274,7 @@ proc parseModule(
   #self.astRoot.mySrcFile.module = myAst
   #echo myAst.repr()
   #echo myAst.toStr(0)
-  discard unstack()
+  #discard unstack()
   #echo myAst.toStr(0)
 
   self.lexAndExpect(tokSemicolon)
@@ -1375,6 +1415,7 @@ proc subOptParseExprBinop(
   self: var Scone,
   chk: bool,
   tokSet: HashSet[TokKind],
+  someSppRet: var SppResult,
 ): SppResult =
   proc tempParseFunc(
     self: var Scone,
@@ -1400,26 +1441,37 @@ proc subOptParseExprBinop(
   if not chk:
     if result.foundTok.isSome:
       result = self.tempParseFunc(chk=false)
-      #echo "testificate"
-      discard self.parseExpr(chk=false)
+      # TODO: determine if `result.ast` and `someSppRet.ast` need to be
+      # swapped! I think the non-commented out code is correct.
+      #result.ast = someSppRet.ast
+      #someSppRet.ast = mkAstAndStack(astBinop)
+      result.ast = mkAst(astBinop)
+      result.ast.myBinop.kind = tokToBinop(result.foundTok.get()).get()
+      result.ast.myBinop.left = someSppRet.ast
+      #defer: discard unstack()
+      result.ast.myBinop.right = self.parseExpr(chk=false).ast
 
 proc subOptParseExprBinop(
   self: var Scone,
   chk: bool,
   tokSeq: seq[TokKind],
+  someSppRet: var SppResult,
 ): SppResult =
   result = self.subOptParseExprBinop(
     chk=chk,
     tokSet=toHashSet(tokSeq),
+    someSppRet=someSppRet,
   )
 proc subOptParseExprBinop(
   self: var Scone,
   chk: bool,
   tok: TokKind,
+  someSppRet: var SppResult,
 ): SppResult =
   result = self.subOptParseExprBinop(
     chk=chk,
     tokSet=toHashSet([tok]),
+    someSppRet=someSppRet,
   )
 
 proc parsePrefixUnary(
@@ -1533,6 +1585,7 @@ proc parseExprMulDivMod(
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokMul, tokDiv, tokMod]),
+    someSppRet=result,
   )
 
 proc parseExprAddSub(
@@ -1543,6 +1596,7 @@ proc parseExprAddSub(
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokPlus, tokMinus]),
+    someSppRet=result,
   )
 
 proc parseExprBitShift(
@@ -1553,6 +1607,7 @@ proc parseExprBitShift(
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokBitShl, tokBitShr]),
+    someSppRet=result,
   )
 
 proc parseExprCmpIneq(
@@ -1563,6 +1618,7 @@ proc parseExprCmpIneq(
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokCmpLt, tokCmpLe, tokCmpGt, tokCmpGe]),
+    someSppRet=result,
   )
 
 proc parseExprCmpEqNe(
@@ -1573,6 +1629,7 @@ proc parseExprCmpEqNe(
   discard self.subOptParseExprBinop(
     chk=false,
     tokSeq=(@[tokCmpEq, tokCmpNe]),
+    someSppRet=result,
   )
 
 proc parseExprBitAnd(
@@ -1583,6 +1640,7 @@ proc parseExprBitAnd(
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokBitAnd,
+    someSppRet=result,
   )
 
 proc parseExprBitXor(
@@ -1593,6 +1651,7 @@ proc parseExprBitXor(
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokBitXor,
+    someSppRet=result,
   )
 
 proc parseExprBitOr(
@@ -1603,6 +1662,7 @@ proc parseExprBitOr(
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokBitOr,
+    someSppRet=result,
   )
 
 proc parseExprLogicAnd(
@@ -1613,6 +1673,7 @@ proc parseExprLogicAnd(
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokLogicAnd,
+    someSppRet=result,
   )
 
 proc parseExprLogicOr(
@@ -1623,7 +1684,9 @@ proc parseExprLogicOr(
   discard self.subOptParseExprBinop(
     chk=false,
     tok=tokLogicOr,
+    someSppRet=result,
   )
+    
 
 proc parseExpr(
   self: var Scone,
