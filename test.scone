@@ -20,7 +20,9 @@
 
 
 #a.plus(b).c(d)
-d.e[array[3; i32]]() + a.plus[T](b)
+
+
+d.e[ptr ptr array[3; ptr ptr ptr i32]]() + a.plus[T](b)
 
 
 

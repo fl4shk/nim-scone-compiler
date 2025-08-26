@@ -865,7 +865,7 @@ proc parseTypeWithOptPreKwVar(
           )
           if myTok.isSome:
             self.lex()
-          ptrDim += 1
+            ptrDim += 1
   if chk and not haveEither:
     result = doChkSpp(parseTypeMain, some(tempTokSet))
   
@@ -920,7 +920,7 @@ proc parseTypeWithoutOptPreKwVar(
         )
         if myTok.isSome:
           self.lex()
-        ptrDim += 1
+          ptrDim += 1
       result.tokSet = tempTokSet
   if chk and not haveEither:
     result = doChkSpp(parseTypeMain, some(tempTokSet))
