@@ -1,28 +1,28 @@
-#module test;
-#
-##def main{T}(a, b: Vec2{T=T}[+(!ba)[].f(t=24) + 0x13], result: i32)(
-##	#var c: i32;
-##);
-#
-#def dot[T](a: array[plus(3; Vec2[T=T]], b: array[3; Vec2[T=T]]) -> T {
+module test;
+
+#def main{T}(a, b: Vec2{T=T}[+(!ba)[].f(t=24) + 0x13], result: i32)(
+#	#var c: i32;
+#);
+
+def dot[T](a: var array[3; Vec2[T=U]], b: array[3; Vec2[D=T]]) -> T {
+	#return a.x * b.x + a.y * b.y;
+};
+
+#def dot[T](a: Vec2[T], b: array[3 * f 4 ; Vec2[T]]) -> T {
 #	#return a.x * b.x + a.y * b.y;
 #};
 #
-##def dot[T](a: Vec2[T], b: array[3 * f 4 ; Vec2[T]]) -> T {
-##	#return a.x * b.x + a.y * b.y;
-##};
-##
-#struct Vec2[T] {
-#	x: T;
-#	y: T;
-#};
+struct Vec2[T] {
+	x: T;
+	y: T;
+};
 #--------
 
 
 #a.plus(b).c(d)
 
 
-d.e[ptr ptr array[3; ptr ptr ptr i32]]() + a.plus[T](b)
+#d.e[ptr ptr array[3; ptr ptr ptr i32]]() + a.plus[T=array[3; i32]](b)
 
 
 

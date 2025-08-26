@@ -755,9 +755,10 @@ proc toStr*(
 ): string =
   if ast == nil:
     return "nil"
-  let x = indent + 2
+  var x = indent + 2
   #result.add doIndent(indent=indent)
-  let i = doIndent(indent=x)
+  template i(): untyped =
+    doIndent(indent=x)
   #let iFinish = i & ")\n"
   var iFinish = doIndent(indent=indent)
 
@@ -795,18 +796,6 @@ proc toStr*(
 
       var tempNl: NimNode
       var tempI: NimNode
-      if h[3].len() > 1:
-        #tempNl = "\n"
-        tempNl = quote do:
-          "\n" #& i
-        tempI = quote do:
-          i
-      else:
-        tempNl = quote do:
-          #i
-          ""
-        tempI = quote do:
-          " "
         
 
       for jdx in 0 ..< h[3].len():
@@ -814,6 +803,22 @@ proc toStr*(
         if jdx == 0 and h[3].len > 1:
           stmtList.add quote do:
             result.add "\n" #`tempNl`
+        #else:
+        if h[3].len <= 1:
+          stmtList.add quote do:
+            x = indent
+        if h[3].len() > 1:
+          #tempNl = "\n"
+          tempNl = quote do:
+            "\n" #& i
+          tempI = quote do:
+            i
+        else:
+          tempNl = quote do:
+            #i
+            ""
+          tempI = quote do:
+            " "
         #var myCmdInner = newNimNode(nnkCommand)
 
         #proc myAddIndent(myCmdInner: var NimNode) =
@@ -1073,5 +1078,7 @@ proc toStr*(
   result.add "[\n"
   for idx in 0 ..< astSeq.len():
     result.add tempIndent1 & astSeq[idx].toStr(x) & "\n"
+  #if int(indent - 2) > 0:
+  #  result.add doIndent(indent - 2)
   result.add tempIndent
   result.add "]"

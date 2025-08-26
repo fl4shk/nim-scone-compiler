@@ -740,10 +740,19 @@ proc parseTypeToResolve(
 ): SppResult =
   #echo "parseTypeToResolve() begin: chk:" & $chk
   result = doChkSpp(parseIdent)
+  var myIdent = result.ast
+  result.ast = mkAst(astNamedType)
+  result.ast.myNamedType.ident = myIdent
   #discard self.parseIdent(chk=false)
   #echo "parseTypeToResolve() post ident `result`: " & $result
   #echo "parseTypeToResolve() post ident `lexMain`: " & $self.lexMain
-  discard self.optParse(chk=false, selProc=spp parseGenericFullImplList)
+  var temp = (
+    self.optParse(chk=false, selProc=spp parseGenericFullImplList)
+  )
+  if temp.foundTok.isSome:
+    result.ast.myNamedType.genericImpl = temp.ast
+  else:
+    result.ast.myNamedType.genericImpl = mkAst(astGenericList)
 
 proc parseTypeArray(
   self: var Scone,
@@ -943,8 +952,14 @@ proc parseVarEtcDeclMost(
   chk: bool,
 ): SppResult =
   result = doChkSpp(parseIdent)
+  var myIdent = result.ast
+  result.ast = mkAst(astVarEtcDeclMost)
+  result.ast.myVarEtcDeclMost.ident = myIdent
+
   self.lexAndExpect(tokColon)
-  discard self.parseTypeWithoutOptPreKwVar(chk=false)
+  result.ast.myVarEtcDeclMost.myType = (
+    self.parseTypeWithoutOptPreKwVar(chk=false).ast
+  )
 
 proc parseGenericDeclItem(
   self: var Scone,
@@ -953,6 +968,24 @@ proc parseGenericDeclItem(
   result = self.parseIdent(chk=chk)
   if chk:
     return
+  else: # if not chk:
+    if result.foundTok.isSome:
+      template parent(): untyped =
+        self.parentTempSeq[^1]
+      case parent.kind:
+      of astDef:
+        if parent.myDef.genericDecl == nil:
+          parent.myDef.genericDecl = mkAst(astGenericList)
+        parent.myDef.genericDecl.myGenericList.mySeq.add result.ast
+      of astStruct:
+        if parent.myStruct.genericDecl == nil:
+          parent.myStruct.genericDecl = mkAst(astGenericList)
+        parent.myStruct.genericDecl.myGenericList.mySeq.add result.ast
+      else:
+        doAssert(
+          false,
+          "eek! " & $parent.kind & " " & $self.lexMain
+        )
 
 proc parseGenericDeclList(
   self: var Scone,
@@ -1088,8 +1121,15 @@ proc subParseFuncArgDeclList(
   chk: bool,
 ): SppResult =
   result = doChkSpp(parseIdent)
+  var myIdent = result.ast
+  result.ast = mkAst(astVarEtcDeclMost)
+  result.ast.myVarEtcDeclMost.ident = myIdent
+
   self.lexAndExpect(tokColon)
-  discard self.parseTypeWithOptPreKwVar(chk=false)
+  result.ast.myVarEtcDeclMost.myType = (
+    self.parseTypeWithOptPreKwVar(chk=false).ast
+  )
+  self.parentTempSeq[^1].myDef.argDeclSeq.add result.ast
   #self.lexAndExpect(tokComma)
 
 proc parseFuncArgDeclList(
@@ -1290,13 +1330,25 @@ proc parseFuncDecl(
 
   self.lexAndExpect(tokSemicolon)
   result.ast = self.parentTempSeq.pop()
+  self.astRoot.mySrcFile.funcDeclSeq.add result.ast
+
+proc subParseStructDecl(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = doChkSpp(parseVarEtcDeclMost)
+  self.parentTempSeq[^1].myStruct.fieldSeq.add result.ast
 
 proc parseStructDecl(
   self: var Scone,
   chk: bool,
 ): SppResult =
   discard doChkTok(tokStruct)
-  discard self.parseIdent(chk=false)
+  result.ast = mkAst(astStruct)
+  result.ast.myStruct.ident = self.parseIdent(chk=false).ast
+
+  self.parentTempSeq.add result.ast
+
   discard self.optParse(chk=false, selProc=spp subParseGenericDeclList)
 
   self.lexAndExpect(tokLBrace)
@@ -1304,13 +1356,18 @@ proc parseStructDecl(
   #echo "test"
   discard self.loopSelParse(
     selProcSeq=(
-      sppSeq @[parseVarEtcDeclMost]
+      sppSeq @[
+        #parseVarEtcDeclMost
+        subParseStructDecl
+      ]
     ),
     sepTok=some(tokSemicolon),
     haveForcedEndSepTok=true,
   )
   self.lexAndExpect(tokRBrace)
   self.lexAndExpect(tokSemicolon)
+  result.ast = self.parentTempSeq.pop()
+  self.astRoot.mySrcFile.structDeclSeq.add result.ast
 
 proc parseModule(
   self: var Scone,
@@ -2096,30 +2153,30 @@ proc parseExpr(
 proc parseSrcFile*(
   self: var Scone
 ) =
-  #self.parseModule(chk=false)
+  self.parseModule(chk=false)
 
-  #let mySppSeq = sppSeq @[
-  #  parseFuncDecl,
-  #  parseStructDecl,
-  #]
-  #let temp = self.selParse(
-  #  chk=true,
-  #  mySppSeq
-  #)
-  ##echo "post self.selParse: " & $temp
-  #if temp.foundTok.isSome:
-  #  #echo "test"
-  #  discard self.loopSelParse(
-  #    mySppSeq
-  #  )
-  #else:
-  #  # this *may* be an error
-  #  self.lexAndExpect(
-  #    temp.tokSet.union(toHashSet([tokEof]))
-  #  )
+  let mySppSeq = sppSeq @[
+    parseFuncDecl,
+    parseStructDecl,
+  ]
+  let temp = self.selParse(
+    chk=true,
+    mySppSeq
+  )
+  #echo "post self.selParse: " & $temp
+  if temp.foundTok.isSome:
+    #echo "test"
+    discard self.loopSelParse(
+      mySppSeq
+    )
+  else:
+    # this *may* be an error
+    self.lexAndExpect(
+      temp.tokSet.union(toHashSet([tokEof]))
+    )
 
-  #self.lexAndExpect(tokEof)
-  self.astRoot = self.parseExpr(chk=false).ast
+  self.lexAndExpect(tokEof)
+  #self.astRoot = self.parseExpr(chk=false).ast
   #echo $self.astRoot.kind
   echo self.astRoot.toStr(0)
   #echo self.astRoot.repr()
