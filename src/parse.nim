@@ -1044,14 +1044,16 @@ proc parseGenericUnnamedImplItem(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  result = self.parseTypeWithoutOptPreKwVar(chk=true)
   let haveNamed = self.subParseIdentAssign(chk=true)
+  result = self.parseTypeWithoutOptPreKwVar(chk=true)
   if chk:
+    #echo "testificate:" & $result.foundTok & " " & $haveNamed.foundTok1
     if not haveNamed.foundTok.isSome:
       return
     else:
       result.foundTok = none(TokKind)
       result.foundTok1 = none(TokKind)
+    #echo "post:" & $result.foundTok & " " & $haveNamed.foundTok1
   else: # if not chk:
     #if not haveNamed.foundTok.isSome:
     result = self.parseTypeWithoutOptPreKwVar(chk=false)
@@ -1098,8 +1100,12 @@ proc parseGenericFullImplList(
   let haveNamed = self.subParseIdentAssign(chk=true)
   if not haveNamed.foundTok.isSome:
     self.parseGenericUnnamedImplList()
-    if self.lexAndCheck(chk=true, tok=tokComma).isSome:
-      self.lex()
+    #echo "full:" & $self.lexMain
+    #if self.lexAndCheck(chk=true, tok=tokComma).isSome:
+    if self.currTok.tok == tokComma:
+      #echo "full have check:" & $self.lexMain
+      #self.lex()
+      #echo "full have check post:" & $self.lexMain
       #discard self.optParse(
       #  chk=false,
       #  selProc=spp parseGenericNamedImplList,
@@ -1227,8 +1233,8 @@ proc parseFuncUnnamedArgImplItem(
   chk: bool,
 ): SppResult =
   #result = self.parseTypeWithoutOptPreKwVar(chk=true)
-  result = self.parseExpr(chk=true)
   let haveNamed = self.subParseIdentAssign(chk=true)
+  result = self.parseExpr(chk=true)
   if chk:
     if not haveNamed.foundTok.isSome:
       return
@@ -1274,8 +1280,9 @@ proc parseExprFuncCallPostGenericMain(
   let haveNamed = self.subParseIdentAssign(chk=true)
   if not haveNamed.foundTok.isSome:
     self.parseFuncUnnamedArgImplList()
-    if self.lexAndCheck(chk=true, tok=tokComma).isSome:
-      self.lex()
+    #if self.lexAndCheck(chk=true, tok=tokComma).isSome:
+    if self.currTok.tok == tokComma:
+      #self.lex()
       #discard self.optParse(
       #  chk=false,
       #  selProc=spp parseFuncNamedArgImplList,

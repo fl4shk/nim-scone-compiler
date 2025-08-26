@@ -1,10 +1,6 @@
 module test;
 
-#def main{T}(a, b: Vec2{T=T}[+(!ba)[].f(t=24) + 0x13], result: i32)(
-#	#var c: i32;
-#);
-
-def dot[T](a: var array[3; Vec2[T=U]], b: array[3; Vec2[D=T]]) -> T {
+def dot[T](a: var array[plus(a, b=c); Vec2[T=U]], b: array[3; Vec2[D=T]]) -> T {
 	#return a.x * b.x + a.y * b.y;
 };
 
@@ -13,7 +9,7 @@ def dot[T](a: var array[3; Vec2[T=U]], b: array[3; Vec2[D=T]]) -> T {
 #};
 #
 struct Vec2[T] {
-	x: T;
+	x: ptr D[A, B];
 	y: T;
 };
 #--------
