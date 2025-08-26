@@ -181,35 +181,35 @@ expr:
 	;
 
 exprLogicOr:
-	exprLogicAnd ('||' expr)?
+	exprLogicAnd ('||' exprLogicAnd)*
 	;
 exprLogicAnd:
-	exprBitOr ('&&' expr)?
+	exprBitOr ('&&' exprBitOr)*
 	;
 exprBitOr:
-	exprBitXor ('|' expr)?
+	exprBitXor ('|' exprBitXor)*
 	;
 exprBitXor:
-	exprBitAnd ('^' expr)?
+	exprBitAnd ('^' exprBitAnd)*
 	;
 exprBitAnd:
-	exprCmpEqNe ('&' expr)?
+	exprCmpEqNe ('&' exprCmpEqNe)*
 	;
 exprCmpEqNe:
-	exprCmpIneq (('==' | '!=') expr)?
+	exprCmpIneq (('==' | '!=') exprCmpIneq)*
 	;
 exprCmpIneq:
 	//exprCmpEqNe
-	exprBitShift (('<' | '<=' | '>' | '>=') expr)?
+	exprBitShift (('<' | '<=' | '>' | '>=') exprBitShift)*
 	;
 exprBitShift:
-	exprAddSub (('<<' | '>>') expr)?
+	exprAddSub (('<<' | '>>') exprAddSub)*
 	;
 exprAddSub:
-	exprMulDivMod (('+' | '-') expr)?
+	exprMulDivMod (('+' | '-') exprMulDivMod)*
 	;
 exprMulDivMod:
-	exprUnary (('*' | '/' | '%') expr)?
+	exprUnary (('*' | '/' | '%') exprUnary)*
 	;
 
 exprUnary:

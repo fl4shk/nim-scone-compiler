@@ -1,5 +1,6 @@
 import std/options
 import std/macros
+import std/sets
 
 type
   Mode* = enum
@@ -57,6 +58,85 @@ type
     assignEtcBitShl,
     assignEtcBitShr,
 
+const `binopPrioSeq`*: seq[HashSet[AstBinopKind]] = @[
+  toHashSet([
+    binopLogicOr,
+  ]),
+  toHashSet([
+    binopLogicAnd,
+  ]),
+  toHashSet([
+    binopBitOr,
+  ]),
+  toHashSet([
+    binopBitXor,
+  ]),
+  toHashSet([
+    binopBitAnd,
+  ]),
+  toHashSet([
+    binopCmpEq,
+    binopCmpNe,
+  ]),
+  toHashSet([
+    binopCmpLt,
+    binopCmpGt,
+    binopCmpLe,
+    binopCmpGe,
+  ]),
+  toHashSet([
+    binopBitShl,
+    binopBitShr,
+  ]),
+  toHashSet([
+    binopPlus,
+    binopMinus,
+  ]),
+  toHashSet([
+    binopMul,
+    binopDiv,
+    binopMod,
+  ])
+]
+
+proc `cmpPrio`*(
+  a: AstBinopKind,
+  b: AstBinopKind,
+): int =
+  var aPrio: int = 0
+  var bPrio: int = 0
+  for idx in 0 ..< binopPrioSeq.len():
+    if a in binopPrioSeq[idx]:
+      aPrio = idx
+    if b in binopPrioSeq[idx]:
+      bPrio = idx
+  if aPrio < bPrio:
+    return -1
+  elif aPrio == bPrio:
+    return 0
+  else: # if aPrio > bPrio:
+    return 1
+
+  #return aPrio < bPrio
+  #if aPr
+  
+proc `cmpPrioLt`*(
+  a: AstBinopKind,
+  b: AstBinopKind,
+): bool =
+  result = (a.cmpPrio b) < 0
+proc `cmpPrioEq`*(
+  a: AstBinopKind,
+  b: AstBinopKind,
+): bool =
+  result = (a.cmpPrio b) == 0
+proc `cmpPrioGt`*(
+  a: AstBinopKind,
+  b: AstBinopKind,
+): bool =
+  result = (a.cmpPrio b) > 0
+
+
 const `helperTokKindSeq`*: seq[(
   string, Option[string], bool,
   seq[(string, AstValKind)]
@@ -110,8 +190,19 @@ const `helperTokKindSeq`*: seq[(
   #--------
   ("Ptr", some("ptr"), true, @[]),
   ("Addr", some("addr"), true, @[]),
-  ("Deref", some("@"), true, @[]), # pointer dereference
-  ("Dot", some("."), true, @[]),
+  (
+    "Deref", some("@"), true, # pointer dereference
+    @[
+      ("obj", astValAstNode)
+    ]
+  ),
+  (
+    "Dot", some("."), true,
+    @[
+      ("left", astValAstNode),
+      ("right", astValAstNode),
+    ]
+  ),
   #--------
   (
     "Var", some("var"), true,
@@ -383,6 +474,33 @@ const `helperTokKindSeq`*: seq[(
       ("argImplSeq", astValSeqAstNode),
     ]
   ),
+  (
+    "FuncNamedArgImpl", none(string), true,
+    @[
+      ("ident", astValAstNode),
+      ("expr", astValAstNode),
+    ],
+  ),
+  (
+    "GenericNamedArgImpl", none(string), true,
+    @[
+      ("ident", astValAstNode),
+      ("type", astValAstNode),
+    ],
+  ),
+  #(
+  #  "MethodCall", none(string), true,
+  #  @[
+  #    ("obj", astValAstNode),
+  #    ("funcCall", astValAstNode),
+  #  ],
+  #),
+  #(
+  #  "ParserTemp", none(string), true,
+  #  @[
+  #    ("childSeq", astValSeqAstNode),
+  #  ],
+  #),
   #("TypeUnresolved", none(string), true),
   #("TypeResolved", none(string), true),
   #("Lim", none(string)),

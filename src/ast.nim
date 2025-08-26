@@ -614,14 +614,14 @@ macro mkAstHier(): untyped =
         newNimNode(nnkEmpty),
       )
       recList.add identDefs
-    if true:
-      var identDefs = newNimNode(nnkIdentDefs)
-      identDefs.add(
-        mkPubIdent("parent"),
-        ident("AstNode"),
-        newNimNode(nnkEmpty),
-      )
-      recList.add identDefs
+    #if true:
+    #  var identDefs = newNimNode(nnkIdentDefs)
+    #  identDefs.add(
+    #    mkPubIdent("parentExpr"),
+    #    ident("AstNode"),
+    #    newNimNode(nnkEmpty),
+    #  )
+    #  recList.add identDefs
     if true:
       var recCase = newNimNode(nnkRecCase)
       var identDefs = newNimNode(nnkIdentDefs)
@@ -775,16 +775,43 @@ proc toStr*(
       var stmtList = newNimNode(nnkStmtList)
 
       var myCmd0 = newNimNode(nnkCommand)
+      let tempAstName = "(Ast" & h[0]
+      let tempNimNode = quote do:
+        #i & 
+        `tempAstName`
+        
       myCmd0.add(
         add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
-        newLit(
-          "(Ast" & h[0] #& "\n"
-        ),
+        #newLit(
+        #  "(Ast" & h[0] #& "\n" #& i
+        #),
+        tempNimNode
       )
       stmtList.add myCmd0
+      #stmtList.add quote do:
+      #  result.add i
+
+      var tempNl: NimNode
+      var tempI: NimNode
+      if h[3].len() > 1:
+        #tempNl = "\n"
+        tempNl = quote do:
+          "\n" #& i
+        tempI = quote do:
+          i
+      else:
+        tempNl = quote do:
+          #i
+          ""
+        tempI = quote do:
+          " "
+        
 
       for jdx in 0 ..< h[3].len():
         let field = h[3][jdx]
+        if jdx == 0 and h[3].len > 1:
+          stmtList.add quote do:
+            result.add "\n" #`tempNl`
         #var myCmdInner = newNimNode(nnkCommand)
 
         #proc myAddIndent(myCmdInner: var NimNode) =
@@ -816,18 +843,26 @@ proc toStr*(
           toAdd = quote do:
             result.add(
               (
-                "\n" & i & `mbrStr` & " "
+                #"\n" & i & 
+                #`tempNl` & 
+                `tempI` & `mbrStr` & " "
               ) & (
                 `myDualDotExpr`.toStr(x) #& i & ")\n"
+              ) & (
+                `tempNl`
               )
             )
         of astValSeqAstNode:
           toAdd = quote do:
             result.add(
               (
-                "\n" & i & `mbrStr` & " "
+                #"\n" & i & 
+                #`tempNl` & 
+                `tempI` & `mbrStr` & " "
               ) & (
                 `myDualDotExpr`.toStr(x) #& "\n"
+              ) & (
+                `tempNl`
               )
             )
         of astValOptAstNode:
@@ -835,46 +870,62 @@ proc toStr*(
             if `myDualDotExpr`.isSome:
               result.add(
                 (
-                  "\n" & i & `mbrStr` & " "
+                  #"\n" & i & 
+                  #`tempNl` & 
+                  `tempI` & `mbrStr` & " "
                 ) & (
                   `myDualDotExpr`.get.toStr(x)
-                ) #& (
-                #  ")\n"
-                #)
+                ) & (
+                  `tempNl`
+                )
               )
             else:
               result.add(
-                "\n" & i & `mbrStr` & " " & "!isSome" #& ")\n"
+                #"\n" & i & 
+                (
+                  " " & `mbrStr` & " " & "!isSome" #& ")\n"
+                ) & (
+                  `tempNl`
+                )
               )
         of astValString:
           toAdd = quote do:
             result.add(
-              " \"" & `myDualDotExpr` & "\"" #& ")\n"
+              #`tempNl` & 
+              " " & "\"" & `myDualDotExpr` & "\"" & `tempNl`
             )
         of astValU64:
           toAdd = quote do:
             result.add(
-              " " & $`myDualDotExpr` #& ")\n"
+              #`tempNl` & 
+              " " & $`myDualDotExpr` & `tempNl`
             )
         of astValBool:
           toAdd = quote do:
             result.add(
-              " " & $`myDualDotExpr` #& ")\n"
+              #`tempNl` & 
+              " " & $`myDualDotExpr` & `tempNl`
             )
         of astValUnopKind:
           toAdd = quote do:
             result.add(
-              " " & `mbrStr` & " " & $`myDualDotExpr` #& ")\n"
+              #`tempNl` & 
+              #" " & 
+              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
             )
         of astValBinopKind:
           toAdd = quote do:
             result.add(
-              " " & `mbrStr` & " " & $`myDualDotExpr` #& ")\n"
+              #`tempNl` & 
+              #" " & 
+              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
             )
         of astValAssignEtcKind:
           toAdd = quote do:
             result.add(
-              " " & `mbrStr` & " " & $`myDualDotExpr` #& ")\n"
+              #`tempNl` & 
+              #" " & 
+              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
             )
 
         #myCmdInner.add myDotExpr
@@ -890,24 +941,26 @@ proc toStr*(
           ) or (
             (
               h[3].len() == 1
-            ) and (
-              not (
-                (
-                  h[3][0][1] == astValAstNode
-                ) or (
-                  h[3][0][1] == astValSeqAstNode
-                ) or (
-                  h[3][0][1] == astValOptAstNode
-                )
-              )
-            )
+            ) 
+            #and (
+            #  #not 
+            #  (
+            #    (
+            #      h[3][0][1] == astValAstNode
+            #    ) or (
+            #      h[3][0][1] == astValSeqAstNode
+            #    ) or (
+            #      h[3][0][1] == astValOptAstNode
+            #    )
+            #  )
+            #)
           )
         ):
           toAdd = quote do:
             result.add(")")
         else:
           toAdd = quote do:
-            result.add("\n" & iFinish & ")")
+            result.add(iFinish & ")")
         stmtList.add toAdd
 
       #var myCmd1 = newNimNode(nnkCommand)
@@ -1011,11 +1064,12 @@ proc toStr*(
 ): string =
   let x = indent + 2
   let tempIndent = doIndent(indent=indent)
+  let tempIndent1 = doIndent(indent=x)
   #result.add tempIndent
   #let i = doIndent(ident=x)
 
   result.add "[\n"
   for idx in 0 ..< astSeq.len():
-    result.add tempIndent & astSeq[idx].toStr(x) & ",\n"
+    result.add tempIndent1 & astSeq[idx].toStr(x) & ",\n"
   result.add tempIndent
   result.add "]"

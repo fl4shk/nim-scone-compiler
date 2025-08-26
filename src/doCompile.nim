@@ -49,15 +49,15 @@ proc mkScone*(
     #lineNum: 0.uint64,
     lexMain: result.lexMain,
     #litVal: none(AstLitVal),
-    parent: nil,
+    #parent: nil,
     kind: astSrcFile,
     #module: nil,
     mySrcFile: AstSrcFile(
       module: nil,
     )
   )
-  result.ast = result.astRoot
-  result.ast.parent = nil
+  #result.ast = result.astRoot
+  #result.ast.parent = nil
 
   #result.ast.module = nil
   #result.srcFileVal.

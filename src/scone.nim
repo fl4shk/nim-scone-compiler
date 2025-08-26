@@ -12,7 +12,7 @@ type
     mode*: Mode
     #ast*: seq[AstNode]
     astRoot*: AstNode
-    ast*: AstNode
+    #ast*: AstNode
     #currAstIdx*: uint64
     symSeq*: seq[Symbol]
     symNameToIdxTbl*: OrderedTable[string, uint64]
@@ -28,6 +28,8 @@ type
     #inpIdx*: int
     #currTok*: CurrTok
     lexMain*: LexMain
+    #parentExprS2d*: seq[ptr AstNode]
+    parentTempSeq*: seq[AstNode]
     
     #line*: string
     #identStrS2d*: seq[seq[string]]

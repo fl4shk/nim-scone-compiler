@@ -1,4 +1,4 @@
-module test;
+#module test;
 
 #def main{T}(a, b: Vec2{T=T}[+(!ba)[].f(t=24) + 0x13], result: i32)(
 #	#var c: i32;
@@ -17,10 +17,16 @@ module test;
 #	y: T;
 #};
 
-def plus(left: i32, right: i32) -> i32 {
-	#return left + right;
-};
+#3 + 4 + (c) method[T](a=3 plus 4, b=c) * b * (6 + 5)
+#(3 plus 4) times (8 plus a)
+d.plus(b@).c(aaa)
+#(3@ + a)@
+#(a).b(d) #b[T](a, c)
 
-struct Temp {
-	x: array[a plus c; u32];
-};
+#def plus(left: i32, right: i32) -> i32 {
+#	#return left + right;
+#};
+#
+#struct Temp {
+#	x: array[a plus c; u32];
+#};
