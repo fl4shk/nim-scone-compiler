@@ -796,7 +796,7 @@ proc parseTypeMain(
   #  # this will be an error
   #  self.lexAndExpect(tokSet=mySpp.tokSet)
   #echo "debug: parseTypeMain(): start"
-  discard doChkSelParse(
+  result = doChkSelParse(
     sppSeq @[
       parseTypeBasicBuiltin,
       parseTypeToResolve,
