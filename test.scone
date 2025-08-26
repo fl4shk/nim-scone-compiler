@@ -1,21 +1,29 @@
 #module test;
-
-#def main{T}(a, b: Vec2{T=T}[+(!ba)[].f(t=24) + 0x13], result: i32)(
-#	#var c: i32;
-#);
-
-#def dot[T](a, b: array[3; Vec2[T=T]]) -> T {
-#	#return a.x * b.x + a.y * b.y;
-#};
-
-#def dot[T](a: Vec2[T], b: array[3 * f 4 ; Vec2[T]]) -> T {
+#
+##def main{T}(a, b: Vec2{T=T}[+(!ba)[].f(t=24) + 0x13], result: i32)(
+##	#var c: i32;
+##);
+#
+#def dot[T](a: array[plus(3; Vec2[T=T]], b: array[3; Vec2[T=T]]) -> T {
 #	#return a.x * b.x + a.y * b.y;
 #};
 #
+##def dot[T](a: Vec2[T], b: array[3 * f 4 ; Vec2[T]]) -> T {
+##	#return a.x * b.x + a.y * b.y;
+##};
+##
 #struct Vec2[T] {
 #	x: T;
 #	y: T;
 #};
+#--------
+
+
+#a.plus(b).c(d)
+d.e[B]() + a.plus[T](b)
+
+
+
 
 #3 + 4 + (c) method[T](a=3 plus 4, b=c) * b * (6 + 5)
 #(3 plus 4) times (8 plus a)
@@ -25,7 +33,8 @@
 #d.plus(b) minus c
 #d.plus(b.minus(ccc=aaa))
 #a.plus b.x(e minus c times d)
-d plus b minus c(3.plus)
+#d.plus.b minus c(3.plus)
+#d plus b
 #3 + 4 + 5
 
 #(3@ + a)@

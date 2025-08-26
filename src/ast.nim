@@ -753,6 +753,8 @@ proc toStr*(
   ast: AstNode,
   indent: uint,
 ): string =
+  if ast == nil:
+    return "nil"
   let x = indent + 2
   #result.add doIndent(indent=indent)
   let i = doIndent(indent=x)
@@ -892,19 +894,19 @@ proc toStr*(
           toAdd = quote do:
             result.add(
               #`tempNl` & 
-              " " & "\"" & `myDualDotExpr` & "\"" & `tempNl`
+              `tempI` & "\"" & `myDualDotExpr` & "\"" & `tempNl`
             )
         of astValU64:
           toAdd = quote do:
             result.add(
               #`tempNl` & 
-              " " & $`myDualDotExpr` & `tempNl`
+              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
             )
         of astValBool:
           toAdd = quote do:
             result.add(
               #`tempNl` & 
-              " " & $`myDualDotExpr` & `tempNl`
+              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
             )
         of astValUnopKind:
           toAdd = quote do:

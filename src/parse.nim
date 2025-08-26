@@ -986,7 +986,15 @@ proc parseGenericNamedImplItem(
   #self.lexAndExpect(tokAssign)
   result = self.subParseIdentAssign(chk=chk)
   if not chk:
-    discard self.parseTypeWithoutOptPreKwVar(chk=false)
+    var tempType = self.parseTypeWithoutOptPreKwVar(chk=false).ast
+    var myIdent = result.ast
+    result.ast = mkAst(astGenericNamedArgImpl)
+    result.ast.myGenericNamedArgImpl.ident = myIdent
+    result.ast.myGenericNamedArgImpl.type = tempType
+
+    var myGenericList = self.parentTempSeq[^1]
+    myGenericList.myGenericList.mySeq.add result.ast
+
   #discard self.parseType(chk=false)
 
 proc parseGenericNamedImplList(
@@ -1014,6 +1022,8 @@ proc parseGenericUnnamedImplItem(
   else: # if not chk:
     #if not haveNamed.foundTok.isSome:
     result = self.parseTypeWithoutOptPreKwVar(chk=false)
+    var myGenericList = self.parentTempSeq[^1]
+    myGenericList.myGenericList.mySeq.add result.ast
     #else:
     #  result
     #else:
@@ -1049,6 +1059,8 @@ proc parseGenericFullImplList(
   #  self.parseGenericNamedImplList()
   #else: # if result.foundTok.get() == tokLBracket
   #  self.parseGenericUnnamedImplList()
+  result.ast = mkAst(astGenericList)
+  self.parentTempSeq.add result.ast
 
   let haveNamed = self.subParseIdentAssign(chk=true)
   if not haveNamed.foundTok.isSome:
@@ -1062,6 +1074,8 @@ proc parseGenericFullImplList(
       self.parseGenericNamedImplList()
   else:
     self.parseGenericNamedImplList()
+
+  result.ast = self.parentTempSeq.pop()
 
 
   #self.lexAndCheck(chk=false, tok=tokRBrace)
@@ -1182,18 +1196,10 @@ proc parseFuncUnnamedArgImplItem(
       result.foundTok = none(TokKind)
       result.foundTok1 = none(TokKind)
   else: # if not chk:
-    #if not haveNamed.foundTok.isSome:
-    #result = self.parseTypeWithoutOptPreKwVar(chk=false)
     result = self.parseExpr(chk=false)
-    #echo "unnamed arg: " & result.ast.toStr(0)
     var myFuncCall = self.parentTempSeq[^1]
     myFuncCall.myFuncCall.argImplSeq.add result.ast
-    #echo myFuncCall.myFuncCall.argImplSeq.toStr(0)
-    #else:
-    #  result
-    #else:
-    #  #result.tokSet
-    #  #result.foundTok = none(TokKind)
+
 proc parseFuncUnnamedArgImplList(
   self: var Scone,
   #chk: bool,
@@ -1262,9 +1268,13 @@ proc parseFuncDecl(
   #echo "parseFuncDecl(): begin: chk:" & $chk
   discard doChkTok(tokDef)
   #echo "parseFuncDecl(): post `tokDef`"
-  discard self.parseIdent(chk=false)
+  result.ast = mkAst(astDef)
+  result.ast.myDef.ident = self.parseIdent(chk=false).ast
   #echo "parseFuncDecl(): " & $self.currIdentStrSeq
   #discard self.subParseGenericDeclList(chk=false)
+
+  self.parentTempSeq.add result.ast
+
   discard self.optParse(chk=false, selProc=spp subParseGenericDeclList)
 
   self.lexAndExpect(tokLParen)
@@ -1279,6 +1289,7 @@ proc parseFuncDecl(
   self.lexAndExpect(tokRBrace)
 
   self.lexAndExpect(tokSemicolon)
+  result.ast = self.parentTempSeq.pop()
 
 proc parseStructDecl(
   self: var Scone,
@@ -1355,6 +1366,35 @@ proc parseExprFuncCallPostIdent(
       result.foundTok = self.lexAndCheck(chk=true, tokSet=result.tokSet)
   else: # if not chk:
     if result.foundTok.isSome or temp.foundTok.isSome:
+      #if result.foundTok.isSome:
+      #  echo "result.foundTok.isSome:" & $result.foundTok.get() #result.ast.toStr(0)
+      #  doAssert(
+      #    not temp.foundTok.isSome,
+      #    "eek! " & $result.foundTok.get() & " " & $temp.foundTok.get()
+      #  )
+      #  echo "parentTempSeq.len(): " & $self.parentTempSeq.len()
+      #  echo self.parentTempSeq[^1].toStr(0)
+      #else:
+      #  doAssert(
+      #    temp.foundTok.isSome,
+      #    "eek! " & $temp.foundTok.get()
+      #  )
+      #  echo "temp.foundTok.isSome:" & $temp.foundTok.get() #temp.ast.toStr(0)
+      #echo "parentTempSeq.len(): " & $self.parentTempSeq.len()
+      if self.parentTempSeq.len() > 0:
+        #echo self.parentTempSeq[^1].toStr(0)
+        discard
+      else:
+        doAssert(
+          false,
+          "eek!"
+        )
+      if result.foundTok.isSome:
+        self.parentTempSeq[^1].myFuncCall.genericImpl = result.ast
+      else:
+        self.parentTempSeq[^1].myFuncCall.genericImpl = (
+          mkAst(astGenericList)
+        )
       result = self.parseExprFuncCallPostGeneric(chk=false)
     else:
       #echo "parseExprFuncCallPostIdent(): lexAndExpect:"
@@ -1371,23 +1411,12 @@ proc parseExprIdentOrFuncCall(
   chk: bool,
 ): SppResult =
   result = doChkSpp(parseIdent)
-  #echo "parseExprIdentOrFuncCall(): " & $chk & " " & $self.lexMain
-  #echo result.ast.myIdent.strVal
-  #echo ""
   self.parentTempSeq.add mkAst(astFuncCall)
   let temp = self.optParse(
     chk=false,
     selProc=spp parseExprFuncCallPostIdent,
   )
-  #if temp.ast != nil:
   if temp.foundTok.isSome:
-    #template childSeq(): untyped =
-    #  temp.ast.myParserTemp.childSeq
-    #doAssert(
-    #  childSeq.len() == 3,
-    #  "eek! " & childSeq.toStr(0)
-    #)
-    #echo "testificate"
     let myIdent = result.ast 
     result.ast = self.parentTempSeq[^1]
     result.ast.myFuncCall.ident = myIdent
@@ -1398,26 +1427,16 @@ proc parseExprIdentOrFuncCallPostDot(
   chk: bool,
 ): SppResult =
   result = doChkSpp(parseIdent)
-  #echo "parseExprIdentOrFuncCall(): " & $chk & " " & $self.lexMain
-  #echo result.ast.myIdent.strVal
-  #echo ""
   self.parentTempSeq.add mkAst(astFuncCall)
   let temp = self.optParse(
     chk=false,
     selProc=spp parseExprFuncCallPostIdent,
   )
-  #if temp.ast != nil:
   if temp.foundTok.isSome:
-    #template childSeq(): untyped =
-    #  temp.ast.myParserTemp.childSeq
-    #doAssert(
-    #  childSeq.len() == 3,
-    #  "eek! " & childSeq.toStr(0)
-    #)
-    #echo "testificate"
     let myIdent = result.ast 
     result.ast = self.parentTempSeq[^1]
     result.ast.myFuncCall.ident = myIdent
+    #echo "testificate:" & result.ast.toStr(0)
   discard self.parentTempSeq.pop()
 
 # BEGIN: Old version of `parseExprBinopFuncCall`
@@ -1478,63 +1497,63 @@ proc parseExprIdentOrFuncCallPostDot(
 #  #echo "test:" & result.ast.toStr(0)
 
 
-proc parseExprBinopFuncCall(
-  self: var Scone,
-  chk: bool,
-): SppResult =
-  result = doChkSpp(parseExprUnary)
-
-  #self.parentTempSeq.add result.ast
-
-  #var loopParseOutp = self.loopSelParse(
-  #  selProcSeq=(
-  #    sppSeq @[subParseExprBinopFuncCall]
-  #  ),
-  #  sepTok=none(TokKind),
-  #)
-  #if loopParseOutp.ast != nil:
-  #  case loopParseOutp.ast.kind:
-  #  of astFuncCall:
-  #    discard
-  #  else:
-  #    doAssert(
-  #      false,
-  #      "eek! loopParseOutp.ast:" & loopParseOutp.ast.toStr(0)
-  #    )
-  #  #var myUnary = result.ast
-  #  #var myExpr = 
-  #  #result.ast = loopParseOutp
-  #discard self.parentTempSeq.pop()
-
-  #if not chk:
-  var haveIdent = self.parseIdent(chk=true)
-  #var atFirstIter: bool = true
-  #var myExpr = result.ast
-  #var firstCall: AstNode = nil
-  #var lastFuncCall: AstNode = nil
-  while haveIdent.foundTok.isSome:
-    #result.ast = mkAst(astFuncCall)
-    haveIdent = self.parseIdent(chk=false)
-    var myExpr: AstNode = result.ast
-    #if atFirstIter:
-    #  #firstExpr = result.ast
-    #  #firstCall = mkAst(astFuncCall)
-    #  atFirstIter = false
-    #else:
-    #  #result.ast.myFuncCall.argImplSeq.add restul
-    result.ast = mkAst(astFuncCall)
-    result.ast.myFuncCall.argImplSeq.add myExpr
-    result.ast.myFuncCall.ident = haveIdent.ast
-    self.parentTempSeq.add result.ast
-    discard self.optParse(
-      chk=false,
-      selProc=spp parseGenericFullImplList,
-    )
-    result.ast = self.parentTempSeq.pop()
-    result.ast.myFuncCall.argImplSeq.add self.parseExprUnary(chk=false).ast
-
-    #lastFuncCall = result.ast
-    haveIdent = self.parseIdent(chk=true)
+#proc parseExprBinopFuncCall(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  result = doChkSpp(parseExprUnary)
+#
+#  #self.parentTempSeq.add result.ast
+#
+#  #var loopParseOutp = self.loopSelParse(
+#  #  selProcSeq=(
+#  #    sppSeq @[subParseExprBinopFuncCall]
+#  #  ),
+#  #  sepTok=none(TokKind),
+#  #)
+#  #if loopParseOutp.ast != nil:
+#  #  case loopParseOutp.ast.kind:
+#  #  of astFuncCall:
+#  #    discard
+#  #  else:
+#  #    doAssert(
+#  #      false,
+#  #      "eek! loopParseOutp.ast:" & loopParseOutp.ast.toStr(0)
+#  #    )
+#  #  #var myUnary = result.ast
+#  #  #var myExpr = 
+#  #  #result.ast = loopParseOutp
+#  #discard self.parentTempSeq.pop()
+#
+#  #if not chk:
+#  var haveIdent = self.parseIdent(chk=true)
+#  #var atFirstIter: bool = true
+#  #var myExpr = result.ast
+#  #var firstCall: AstNode = nil
+#  #var lastFuncCall: AstNode = nil
+#  while haveIdent.foundTok.isSome:
+#    #result.ast = mkAst(astFuncCall)
+#    haveIdent = self.parseIdent(chk=false)
+#    var myExpr: AstNode = result.ast
+#    #if atFirstIter:
+#    #  #firstExpr = result.ast
+#    #  #firstCall = mkAst(astFuncCall)
+#    #  atFirstIter = false
+#    #else:
+#    #  #result.ast.myFuncCall.argImplSeq.add restul
+#    result.ast = mkAst(astFuncCall)
+#    result.ast.myFuncCall.argImplSeq.add myExpr
+#    result.ast.myFuncCall.ident = haveIdent.ast
+#    self.parentTempSeq.add result.ast
+#    discard self.optParse(
+#      chk=false,
+#      selProc=spp parseGenericFullImplList,
+#    )
+#    result.ast = self.parentTempSeq.pop()
+#    result.ast.myFuncCall.argImplSeq.add self.parseExprUnary(chk=false).ast
+#
+#    #lastFuncCall = result.ast
+#    haveIdent = self.parseIdent(chk=true)
 
 
 
@@ -1679,6 +1698,7 @@ proc subLoopSelParseExprBinop(
           self.lex()
         else:
           break
+      #echo "testificate: " & result.ast.toStr(0)
 #proc subLoopSelParseExprBinop(
 #  self: var Scone,
 #  chk: bool,
@@ -1827,7 +1847,7 @@ proc parseExprFieldArrEtcChoice(
   #)
   #echo "parseExprFieldArrEtcChoice: before selParse"
   let temp = self.selParse(
-    chk=chk,
+    chk=true,
     selProcSeq=(
       sppSeq @[
         parseExprSuffixFieldMethodAccess,
@@ -1858,10 +1878,14 @@ proc parseExprFieldArrEtcChoice(
     if temp.foundSelProc.get() == parseExprSuffixFieldMethodAccess:
       #echo "have parseExprSuffixFieldMethodAccess: begin: "
       var myTemp = temp.foundSelProc.get()(self=self, chk=false)
+      #echo $myTemp.ast.kind #toStr(0)
       case myTemp.ast.kind:
       of astFuncCall:
+        #echo "myTemp.ast.kind == astFuncCall:"
         var myPrev = self.parentTempSeq.pop()
+        #echo $myPrev.kind & " " & $self.parentTempSeq.len()
         myTemp.ast.myFuncCall.argImplSeq.insert(myPrev)
+        #echo $(myTemp.ast.myFuncCall.genericImpl == nil)
         self.parentTempSeq.add myTemp.ast
       #of astIdent:
       #  discard
@@ -1934,16 +1958,16 @@ proc parseExprMulDivMod(
   chk: bool,
 ): SppResult =
   result = doChkSpp(
-    #parseExprUnary
-    parseExprBinopFuncCall
+    parseExprUnary
+    #parseExprBinopFuncCall
   )
   discard self.subLoopSelParseExprBinop(
     chk=false,
     tokSeq=(@[tokMul, tokDiv, tokMod]),
     someSppRet=result,
     subExprParseFunc=(
-      #parseExprUnary
-      parseExprBinopFuncCall
+      parseExprUnary
+      #parseExprBinopFuncCall
     ),
   )
 
@@ -2096,6 +2120,7 @@ proc parseSrcFile*(
 
   #self.lexAndExpect(tokEof)
   self.astRoot = self.parseExpr(chk=false).ast
+  #echo $self.astRoot.kind
   echo self.astRoot.toStr(0)
   #echo self.astRoot.repr()
   #let temp = self.loopSelParse()

@@ -209,17 +209,17 @@ exprAddSub:
 	exprMulDivMod (('+' | '-') exprMulDivMod)*
 	;
 exprMulDivMod:
-	//exprUnary (('*' | '/' | '%') exprUnary)*
-	exprBinopFuncCall (('*' | '/' | '%') exprBinopFuncCall)*
+	exprUnary (('*' | '/' | '%') exprUnary)*
+	//exprBinopFuncCall (('*' | '/' | '%') exprBinopFuncCall)*
 	;
 
-exprBinopFuncCall:
-	exprUnary (ident genericFullImplList? exprUnary)*
-
-	//exprLowestNonOp
-	//expr
-	//exprFieldArrEtcChoice
-	;
+//exprBinopFuncCall:
+//	exprUnary (ident genericFullImplList? exprUnary)*
+//
+//	//exprLowestNonOp
+//	//expr
+//	//exprFieldArrEtcChoice
+//	;
 
 exprUnary:
 	exprPrefixUnary? exprFieldArrEtc
@@ -231,7 +231,7 @@ exprSuffixFieldMethodAccessDotExpr:
 	;
 exprSuffixFieldMethodAccess:
 	exprSuffixFieldMethodAccessDotExpr
-	| exprBinopFuncCall
+	//| exprBinopFuncCall
 	;
 //exprSuffixMethodCall:
 //	'->' exprFuncCallMain

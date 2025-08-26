@@ -225,7 +225,7 @@ const `helperTokKindSeq`*: seq[(
     @[
       
       ("ident", astValAstNode),               # `AstIdent`
-      ("genericDeclSeq", astValSeqAstNode),   # seq of `AstIdent`
+      ("genericDecl", astValSeqAstNode),    # seq of `AstIdent`
       ("argDeclSeq", astValSeqAstNode),       # seq of `AstVar`
       ("stmtSeq", astValSeqAstNode),
     ],
@@ -248,7 +248,7 @@ const `helperTokKindSeq`*: seq[(
   (
     "Struct", some("struct"), true,
     @[
-      ("genericDeclSeq", astValSeqAstNode),  # seq of `AstIdent`
+      ("genericDecl", astValSeqAstNode),  # seq of `AstIdent`
       ("fieldSeq", astValSeqAstNode),        # `seq` of `AstVar`
     ],
   ),
@@ -430,7 +430,7 @@ const `helperTokKindSeq`*: seq[(
     "Unop", none(string), true,
     @[
       ("kind", astValUnopKind),
-      ("child", astValAstNode),
+      ("obj", astValAstNode),
     ]
   ),
   (
@@ -453,7 +453,8 @@ const `helperTokKindSeq`*: seq[(
     "NamedType", none(string), true,
     @[
       ("ident", astValAstNode),
-      ("genericImplSeq", astValSeqAstNode),
+      #("genericImplSeq", astValSeqAstNode),
+      ("genericImpl", astValAstNode),
     ]
   ),
   (
@@ -470,7 +471,8 @@ const `helperTokKindSeq`*: seq[(
     "FuncCall", none(string), true,
     @[
       ("ident", astValAstNode),
-      ("genericImplSeq", astValSeqAstNode),
+      #("genericImplSeq", astValSeqAstNode),
+      ("genericImpl", astValAstNode),
       ("argImplSeq", astValSeqAstNode),
     ]
   ),
@@ -488,6 +490,12 @@ const `helperTokKindSeq`*: seq[(
       ("type", astValAstNode),
     ],
   ),
+  (
+    "GenericList", none(string), true,
+    @[
+      ("mySeq", astValSeqAstNode)
+    ]
+  ),
   #(
   #  "MethodCall", none(string), true,
   #  @[
@@ -495,12 +503,12 @@ const `helperTokKindSeq`*: seq[(
   #    ("funcCall", astValAstNode),
   #  ],
   #),
-  (
-    "ParserTemp", none(string), true,
-    @[
-      ("childSeq", astValSeqAstNode),
-    ],
-  ),
+  #(
+  #  "ParserTemp", none(string), true,
+  #  @[
+  #    ("mySeq", astValSeqAstNode),
+  #  ],
+  #),
   #("TypeUnresolved", none(string), true),
   #("TypeResolved", none(string), true),
   #("Lim", none(string)),
