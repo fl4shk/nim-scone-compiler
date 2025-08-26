@@ -495,12 +495,12 @@ const `helperTokKindSeq`*: seq[(
   #    ("funcCall", astValAstNode),
   #  ],
   #),
-  #(
-  #  "ParserTemp", none(string), true,
-  #  @[
-  #    ("childSeq", astValSeqAstNode),
-  #  ],
-  #),
+  (
+    "ParserTemp", none(string), true,
+    @[
+      ("childSeq", astValSeqAstNode),
+    ],
+  ),
   #("TypeUnresolved", none(string), true),
   #("TypeResolved", none(string), true),
   #("Lim", none(string)),

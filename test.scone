@@ -21,7 +21,12 @@
 #(3 plus 4) times (8 plus a)
 
 #d.plus(b).c(aaa)
-d.plus(b).c(aaa)
+#(d.plus(b).c(aaa)) + (d plus b c aaa)
+#d.plus(b) minus c
+#d.plus(b.minus(ccc=aaa))
+#a.plus b.x(e minus c times d)
+d plus b minus c(3.plus)
+#3 + 4 + 5
 
 #(3@ + a)@
 #(a).b(d) #b[T](a, c)

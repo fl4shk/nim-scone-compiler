@@ -1070,6 +1070,6 @@ proc toStr*(
 
   result.add "[\n"
   for idx in 0 ..< astSeq.len():
-    result.add tempIndent1 & astSeq[idx].toStr(x) & ",\n"
+    result.add tempIndent1 & astSeq[idx].toStr(x) & "\n"
   result.add tempIndent
   result.add "]"

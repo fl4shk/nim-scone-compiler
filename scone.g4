@@ -209,7 +209,16 @@ exprAddSub:
 	exprMulDivMod (('+' | '-') exprMulDivMod)*
 	;
 exprMulDivMod:
-	exprUnary (('*' | '/' | '%') exprUnary)*
+	//exprUnary (('*' | '/' | '%') exprUnary)*
+	exprBinopFuncCall (('*' | '/' | '%') exprBinopFuncCall)*
+	;
+
+exprBinopFuncCall:
+	exprUnary (ident genericFullImplList? exprUnary)*
+
+	//exprLowestNonOp
+	//expr
+	//exprFieldArrEtcChoice
 	;
 
 exprUnary:
@@ -217,7 +226,8 @@ exprUnary:
 	;
 
 exprSuffixFieldMethodAccessDotExpr:
-	'.' exprIdentOrFuncCall
+	//'.' exprIdentOrFuncCall
+	'.' exprIdentOrFuncCallPostDot
 	;
 exprSuffixFieldMethodAccess:
 	exprSuffixFieldMethodAccessDotExpr
@@ -267,18 +277,24 @@ exprLhs:
 	;
 
 exprIdentOrFuncCall:
-	//'$' exprFuncCallMain
-	// '$' (or some other leading token) required because the parser needs
-	// to have at most one token to determine if a rule can be taken.
 	ident
 
 	exprFuncCallPostIdent?	// if we have `exprFuncCallPostIdent`,
 							// this indicates calling either 
 							// a function or method
 	;
-exprFuncCall:
-	ident exprFuncCallPostIdent
+
+exprIdentOrFuncCallPostDot:
+	ident
+
+	exprFuncCallPostIdent?	// if we have `exprFuncCallPostIdent`,
+							// this indicates calling either 
+							// a function or method
 	;
+
+//exprFuncCall:
+//	ident exprFuncCallPostIdent
+//	;
 
 exprFuncCallPostIdent:
 	//( '[' genericImplList ']' )? 
@@ -286,11 +302,13 @@ exprFuncCallPostIdent:
 	exprFuncCallPostGeneric
 	;
 
-exprBinopFuncCall:
-	ident
-	genericFullImplList?
-	expr
-	;
+//exprBinopFuncCall:
+//	ident
+//	genericFullImplList?
+//	exprLowestNonOp
+//	//expr
+//	//exprFieldArrEtcChoice
+//	;
 
 //exprFuncCallPostGenericBinop:
 //	ident
