@@ -19,7 +19,10 @@
 
 #3 + 4 + (c) method[T](a=3 plus 4, b=c) * b * (6 + 5)
 #(3 plus 4) times (8 plus a)
-d.plus(b@).c(aaa)
+
+#d.plus(b).c(aaa)
+d.plus(b).c(aaa)
+
 #(3@ + a)@
 #(a).b(d) #b[T](a, c)
 
