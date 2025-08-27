@@ -207,16 +207,18 @@ const `helperTokKindSeq`*: seq[(
   (
     "Var", some("var"), true,
     @[
-      ("ident", astValAstNode),           # `AstIdent` index
-      ("myType", astValAstNode),          # `AstType` index
+      #("ident", astValAstNode),           # `AstIdent` index
+      #("myType", astValAstNode),          # `AstType` index
+      ("child", astValAstNode),           # `AstVarEtcDeclMost`
       ("optExpr", astValOptAstNode),      # optional expression index
     ]
   ),
   (
     "Const", some("const"), true,
     @[
-      ("ident", astValAstNode),         # `AstIdent` index
-      ("myType", astValAstNode),        # `AstType` index
+      #("ident", astValAstNode),         # `AstIdent` index
+      #("myType", astValAstNode),        # `AstType` index
+      ("child", astValAstNode),         # `AstVarEtcDeclMost`
       ("expr", astValAstNode),          # expression index
     ]
   ),
@@ -296,7 +298,8 @@ const `helperTokKindSeq`*: seq[(
       ("expr", astValAstNode),          # (condition) expression
       ("stmtSeq", astValSeqAstNode),    # the list of statements
                                         # within the scope
-      ("optChild", astValOptAstNode),   # optional `AstElif` or `AstElse`
+      ("elifSeq", astValSeqAstNode),    # `AstElif` `seq`
+      ("optElse", astValOptAstNode),    # optional `AstElse`
     ],
   ),
   (
@@ -305,7 +308,7 @@ const `helperTokKindSeq`*: seq[(
       ("expr", astValAstNode),        # (condition) expression
       ("stmtSeq", astValSeqAstNode),  # the list of statements 
                                       # within the scope
-      ("optChild", astValOptAstNode), # optional `AstElif` or `AstElse`
+      #("optChild", astValOptAstNode), # optional `AstElif` or `AstElse`
     ],
   ),
   (
@@ -319,7 +322,8 @@ const `helperTokKindSeq`*: seq[(
     "Switch", some("switch"), true,
     @[
       ("expr", astValAstNode),          # the condition
-      ("childSeq", astValSeqAstNode),   # the list of `case` or `default`
+      ("caseSeq", astValSeqAstNode),    # the list of `AstCase` 
+      ("optDefault", astValOptAstNode), # optional `AstDefault`
     ]
   ),
   (
@@ -501,7 +505,7 @@ const `helperTokKindSeq`*: seq[(
     "VarEtcDeclMost", none(string), true,
     @[
       ("ident", astValAstNode),           # `AstIdent` index
-      ("myType", astValAstNode),          # `AstType` index
+      ("type", astValAstNode),          # `AstType` index
     ]
   ),
   #(

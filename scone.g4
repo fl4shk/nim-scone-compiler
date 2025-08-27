@@ -22,7 +22,8 @@ funcDecl:
 	'def' ident
 	( '[' genericDeclList ']' )?
 	'(' funcArgDeclList? ')' '->' typeWithOptPreKwVar '{'
-		stmtList
+		//stmtList
+		(stmt ';')*
 	'}' ';'
 	;
 
@@ -64,99 +65,116 @@ varEtcDeclMost: // "Most" is short for "Most of it"
 	;
 
 //--------
-varDecl:
+stmtVarDecl:
 	'var' varEtcDeclMost ('=' expr)?
 	;
-letDecl:
-	'let' varEtcDeclMost '=' expr
-	;
-//constDecl:
-//	'const' varEtcDeclMost '=' expr
+//letDecl:
+//	'let' varEtcDeclMost '=' expr
 //	;
+stmtConstDecl:
+	'const' varEtcDeclMost '=' expr
+	;
 //--------
 stmt:
-	varDecl | letDecl //| constDecl
-	| breakStmt | continueStmt
-	| forStmt | whileStmt
-	| ifStmt
-	| returnStmt
-	| assignStmt
+	stmrVarDecl /*| letDecl*/ | stmtConstDecl
+	| stmtBreak | stmtContinue
+	| stmtFor | stmtWhile
+	| stmtIf | stmtSwitch 
+	| stmtScope
+	| stmtReturn
+	| stmtCallOrAssignEtc
 	;
 	
-stmtList:
-	(stmt ';')* 
-	;
+//stmtList:
+//	(stmt ';')* 
+//	;
 
-breakStmt:
+stmtBreak:
 	'break'
 	;
-continueStmt:
+stmtContinue:
 	'continue'
 	;
 
-forStmt:
-	'for' '(' ident 'in' expr ('to' | 'until') expr ')' '{'
-		stmtList
+stmtFor:
+	'for' ident 'in' expr ('to' | 'until') expr '{'
+		//stmtList
+		(stmt ';')*
 	'}'
 	;
 
-whileStmt:
-	'while' '(' expr ')' '{'
-		stmtList
+stmtWhile:
+	'while' expr '{'
+		//stmtList
+		(stmt ';')*
 	'}'
 	;
 
-ifStmt:
-	'if' '(' expr ')' '{'
-		stmtList
+stmtIf:
+	'if' expr '{'
+		//stmtList
+		(stmt ';')*
 	'}'
-	elifStmt*
-	elseStmt?
+	stmtElif*
+	stmtElse?
 	;
-elifStmt:
-	'elif' '(' expr ')' '{'
-		stmtList
+stmtElif:
+	'elif' expr '{'
+		//stmtList
+		(stmt ';')*
 	'}'
 	;
-elseStmt:
+stmtElse:
 	'else' '{'
-		stmtList
+		//stmtList
+		(stmt ';')*
 	'}'
 	;
 
-switchStmt:
-	'switch' '('
-		expr
-	')' '{'
-		caseStmt*
-		defaultStmt?
+stmtSwitch:
+	'switch' expr '{'
+		stmtCase*
+		stmtDefault?
 	'}'
 	;
-caseStmt:
-	'case' '(' expr ')' '{'
-		stmtList
+stmtCase:
+	'case' expr '{'
+		//stmtList
+		(stmt ';')*
 	'}'
 	;
-defaultStmt:
+stmtDefault:
 	'default' '{'
-		stmtList
+		//stmtList
+		(stmt ';')*
 	'}'
 	;
 
-returnStmt:
+stmtScope:
+	'scope' '{'
+		//stmtList
+		(stmt ';')*
+	'}'
+	;
+
+stmtReturn:
 	'return' expr?
 	;
 
-assignStmt:
+assignOp:
+	'='
+	| '+=' | '-='
+	| '*=' | '/=' | '%='
+	| '&=' | '|=' | '^='
+	| '<<=' | '>>='
+	;
+
+stmtCallOrAssignEtc:
 	exprLhs
 	(
-		'='
-		| '+=' | '-='
-		| '*=' | '/=' | '%='
-		| '&=' | '|=' | '^='
-		| '<<=' | '>>='
-	)
-	expr
+		assignOp
+		expr
+	)?
 	;
 //--------
 exprLowestNonOp:

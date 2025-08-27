@@ -1082,3 +1082,10 @@ proc toStr*(
   #  result.add doIndent(indent - 2)
   result.add tempIndent
   result.add "]"
+
+#proc repr*(
+#  ast: AstNode,
+#  indent: uint,
+#): string =
+#  discard
+  

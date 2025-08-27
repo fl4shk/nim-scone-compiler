@@ -678,6 +678,10 @@ proc parseGenericNamedImplList(
   self: var Scone,
   #chk: bool,
 )
+proc parseStmt(
+  self: var Scone,
+  chk: bool,
+): SppResult
 
 #proc parseTypeArrDim(
 #  self: var Scone,
@@ -957,7 +961,7 @@ proc parseVarEtcDeclMost(
   result.ast.myVarEtcDeclMost.ident = myIdent
 
   self.lexAndExpect(tokColon)
-  result.ast.myVarEtcDeclMost.myType = (
+  result.ast.myVarEtcDeclMost.type = (
     self.parseTypeWithoutOptPreKwVar(chk=false).ast
   )
 
@@ -1132,7 +1136,7 @@ proc subParseFuncArgDeclList(
   result.ast.myVarEtcDeclMost.ident = myIdent
 
   self.lexAndExpect(tokColon)
-  result.ast.myVarEtcDeclMost.myType = (
+  result.ast.myVarEtcDeclMost.type = (
     self.parseTypeWithOptPreKwVar(chk=false).ast
   )
   self.parentTempSeq[^1].myDef.argDeclSeq.add result.ast
@@ -1306,6 +1310,17 @@ proc parseExprFuncCallPostGeneric(
   #  none(HashSet[TokKind]),
   #)
 
+proc subParseStmtList(
+  self: var Scone,
+  #chk: bool,
+  stmtSeq: var seq[AstNode],
+) =
+  var myStmt = self.parseStmt(chk=true)
+  while myStmt.foundTok.isSome:
+    myStmt = self.parseStmt(chk=false)
+    stmtSeq.add myStmt.ast
+    self.lexAndExpect(tokSemicolon)
+    myStmt = self.parseStmt(chk=true)
 
 
 proc parseFuncDecl(
@@ -1333,6 +1348,13 @@ proc parseFuncDecl(
 
   self.lexAndExpect(tokLBrace)
   # stmts go here
+  #var myStmt = self.parseStmt(chk=true)
+  #while myStmt.foundTok.isSome:
+  #  myStmt = self.parseStmt(chk=false)
+  #  result.ast.myDef.stmtSeq.add myStmt.ast
+  #  self.lexAndExpect(tokSemicolon)
+  #  myStmt = self.parseStmt(chk=true)
+  self.subParseStmtList(stmtSeq=result.ast.myDef.stmtSeq)
   self.lexAndExpect(tokRBrace)
 
   self.lexAndExpect(tokSemicolon)
@@ -2156,6 +2178,176 @@ proc parseExpr(
   #  none(HashSet[TokKind])
   #)
   result = self.parseExprLogicOr(chk=chk)
+
+
+proc parseStmtVarDecl(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokVar)
+  result.ast = mkAst(astVar)
+  result.ast.myVar.child = self.parseVarEtcDeclMost(chk=false).ast
+  result.ast.myVar.optExpr = none(AstNode)
+  if self.lexAndCheck(chk=true, tok=tokAssign).isSome:
+    self.lex()
+    result.ast.myVar.optExpr = some(self.parseExpr(chk=false).ast)
+
+proc parseStmtConstDecl(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokConst)
+  result.ast = mkAst(astConst)
+  result.ast.myConst.child = self.parseVarEtcDeclMost(chk=false).ast
+  discard self.lexAndCheck(chk=false, tok=tokAssign)
+  result.ast.myConst.expr = self.parseExpr(chk=false).ast
+
+proc parseStmtBreak(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard
+proc parseStmtContinue(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard
+
+proc parseStmtFor(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard
+proc parseStmtWhile(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard
+
+proc parseStmtElse(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokElse)
+  result.ast = mkAst(astElse)
+  self.lexAndExpect(tokLBrace)
+  self.subParseStmtList(result.ast.myElse.stmtSeq)
+  self.lexAndExpect(tokRBrace)
+
+proc parseStmtElif(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokElif)
+  result.ast = mkAst(astElif)
+  result.ast.myElif.expr = self.parseExpr(chk=false).ast
+  self.lexAndExpect(tokLBrace)
+  self.subParseStmtList(result.ast.myElif.stmtSeq)
+  self.lexAndExpect(tokRBrace)
+
+proc parseStmtIf(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokIf)
+  result.ast = mkAst(astIf)
+  result.ast.myIf.expr = self.parseExpr(chk=false).ast
+  self.lexAndExpect(tokLBrace)
+  self.subParseStmtList(result.ast.myIf.stmtSeq)
+  self.lexAndExpect(tokRBrace)
+  var myElif = self.parseStmtElif(chk=true)
+  while myElif.foundTok.isSome:
+    myElif = self.parseStmtElif(chk=false)
+    result.ast.myIf.elifSeq.add myElif.ast
+    myElif = self.parseStmtElif(chk=true)
+  result.ast.myIf.optElse = none(AstNode)
+  var myElse = self.parseStmtElse(chk=true)
+  if myElse.foundTok.isSome:
+    result.ast.myIf.optElse = some(self.parseStmtElse(chk=false).ast)
+
+proc parseStmtDefault(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokDefault)
+  result.ast = mkAst(astDefault)
+  self.lexAndExpect(tokLBrace)
+  self.subParseStmtList(result.ast.myDefault.stmtSeq)
+  self.lexAndExpect(tokRBrace)
+
+proc parseStmtCase(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokCase)
+  result.ast = mkAst(astCase)
+  result.ast.myCase.expr = self.parseExpr(chk=false).ast
+  self.lexAndExpect(tokLBrace)
+  self.subParseStmtList(result.ast.myCase.stmtSeq)
+  self.lexAndExpect(tokRBrace)
+
+proc parseStmtSwitch(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokSwitch)
+  result.ast = mkAst(astSwitch)
+  result.ast.mySwitch.expr = self.parseExpr(chk=false).ast
+  self.lexAndExpect(tokLBrace)
+
+  var myCase = self.parseStmtCase(chk=true)
+  while myCase.foundTok.isSome:
+    myCase = self.parseStmtCase(chk=false)
+    result.ast.mySwitch.caseSeq.add myCase.ast
+    myCase = self.parseStmtCase(chk=true)
+
+  result.ast.mySwitch.optDefault = none(AstNode)
+  var myDefault = self.parseStmtDefault(chk=true)
+  if myDefault.foundTok.isSome:
+    result.ast.mySwitch.optDefault = (
+      some(self.parseStmtDefault(chk=false).ast)
+    )
+  self.lexAndExpect(tokRBrace)
+
+proc parseStmtScope(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard
+proc parseStmtReturn(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokReturn)
+  result.ast = mkAst(astReturn)
+  result.ast.myReturn.optExpr = none(AstNode)
+  var myExpr = self.parseExpr(chk=true)
+  if myExpr.foundTok.isSome:
+    result.ast.myReturn.optExpr = some(self.parseExpr(chk=false).ast)
+
+proc parseStmtCallOrAssignEtc(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard
+
+proc parseStmt(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = doChkSelParse(
+    sppSeq @[
+      parseStmtVarDecl, parseStmtConstDecl,
+      parseStmtBreak, parseStmtContinue,
+      parseStmtFor, parseStmtWhile,
+      parseStmtIf,
+      parseStmtSwitch,
+      parseStmtScope,
+      parseStmtReturn,
+      parseStmtCallOrAssignEtc,
+    ],
+    none(HashSet[TokKind]),
+  )
 
 proc parseSrcFile*(
   self: var Scone

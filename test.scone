@@ -1,15 +1,49 @@
 module test;
 
-def dot[T](a: var array[plus(a, b=c); Vec2[T=U]], b: array[3; Vec2[D=T]]) -> T {
-	#return a.x * b.x + a.y * b.y;
-};
+#def dot[T](a: var array[plus(a, b=c); Vec2[T=U]], b: array[3; Vec2[D=T]]) -> T {
+#	#return a.x * b.x + a.y * b.y;
+#};
 
 #def dot[T](a: Vec2[T], b: array[3 * f 4 ; Vec2[T]]) -> T {
 #	#return a.x * b.x + a.y * b.y;
 #};
 #
+#struct Vec2[T] {
+#	x: ptr D[A, B];
+#	y: T;
+#};
+
+def dot[T](a: var Vec2[T], b: var Vec2[T]) -> T {
+	const result: T = a.x * b.x + a.y * b.y;
+	return result;
+};
+
+def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
+	#const result: T = a.x * b.x + a.y * b.y;
+	const result: T = a.dot[T](b);
+	#--------
+	switch result {
+	case T(3) {
+	}
+	case T(5) {
+	}
+	default {
+	}
+	};
+	#--------
+	if result == T(3) {
+		return T(5);
+	} elif result == T(2) {
+		return T(3);
+	} elif result == T(5) {
+		#
+	} else {
+		return T(25);
+	};
+	return result;
+};
 struct Vec2[T] {
-	x: ptr D[A, B];
+	x: T;
 	y: T;
 };
 #--------

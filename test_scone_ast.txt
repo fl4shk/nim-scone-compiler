@@ -1,0 +1,132 @@
+(AstSrcFile
+  module (AstModule ident (AstIdent "test"))
+  funcDeclSeq [
+    (AstDef
+      ident (AstIdent "dot")
+      genericDecl (AstGenericList mySeq [
+        (AstIdent "T")
+      ])
+      argDeclSeq [
+        (AstVarEtcDeclMost
+          ident (AstIdent "a")
+          type (AstType
+            kwVar true
+            ptrDim 0
+            child (AstNamedType
+              ident (AstIdent "Vec2")
+              genericImpl (AstGenericList mySeq [
+                (AstType
+                  kwVar false
+                  ptrDim 0
+                  child (AstNamedType
+                    ident (AstIdent "T")
+                    genericImpl (AstGenericList mySeq [
+                    ])
+                  )
+                )
+              ])
+            )
+          )
+        )
+        (AstVarEtcDeclMost
+          ident (AstIdent "b")
+          type (AstType
+            kwVar true
+            ptrDim 0
+            child (AstNamedType
+              ident (AstIdent "Vec2")
+              genericImpl (AstGenericList mySeq [
+                (AstType
+                  kwVar false
+                  ptrDim 0
+                  child (AstNamedType
+                    ident (AstIdent "T")
+                    genericImpl (AstGenericList mySeq [
+                    ])
+                  )
+                )
+              ])
+            )
+          )
+        )
+      ]
+      stmtSeq [
+        (AstConst
+          child (AstVarEtcDeclMost
+            ident (AstIdent "result")
+            type (AstType
+              kwVar false
+              ptrDim 0
+              child (AstNamedType
+                ident (AstIdent "T")
+                genericImpl (AstGenericList mySeq [
+                ])
+              )
+            )
+          )
+          expr (AstBinop
+            kind binopPlus
+            left (AstBinop
+              kind binopMul
+              left (AstDot
+                left (AstIdent "a")
+                right (AstIdent "x")
+              )
+              right (AstDot
+                left (AstIdent "b")
+                right (AstIdent "x")
+              )
+            )
+            right (AstBinop
+              kind binopMul
+              left (AstDot
+                left (AstIdent "a")
+                right (AstIdent "y")
+              )
+              right (AstDot
+                left (AstIdent "b")
+                right (AstIdent "y")
+              )
+            )
+          )
+        )
+        (AstReturn optExpr (AstIdent "result"))
+      ]
+    )
+  ]
+  structDeclSeq [
+    (AstStruct
+      ident (AstIdent "Vec2")
+      genericDecl (AstGenericList mySeq [
+        (AstIdent "T")
+      ])
+      fieldSeq [
+        (AstVarEtcDeclMost
+          ident (AstIdent "x")
+          type (AstType
+            kwVar false
+            ptrDim 0
+            child (AstNamedType
+              ident (AstIdent "T")
+              genericImpl (AstGenericList mySeq [
+              ])
+            )
+          )
+        )
+        (AstVarEtcDeclMost
+          ident (AstIdent "y")
+          type (AstType
+            kwVar false
+            ptrDim 0
+            child (AstNamedType
+              ident (AstIdent "T")
+              genericImpl (AstGenericList mySeq [
+              ])
+            )
+          )
+        )
+      ]
+    )
+  ]
+)
+
