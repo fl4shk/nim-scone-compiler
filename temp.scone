@@ -7,8 +7,9 @@ def dot[T](a: var Vec2[T], b: var Vec2[T]) -> T {
 
 def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
   const result: T = dot[T](a, b=b);
-  var c: ptr i32 = addrd.c.e.g;
+  var c: i32 = (d.c.e.g + a) * b;
   c = -(-d@);
+  var x: i32 = b(d, asdf=asdf) + c * 3;
   if asdf {
     switch addrresult {
     case T(3) {
