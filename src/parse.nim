@@ -59,7 +59,7 @@ proc mkAstMain*(
   #  )
   ##echo myAst.repr()
   ##echo "mkAst(): begin:"
-  ##echo result.toStr(0)
+  ##echo $result.ast
   ##echo "mkAst(): end:"
 
 #proc mkAstAndStackMain*(
@@ -269,121 +269,74 @@ proc optParse(
   #    return selProc(self=self, chk=false)
   #self.unstackSavedIlp()
 
-proc optParseThenExpectTokSet(
-  self: var Scone,
-  chk: bool,
-  selProc: SelParseProc,
-  postTokSet: HashSet[TokKind],
-): SppResult =
-  #result = self.optParse(
-  #  chk=true,
-  #  selProc=selProc,
-  #)
-  #if not result.foundTok.isSome:
-  #  result.tokSet = result.tokSet.union(postTokSet)
-  #  self.lexAndExpect(result.tokSet)
-  #else:
-  #  self.lexAndExpect(postTokSet)
-
-  #result = self.optParse(
-  #  chk=true,
-  #  selProc=selProc,
-  #)
-  result = selProc(self=self, chk=true)
-  if chk:
-    #let postResult = postSelProc(self=self, chk=true)
-    let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
-    if result.foundTok.isSome:
-      discard
-    elif postFoundTok.isSome:
-      result.foundTok = postFoundTok
-    result.tokSet = result.tokSet.union(postTokSet)
-  else: # if not chk:
-    if not result.foundTok.isSome:
-      let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
-      if not postFoundTok.isSome:
-        # this will be an error
-        self.lexAndExpect(tokSet=result.tokSet.union(postTokSet))
-      else: # if postFoundTok.isSome:
-        self.lexAndExpect(tokSet=postTokSet)
-    else: # if result.foundTok.isSome:
-      result = selProc(self=self, chk=false)
-      self.lexAndExpect(tokSet=postTokSet)
-
-proc optParseThenExpectTokSeq(
-  self: var Scone,
-  chk: bool,
-  selProc: SelParseProc,
-  postTokSeq: seq[TokKind],
-): SppResult =
-  result = self.optParseThenExpectTokSet(
-    chk=chk,
-    selProc=selProc,
-    postTokSet=toHashSet(postTokSeq),
-  )
-
-proc optParseThenExpectSpp(
-  self: var Scone,
-  chk: bool,
-  selProc: SelParseProc,
-  postSelProc: SelParseProc,
-): SppResult =
-  #result = self.optParse(
-  #  chk=true,
-  #  selProc=selProc,
-  #)
-  #let temp = postSelProc(
-  #  self=self,
-  #  chk=true
-  #)
-  ##result.tokSet = result.tokSet.union(temp.tokSet)
-  #result = self.optParseThenExpectTokSet(
-  #  chk=chk,
-  #  selProc=selProc,
-  #  postTokSet=temp.tokSet,
-  #)
-
-  #result = self.optParse(
-  #  chk=true,
-  #  selProc=selProc,
-  #)
-  result = selProc(self=self, chk=true)
-  if chk:
-    let postResult = postSelProc(self=self, chk=true)
-    if result.foundTok.isSome:
-      discard
-    elif postResult.foundTok.isSome:
-      result.foundTok = postResult.foundTok
-    result.tokSet = result.tokSet.union(postResult.tokSet)
-  else: # if not chk
-    #echo "not chk"
-    if not result.foundTok.isSome:
-      #echo "not result.foundTok.isSome: " & $result
-      #let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
-      let postResult = postSelProc(self=self, chk=true)
-      #echo "postResult: " & $postResult
-      if not postResult.foundTok.isSome:
-        #echo "postResult.foundTok.isSome == false"
-        # this will be an error
-        self.lexAndExpect(
-          tokSet=result.tokSet.union(postResult.tokSet),
-        )
-      else: # if postFoundTok.isSome:
-        #echo (
-        #  (
-        #    "postResult.foundTok.isSome == true: "
-        #  ) & (
-        #    #$postResult.foundTok.get()
-        #    $postResult & "  " & $self.lexMain
-        #  )
-        #)
-        #self.lexAndExpect(tokSet=postTokSet)
-        result = postSelProc(self=self, chk=false)
-    else: # if result.foundTok.isSome:
-      result = selProc(self=self, chk=false)
-      discard postSelProc(self=self, chk=false)
-      #self.lexAndExpect(tokSet=postTokSet)
-  #echo "following: " & $result & " " & $self.currTok
+#proc optParseThenExpectTokSet(
+#  self: var Scone,
+#  chk: bool,
+#  selProc: SelParseProc,
+#  postTokSet: HashSet[TokKind],
+#): SppResult =
+#  result = selProc(self=self, chk=true)
+#  if chk:
+#    #let postResult = postSelProc(self=self, chk=true)
+#    let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
+#    if result.foundTok.isSome:
+#      discard
+#    elif postFoundTok.isSome:
+#      result.foundTok = postFoundTok
+#    result.tokSet = result.tokSet.union(postTokSet)
+#  else: # if not chk:
+#    if not result.foundTok.isSome:
+#      let postFoundTok = self.lexAndCheck(chk=true, tokSet=postTokSet)
+#      if not postFoundTok.isSome:
+#        # this will be an error
+#        self.lexAndExpect(
+#          tokSet=result.tokSet.union(postTokSet)
+#        )
+#      else: # if postFoundTok.isSome:
+#        self.lexAndExpect(tokSet=postTokSet)
+#    else: # if result.foundTok.isSome:
+#      result = selProc(self=self, chk=false)
+#      self.lexAndExpect(tokSet=postTokSet)
+#
+#proc optParseThenExpectTokSeq(
+#  self: var Scone,
+#  chk: bool,
+#  selProc: SelParseProc,
+#  postTokSeq: seq[TokKind],
+#): SppResult =
+#  result = self.optParseThenExpectTokSet(
+#    chk=chk,
+#    selProc=selProc,
+#    postTokSet=toHashSet(postTokSeq),
+#  )
+#
+#proc optParseThenExpectSpp(
+#  self: var Scone,
+#  chk: bool,
+#  selProc: SelParseProc,
+#  postSelProc: SelParseProc,
+#): SppResult =
+#  result = selProc(self=self, chk=true)
+#  if chk:
+#    let postResult = postSelProc(self=self, chk=true)
+#    if result.foundTok.isSome:
+#      discard
+#    elif postResult.foundTok.isSome:
+#      result.foundTok = postResult.foundTok
+#    result.tokSet = result.tokSet.union(postResult.tokSet)
+#  else: # if not chk
+#    if not result.foundTok.isSome:
+#      let postResult = postSelProc(self=self, chk=true)
+#      if not postResult.foundTok.isSome:
+#        # this will be an error
+#        self.lexAndExpect(
+#          tokSet=result.tokSet.union(postResult.tokSet),
+#        )
+#      else: # if postFoundTok.isSome:
+#        result = postSelProc(self=self, chk=false)
+#    else: # if result.foundTok.isSome:
+#      result = selProc(self=self, chk=false)
+#      discard postSelProc(self=self, chk=false)
   
 
 
@@ -655,6 +608,18 @@ proc parseExprLowestNonOp(
   chk: bool,
 ): SppResult
 proc parseExprUnary(
+  self: var Scone,
+  chk: bool,
+): SppResult
+#proc parseExprAddrLhsMain(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult
+#proc parseExprLhsMain(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult
+proc parseExprLhs(
   self: var Scone,
   chk: bool,
 ): SppResult
@@ -1344,7 +1309,9 @@ proc parseFuncDecl(
   discard self.parseFuncArgDeclList(chk=false)
   self.lexAndExpect(tokRParen)
   self.lexAndExpect(tokFuncReturnTypePrefix)
-  discard self.parseTypeWithOptPreKwVar(chk=false)
+  result.ast.myDef.returnType = (
+    self.parseTypeWithOptPreKwVar(chk=false).ast
+  )
 
   self.lexAndExpect(tokLBrace)
   # stmts go here
@@ -1423,9 +1390,9 @@ proc parseModule(
   )
   #self.astRoot.mySrcFile.module = myAst
   #echo myAst.repr()
-  #echo myAst.toStr(0)
+  #echo $myAst
   #discard unstack()
-  #echo myAst.toStr(0)
+  #echo $myAst
 
   self.lexAndExpect(tokSemicolon)
 
@@ -1453,27 +1420,27 @@ proc parseExprFuncCallPostIdent(
   else: # if not chk:
     if result.foundTok.isSome or temp.foundTok.isSome:
       #if result.foundTok.isSome:
-      #  echo "result.foundTok.isSome:" & $result.foundTok.get() #result.ast.toStr(0)
+      #  echo "result.foundTok.isSome:" & $result.foundTok.get() #$result.ast
       #  doAssert(
       #    not temp.foundTok.isSome,
       #    "eek! " & $result.foundTok.get() & " " & $temp.foundTok.get()
       #  )
       #  echo "parentTempSeq.len(): " & $self.parentTempSeq.len()
-      #  echo self.parentTempSeq[^1].toStr(0)
+      #  echo $self.parentTempSeq[^1]
       #else:
       #  doAssert(
       #    temp.foundTok.isSome,
       #    "eek! " & $temp.foundTok.get()
       #  )
-      #  echo "temp.foundTok.isSome:" & $temp.foundTok.get() #temp.ast.toStr(0)
+      #  echo "temp.foundTok.isSome:" & $temp.foundTok.get() #$temp.ast
       #echo "parentTempSeq.len(): " & $self.parentTempSeq.len()
       if self.parentTempSeq.len() > 0:
-        #echo self.parentTempSeq[^1].toStr(0)
+        #$echo self.parentTempSeq[^1]
         discard
       else:
         doAssert(
           false,
-          "eek!"
+          "eek! " & $result.ast
         )
       if result.foundTok.isSome:
         self.parentTempSeq[^1].myFuncCall.genericImpl = result.ast
@@ -1484,7 +1451,7 @@ proc parseExprFuncCallPostIdent(
       result = self.parseExprFuncCallPostGeneric(chk=false)
     else:
       #echo "parseExprFuncCallPostIdent(): lexAndExpect:"
-      #echo self.astRoot.toStr(0)
+      #echo $self.astRoot
       self.lexAndExpect(tokSet=result.tokSet)
     #discard self.optParseThenExpectTokSeq(
     #  chk=chk,
@@ -1522,7 +1489,7 @@ proc parseExprIdentOrFuncCallPostDot(
     let myIdent = result.ast 
     result.ast = self.parentTempSeq[^1]
     result.ast.myFuncCall.ident = myIdent
-    #echo "testificate:" & result.ast.toStr(0)
+    #echo "testificate:" & $result.ast
   discard self.parentTempSeq.pop()
 
 # BEGIN: Old version of `parseExprBinopFuncCall`
@@ -1551,7 +1518,7 @@ proc parseExprIdentOrFuncCallPostDot(
 #  )
 #  result.ast = self.parentTempSeq.pop()
 #  result.ast.myFuncCall.argImplSeq.add myExpr.ast
-#  #echo "test:" & result.ast.toStr(0)
+#  #echo "test:" & $result.ast
 # END: Old version of `parseExprBinopFuncCall`
 
 #proc subParseExprBinopFuncCall(
@@ -1580,7 +1547,7 @@ proc parseExprIdentOrFuncCallPostDot(
 #  )
 #  result.ast = self.parentTempSeq.pop()
 #  result.ast.myFuncCall.argImplSeq.add myExpr.ast
-#  #echo "test:" & result.ast.toStr(0)
+#  #echo "test:" & $result.ast
 
 
 #proc parseExprBinopFuncCall(
@@ -1604,7 +1571,7 @@ proc parseExprIdentOrFuncCallPostDot(
 #  #  else:
 #  #    doAssert(
 #  #      false,
-#  #      "eek! loopParseOutp.ast:" & loopParseOutp.ast.toStr(0)
+#  #      "eek! loopParseOutp.ast:" & $loopParseOutp.ast
 #  #    )
 #  #  #var myUnary = result.ast
 #  #  #var myExpr = 
@@ -1666,7 +1633,7 @@ proc parseExprIdentOrFuncCallPostDot(
   #)
   #result.ast = self.parentTempSeq.pop()
   #result.ast.myFuncCall.argImplSeq.add myExpr.ast
-  ##echo "test:" & result.ast.toStr(0)
+  ##echo "test:" & $result.ast
 
 #proc parseExprFuncCall(
 #  self: var Scone,
@@ -1693,7 +1660,7 @@ proc parseU64Lit(
   result.ast = mkAst(astU64Lit)
   #defer: discard unstack()
   result.ast.myU64Lit.u64Val = self.currTok.optU64.get()
-  #echo "parseU64Lit: " & result.ast.toStr(0)
+  #echo "parseU64Lit: " & $result.ast
 
   ##self.parentTempSeq.add(result.ast)
   #var temp = self.optParse(
@@ -1750,7 +1717,7 @@ proc parseExprLowestNonOp(
   )
   #echo "parseExprLowestNonOp: post: " & "chk:" & $chk & " " & $self.lexMain
   if not chk:
-    #echo "parseExprLowestNonOp: not chk: " & result.ast.toStr(0)
+    #echo "parseExprLowestNonOp: not chk: " & $result.ast
     discard
 
 proc subLoopSelParseExprBinop(
@@ -1784,7 +1751,7 @@ proc subLoopSelParseExprBinop(
           self.lex()
         else:
           break
-      #echo "testificate: " & result.ast.toStr(0)
+      #echo "testificate: " & $result.ast
 #proc subLoopSelParseExprBinop(
 #  self: var Scone,
 #  chk: bool,
@@ -1849,7 +1816,7 @@ proc subLoopSelParseExprBinop(
     subExprParseFunc=subExprParseFunc,
   )
 
-proc parsePrefixUnary(
+proc parseExprPrefixUnary(
   self: var Scone,
   chk: bool,
 ): SppResult =
@@ -1906,7 +1873,7 @@ proc parseExprSuffixFieldMethodAccess(
   )
   #echo "parseExprSuffixFieldMethodAccess: after:"
   #if result.ast != nil:
-  #  echo result.ast.toStr(0)
+  #  echo $result.ast
 
 proc parseExprSuffixDeref(
   self: var Scone,
@@ -1952,26 +1919,12 @@ proc parseExprFieldArrEtcChoice(
       temp.foundTok.isSome,
       "eek! " & $temp
     )
-    #var myAst = 
-    #result.foundTok = temp(self=self, chk=false).foundTok
-    #var myTemp = temp(self=self, chk=false)
-    #if myTemp.ast.kind != astDeref:
-    #  discard
-    #else:
-    #  #self.parentTempSeq.add 
-    #  discard
-
     if temp.foundSelProc.get() == parseExprSuffixFieldMethodAccess:
-      #echo "have parseExprSuffixFieldMethodAccess: begin: "
       var myTemp = temp.foundSelProc.get()(self=self, chk=false)
-      #echo $myTemp.ast.kind #toStr(0)
       case myTemp.ast.kind:
       of astFuncCall:
-        #echo "myTemp.ast.kind == astFuncCall:"
         var myPrev = self.parentTempSeq.pop()
-        #echo $myPrev.kind & " " & $self.parentTempSeq.len()
         myTemp.ast.myFuncCall.argImplSeq.insert(myPrev)
-        #echo $(myTemp.ast.myFuncCall.genericImpl == nil)
         self.parentTempSeq.add myTemp.ast
       #of astIdent:
       #  discard
@@ -1984,29 +1937,13 @@ proc parseExprFieldArrEtcChoice(
           false,
           "eek! " & myTemp.ast.toStr(0)
         )
-      #echo "debug:" & myTemp.ast.toStr(0)
-      #echo "debug:" & self.parentTempSeq[^1].toStr(0)
-      #var myFuncCall =
-      #self.parentTempSeq[^1].
     elif temp.foundSelProc.get() == parseExprSuffixDeref:
-      #echo "have parseExprSuffixDeref: "
       discard temp.foundSelProc.get()(self=self, chk=false)
-      #echo myTemp.ast.toStr(0)
     else:
       doAssert(
         false,
         "eek! " & $temp
       )
-
-    #if temp.foundTok.get() == tokDeref:
-    #  #var myDeref = mkAst(astDeref)
-    #else:
-    #  result.ast = mkAst(astFuncCall)
-    #  self.parentTempSeq.add result.ast
-    #  #result = temp(self=self, chk=false)
-
-  #echo "parseExprFieldArrEtcChoice: post selParse: " & $chk & " " & $temp
-  #result = temp
 
 proc parseExprFieldArrEtc(
   self: var Scone,
@@ -2027,17 +1964,71 @@ proc parseExprFieldArrEtc(
     result.ast = self.parentTempSeq.pop()
     #self.parentTempSeq.setLen(self.parentTempSeq.len() - 1)
 
+#proc parseExprOptPrefixUnaryMain(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  #result = self.optParseThenExpectSpp(
+#  #  chk=chk,
+#  #  selProc=parseExprPrefixUnary,
+#  #  postSelProc=parseExprFieldArrEtc,
+#  #)
+#  result = self.optParse(
+#    chk=chk,
+#    selProc=spp parseExprPrefixUnary,
+#  )
+
+#proc parseExprAddrLhsMain(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  discard doChkTok(tokAddr)
+#  result.ast = mkAst(astAddr)
+#  result.ast.myAddr.obj = self.parseExprLhsMain(chk=false).ast
+
 proc parseExprUnary(
   self: var Scone,
   chk: bool,
 ): SppResult =
   #echo "parseExprUnary: lexMain: pre: " & $self.lexMain
-  result = self.optParseThenExpectSpp(
-    chk=chk,
-    selProc=parsePrefixUnary,
-    postSelProc=parseExprFieldArrEtc,
-  )
   #echo "parseExprUnary: lexMain: post: " & $self.lexMain
+  #result = self.selParse(
+  #  chk=false,
+  #  sppSeq @[
+  #    parseExprOptPrefixUnaryMain
+  #  ],
+  #)
+
+  #result = doChkSelParse(
+  #  sppSeq @[
+  #    parseExprOptPrefixUnaryMain
+  #  ],
+  #  none(HashSet[TokKind]),
+  #)
+  result = self.optParse(
+    chk=chk,
+    selProc=spp parseExprPrefixUnary,
+  )
+  let temp = self.parseExprFieldArrEtc(
+    chk=true
+  )
+  result.tokSet = result.tokSet.union(temp.tokSet)
+  if chk:
+    if result.foundTok.isSome:
+      return
+    else:
+      result.foundTok = self.lexAndCheck(chk=true, tokSet=result.tokSet)
+  else: # if not chk:
+    if result.foundTok.isSome or temp.foundTok.isSome:
+      if result.foundTok.isSome:
+        result.ast = mkAst(astUnop)
+        result.ast.myUnop.kind = tokToUnop(result.foundTok.get()).get()
+        result.ast.myUnop.obj = self.parseExprFieldArrEtc(chk=false).ast
+      else:
+        result.ast = self.parseExprFieldArrEtc(chk=false).ast
+    else:
+      self.lexAndExpect(tokSet=result.tokSet)
+
 
 proc parseExprMulDivMod(
   self: var Scone,
@@ -2206,23 +2197,43 @@ proc parseStmtBreak(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard
+  discard doChkTok(tokBreak)
 proc parseStmtContinue(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard
+  discard doChkTok(tokContinue)
 
 proc parseStmtFor(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard
+  discard doChkTok(tokFor)
+  result.ast = mkAst(astFor)
+  result.ast.myFor.ident = self.parseIdent(chk=false).ast
+  self.lexAndExpect(tokIn)
+  result.ast.myFor.exprPre = self.parseExpr(chk=false).ast
+  self.lex()
+  if self.currTok.tok == tokTo:
+    result.ast.myFor.isUntil = false
+  elif self.currTok.tok == tokUntil:
+    result.ast.myFor.isUntil = true
+  else:
+    self.expect(toHashSet([tokTo, tokUntil]))
+  result.ast.myFor.exprPost = self.parseExpr(chk=false).ast
+  self.lexAndExpect(tokLBrace)
+  self.subParseStmtList(result.ast.myFor.stmtSeq)
+  self.lexAndExpect(tokRBrace)
 proc parseStmtWhile(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard
+  discard doChkTok(tokWhile)
+  result.ast = mkAst(astWhile)
+  result.ast.myWhile.expr = self.parseExpr(chk=false).ast
+  self.lexAndExpect(tokLBrace)
+  self.subParseStmtList(result.ast.myWhile.stmtSeq)
+  self.lexAndExpect(tokRBrace)
 
 proc parseStmtElse(
   self: var Scone,
@@ -2313,7 +2324,12 @@ proc parseStmtScope(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard
+  discard doChkTok(tokScope)
+  result.ast = mkAst(astScope)
+  self.lexAndExpect(tokLBrace)
+  self.subParseStmtList(result.ast.myScope.stmtSeq)
+  self.lexAndExpect(tokRBrace)
+
 proc parseStmtReturn(
   self: var Scone,
   chk: bool,
@@ -2325,11 +2341,112 @@ proc parseStmtReturn(
   if myExpr.foundTok.isSome:
     result.ast.myReturn.optExpr = some(self.parseExpr(chk=false).ast)
 
+
+proc subParseExprLhsTokAddr(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokAddr)
+
+proc subParseExprLhsParenExprLhs(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokLParen)
+  result = self.parseExprLhs(chk=false)
+  self.lexAndExpect(tokRParen)
+
+proc parseExprLhsLowestNonOp(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = self.optParse(
+    chk=chk,
+    selProc=subParseExprLhsTokAddr
+  )
+  let temp = self.selParse(
+    chk=true,
+    sppSeq @[
+      parseExprIdentOrFuncCall,
+      subParseExprLhsParenExprLhs,
+    ],
+  )
+  result.tokSet = result.tokSet.union(temp.tokSet)
+  if chk:
+    if result.foundTok.isSome:
+      return
+    else:
+      result.foundTok = self.lexAndCheck(chk=true, tokSet=result.tokSet)
+  else:
+    if result.foundTok.isSome or temp.foundTok.isSome:
+      if result.foundTok.isSome:
+        result.ast = mkAst(astUnop)
+        result.ast.myUnop.kind = unopAddr
+        result.ast.myUnop.obj = temp.foundSelProc.get()(
+          self=self,
+          chk=false,
+        ).ast
+      else:
+        result.ast = temp.foundSelProc.get()(
+          self=self,
+          chk=false,
+        ).ast
+    else:
+      self.lexAndExpect(tokSet=result.tokSet)
+
+proc parseExprLhs(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = doChkSpp(parseExprLhsLowestNonOp)
+  let temp = self.parseExprFieldArrEtcChoice(chk=true)
+  if temp.foundTok.isSome:
+    self.parentTempSeq.add result.ast
+    discard self.loopSelParse(
+      selProcSeq=(
+        sppSeq @[parseExprFieldArrEtcChoice]
+      )
+    )
+    result.ast = self.parentTempSeq.pop()
+  
+#proc parseExprLhs(
+#  self: var Scone,
+#  chk: bool,
+#): SppResult =
+#  #result = self.optParseThenExpectSpp(
+#  #  chk=chk,
+#  #  selProc=parseExprPrefixUnary,
+#  #  postSelProc=parseExprFieldArrEtc,
+#  #)
+#  discard
+
+proc parseAssignOp(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTokSet(toHashSet([
+    tokAssign,
+    tokAssignPlus, tokAssignMinus,
+    tokAssignMul, tokAssignDiv, tokAssignMod,
+    tokAssignBitAnd, tokAssignBitOr, tokAssignBitXor,
+    tokAssignBitShl, tokAssignBitShr,
+  ]))
+
 proc parseStmtCallOrAssignEtc(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard
+  result = doChkSpp(parseExprLhs)
+  var temp = self.parseAssignOp(chk=true)
+  if temp.foundTok.isSome:
+    var myExprLhs = result.ast
+    temp = self.parseAssignOp(chk=false)
+    result.ast = mkAst(astAssignEtc)
+    result.ast.myAssignEtc.kind = (
+      tokToAssignEtc(temp.foundTok.get()).get()
+    )
+    result.ast.myAssignEtc.left = myExprLhs
+    result.ast.myAssignEtc.right = self.parseExpr(chk=false).ast
 
 proc parseStmt(
   self: var Scone,
@@ -2377,7 +2494,8 @@ proc parseSrcFile*(
   self.lexAndExpect(tokEof)
   #self.astRoot = self.parseExpr(chk=false).ast
   #echo $self.astRoot.kind
-  echo self.astRoot.toStr(0)
+  #echo $self.astRoot
+  echo self.astRoot.toRepr(0)
   #echo self.astRoot.repr()
   #let temp = self.loopSelParse()
   #if not temp.foundTok.isSome:

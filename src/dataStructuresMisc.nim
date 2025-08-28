@@ -23,6 +23,7 @@ type
     unopMinus,
     unopLogicNot,
     unopBitInvert,
+    unopAddr,
 
   AstBinopKind* = enum
     binopCmpEq,
@@ -143,37 +144,45 @@ const `helperTokKindSeq`*: seq[(
 )] = @[
   #--------
   (
+    # fake token indicating the beginning of the AST
     "SrcFile", none(string), true,
     @[
       ("module", astValAstNode),
       ("funcDeclSeq", astValSeqAstNode),
       ("structDeclSeq", astValSeqAstNode),
     ]
-  ), # fake token indicating the beginning of the AST
+  ),
   (
+    # invalid input!
     "Bad", none(string), false, @[]
-  ),           # invalid input!
-  ("Eof", none(string), false, @[]),           # end of file
+  ),
+  (
+    # end of file
+    "Eof", none(string), false, @[]
+  ),
   #("LineComent", none(string)),    # start of line comment
   #--------
   (
+    # identifiers
     "Ident", none(string), true,
     @[
       ("strVal", astValString)
     ]
-  ),  # identifiers
+  ),
   (
+    # 0-9, hex numbers, binary numbers, etc.
     "U64Lit", none(string), true,
     @[
       ("u64Val", astValU64)
     ]
-  ), # 0-9, hex numbers, binary numbers, etc.
+  ),
   (
+    # string literals
     "StrLit", none(string), true,
     @[
       ("strLitVal", astValString)
     ]
-  ), # string literals
+  ),
   #--------
   ("True", some("true"), true, @[]),
   ("False", some("false"), true, @[]),
@@ -189,7 +198,12 @@ const `helperTokKindSeq`*: seq[(
   ("Colon", some(":"), false, @[]),
   #--------
   ("Ptr", some("ptr"), true, @[]),
-  ("Addr", some("addr"), true, @[]),
+  (
+    "Addr", some("addr"), false, # address of an expression
+    @[
+      #("obj", astValAstNode)
+    ]
+  ),
   (
     "Deref", some("@"), true, # pointer dereference
     @[
@@ -225,10 +239,10 @@ const `helperTokKindSeq`*: seq[(
   (
     "Def", some("def"), true,
     @[
-      
       ("ident", astValAstNode),               # `AstIdent`
       ("genericDecl", astValAstNode),         # `AstGenericList`
       ("argDeclSeq", astValSeqAstNode),       # seq of `AstVarEtcDeclMost`
+      ("returnType", astValAstNode),          # `AstType`
       ("stmtSeq", astValSeqAstNode),
     ],
   ),
@@ -289,7 +303,7 @@ const `helperTokKindSeq`*: seq[(
   (
     "Scope", some("scope"), true,
     @[
-      # TODO: come back to this later
+      ("stmtSeq", astValSeqAstNode),    # the list of statements
     ]
   ),
   (
@@ -574,7 +588,7 @@ macro mkEnumTokKind(): untyped =
 
   for idx in 0 ..< helperTokKindSeq.len():
     tempSeq.add ident("tok" & helperTokKindSeq[idx][0])
-    
+
   result = newEnum(
     name=ident("TokKind"),
     fields=tempSeq,

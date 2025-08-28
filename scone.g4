@@ -238,8 +238,20 @@ exprMulDivMod:
 //	//expr
 //	//exprFieldArrEtcChoice
 //	;
+//exprAddrLhsMain:
+//	'addr' exprLhsMain
+//	;
+//exprOptPrefixUnaryMain:
+//	exprPrefixUnary? exprFieldArrEtc
+//	;
 
 exprUnary:
+	//(
+	//	exprPrefixUnary? exprFieldArrEtc
+	//	| 'addr' exprLhsMain
+	//)
+	//exprOptPrefixUnaryMain
+	//| exprAddrLhsMain
 	exprPrefixUnary? exprFieldArrEtc
 	;
 
@@ -290,8 +302,15 @@ exprLhsLowestNonOpEtc:
 	)
 	;
 
+//exprLhsMain:
+//	exprLhsLowestNonOpEtc exprFieldArrEtcChoice*
+//	;
 exprLhs:
-	exprLhsLowestNonOpEtc exprFieldArrEtcChoice*
+	//'addr'? exprLhsMain
+	//'addr'? 
+	(
+		exprLhsLowestNonOpEtc exprFieldArrEtcChoice*
+	)
 	;
 
 exprIdentOrFuncCall:

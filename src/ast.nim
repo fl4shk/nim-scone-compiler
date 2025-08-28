@@ -314,8 +314,24 @@ proc tokToUnop*(
     return some(unopLogicNot)
   of tokBitInvert:
     return some(unopBitInvert)
+  of tokAddr:
+    return some(unopAddr)
   else:
     return none(AstUnopKind)
+proc unopToTok*(
+  unop: AstUnopKind,
+): TokKind =
+  case unop:
+  of unopPlus:
+    return tokPlus
+  of unopMinus:
+    return tokMinus
+  of unopLogicNot:
+    return tokLogicNot
+  of unopBitInvert:
+    return tokBitInvert
+  of unopAddr:
+    return tokAddr
 
 proc tokToBinop*(
   tok: TokKind,
@@ -361,6 +377,76 @@ proc tokToBinop*(
     return some(binopBitShr)
   else:
     return none(AstBinopKind)
+
+proc binopToTok*(
+  binop: AstBinopKind,
+): TokKind =
+  case binop:
+  of binopCmpEq:
+    return tokCmpEq
+  of binopCmpNe:
+    return tokCmpNe
+  of binopCmpLt:
+    return tokCmpLt
+  of binopCmpGt:
+    return tokCmpGt
+  of binopCmpLe:
+    return tokCmpLe
+  of binopCmpGe:
+    return tokCmpGe
+  #--------
+  of binopPlus:
+    return tokPlus
+  of binopMinus:
+    return tokMinus
+  of binopMul:
+    return tokMul
+  of binopDiv:
+    return tokDiv
+  of binopMod:
+    return tokMod
+  of binopBitAnd:
+    return tokBitAnd
+  of binopBitOr:
+    return tokBitOr
+  of binopBitXor:
+    return tokBitXor
+  of binopLogicAnd:
+    return tokLogicAnd
+  of binopLogicOr:
+    return tokLogicOr
+  of binopBitShl:
+    return tokBitShl
+  of binopBitShr:
+    return tokBitShr
+
+proc assignEtcToTok*(
+  assignEtc: AstAssignEtcKind,
+): TokKind =
+  case assignEtc:
+  of assignEtcRegular:
+    return tokAssign
+  of assignEtcPlus:
+    return tokAssignPlus
+  of assignEtcMinus:
+    return tokAssignMinus
+  of assignEtcMul:
+    return tokAssignMul
+  of assignEtcDiv:
+    return tokAssignDiv
+  of assignEtcMod:
+    return tokAssignMod
+  of assignEtcBitAnd:
+    return tokAssignBitAnd
+  of assignEtcBitOr:
+    return tokAssignBitOr
+  of assignEtcBitXor:
+    return tokAssignBitXor
+  of assignEtcBitShl:
+    return tokAssignBitShl
+  of assignEtcBitShr:
+    return tokAssignBitShr
+
 proc tokToAssignEtc*(
   tok: TokKind,
 ): Option[AstAssignEtcKind] =
@@ -749,6 +835,7 @@ proc toStr*(
 #                    Ident "x"
 #                StrLit ")\n"
 
+
 proc toStr*(
   ast: AstNode,
   indent: uint,
@@ -1089,3 +1176,266 @@ proc toStr*(
 #): string =
 #  discard
   
+proc `$`*(
+  ast: AstNode
+): string =
+  result = ast.toStr(0)
+
+proc toRepr*(
+  ast: AstNode,
+  indent: int=(-2),
+): string =
+  if ast == nil:
+    return "(eek! `nil`)"
+  var x = indent + 2
+  template i(): untyped =
+    doIndent(indent=uint(x))
+  var iPrev: Option[string] = none(string)
+  if indent >= 0:
+    iPrev = some(doIndent(indent=uint(indent)))
+
+  proc helperStmtSeq(
+    stmtSeq: seq[AstNode],
+    toSub: int=0,
+  ): string =
+    for idx in 0 ..< stmtSeq.len():
+      result.add stmtSeq[idx].toRepr(x - toSub) & ";\n"
+    
+
+  case ast.kind:
+  of astSrcFile:
+    result.add ast.mySrcFile.module.toRepr() & ";\n\n"
+    for idx in 0 ..< ast.mySrcFile.funcDeclSeq.len():
+      result.add ast.mySrcFile.funcDeclSeq[idx].toRepr() & ";\n\n"
+    for idx in 0 ..< ast.mySrcFile.structDeclSeq.len():
+      result.add ast.mySrcFile.structDeclSeq[idx].toRepr() & ";\n\n"
+  of astIdent:
+    result.add ast.myIdent.strVal
+  of astU64Lit:
+    result.add $ast.myU64Lit.u64Val
+  of astStrLit:
+    result.add "\"" & ast.myStrLit.strLitVal & "\""
+  of astTrue:
+    result.add "true"
+  of astFalse:
+    result.add "false"
+  of astPtr:
+    result.add "ptr"
+  #of astAddr:
+  #  result.add "(" & "addr " & ast.myAddr.obj.toRepr(x) & ")"
+  of astDeref:
+    result.add "(" & ast.myDeref.obj.toRepr(x) & "@)"
+  of astDot:
+    result.add "("
+    result.add ast.myDot.left.toRepr(x) & "." & ast.myDot.right.toRepr(x)
+    result.add ")"
+  of astVar:
+    result.add i & "var " & ast.myVar.child.toRepr()
+    if ast.myVar.optExpr.isSome:
+      result.add " = " & ast.myVar.optExpr.get().toRepr()
+  of astConst:
+    result.add i & "const " & ast.myConst.child.toRepr()
+    result.add " = " & ast.myConst.expr.toRepr()
+  of astDef:
+    result.add "def " & ast.myDef.ident.toRepr()
+    result.add ast.myDef.genericDecl.toRepr()
+    result.add "("
+    #result.add ast.myDef.argDeclSeq
+    for idx in 0 ..< ast.myDef.argDeclSeq.len():
+      result.add ast.myDef.argDeclSeq[idx].toRepr()
+      if idx + 1 < ast.myDef.argDeclSeq.len():
+        result.add ", "
+    result.add ") -> " & ast.myDef.returnType.toRepr() & " {\n"
+    #for idx in 0 ..< ast.myDef.stmtSeq.len():
+    #  result.add i & ast.myDef.stmtSeq[idx].toRepr(x) & ";\n"
+    result.add helperStmtSeq(ast.myDef.stmtSeq)
+    result.add "}"
+  of astModule:
+    result.add "module " & ast.myModule.ident.toRepr()
+  of astStruct:
+    result.add "struct " & ast.myStruct.ident.toRepr()
+    result.add ast.myStruct.genericDecl.toRepr() & " {\n"
+    for idx in 0 ..< ast.myStruct.fieldSeq.len():
+      result.add(
+        doIndent(uint(x + 2)) & ast.myStruct.fieldSeq[idx].toRepr() & ";\n"
+      )
+    result.add "}"
+  of astEnum:
+    discard
+  of astExtern:
+    discard
+  of astCextern:
+    discard
+  of astImport:
+    discard
+  of astCImport:
+    discard
+  of astScope:
+    result.add iPrev.get() & "scope {\n"
+    result.add helperStmtSeq(ast.myScope.stmtSeq)
+    result.add iPrev.get() & "}"
+  of astIf:
+    result.add (
+      i & "if " & ast.myIf.expr.toRepr() & " {\n"
+    )
+    result.add helperStmtSeq(ast.myIf.stmtSeq)
+    result.add i & "}"
+    #if ast.myIf.elifSeq.len() > 0:
+    #  result.add ast.myIf.elifSeq[0].toRepr(x)
+    #  #if ast.myIf.optElse.isSome:
+    #  #  result.add " " & ast.myIf.optElse.get().toRepr(x)
+    #for myElif in ast.myIf.elifSeq:
+    for idx in 0 ..< ast.myIf.elifSeq.len():
+      result.add " " & ast.myIf.elifSeq[idx].toRepr(x - 2)
+
+    if ast.myIf.optElse.isSome:
+      result.add " " & ast.myIf.optElse.get().toRepr(x - 2)
+  of astElif:
+    result.add "elif " & ast.myElif.expr.toRepr() & " {\n"
+    result.add helperStmtSeq(ast.myElif.stmtSeq)
+    result.add i & "}"
+    discard
+  of astElse:
+    result.add "else {\n"
+    result.add helperStmtSeq(ast.myElse.stmtSeq)
+    result.add i & "}"
+  of astSwitch:
+    result.add i & "switch " & ast.mySwitch.expr.toRepr() & " {\n"
+    result.add helperStmtSeq(ast.mySwitch.caseSeq)
+    if ast.mySwitch.optDefault.isSome:
+      result.add i & ast.mySwitch.optDefault.get().toRepr(x - 2)
+  of astCase:
+    result.add iPrev.get() & "case " & ast.myCase.expr.toRepr() & " {\n"
+    result.add helperStmtSeq(ast.myCase.stmtSeq)
+    result.add iPrev.get() & "}"
+  of astDefault:
+    result.add "default {\n"
+    result.add helperStmtSeq(ast.myDefault.stmtSeq)
+    result.add i & "}"
+  of astFor:
+    result.add i & "for "
+    result.add ast.myFor.ident.toRepr() & " in "
+    result.add ast.myFor.exprPre.toRepr()
+    if ast.myFor.isUntil:
+      result.add " until "
+    else:
+      result.add " to "
+    result.add ast.myFor.exprPost.toRepr() & " {\n"
+    result.add helperStmtSeq(ast.myFor.stmtSeq)
+    result.add i & "}"
+  of astWhile:
+    result.add i & "while "
+    result.add ast.myWhile.expr.toRepr() & " {\n"
+    result.add helperStmtSeq(ast.myWhile.stmtSeq)
+    result.add i & "}"
+  of astContinue:
+    result.add i & "continue"
+  of astBreak:
+    result.add i & "break"
+  of astReturn:
+    result.add i & "return"
+    if ast.myReturn.optExpr.isSome:
+      result.add " " & ast.myReturn.optExpr.get().toRepr(x)
+  of astArray:
+    result.add "array["
+    result.add ast.myArray.dim.toRepr() & "; "
+    result.add ast.myArray.elemType.toRepr()
+    result.add "]"
+  of astVoid:
+    result.add "void"
+  of astBool:
+    result.add "bool"
+  of astU8:
+    result.add "u8"
+  of astI8:
+    result.add "i8"
+  of astU16:
+    result.add "u16"
+  of astI16:
+    result.add "i16"
+  of astU32:
+    result.add "u32"
+  of astI32:
+    result.add "i32"
+  of astU64:
+    result.add "u64"
+  of astI64:
+    result.add "i64"
+  of astF32:
+    result.add "f32"
+  of astF64:
+    result.add "f64"
+  of astChar:
+    result.add "char"
+  of astString:
+    result.add "string"
+  of astUnop:
+    result.add "("
+    result.add(
+      helperTokKindSeq[uint(ast.myUnop.kind.unopToTok())][1].get()
+    )
+    result.add " " & ast.myUnop.obj.toRepr()
+    result.add ")"
+  of astBinop:
+    result.add "("
+    result.add ast.myBinop.left.toRepr() & " "
+    result.add(
+      helperTokKindSeq[uint(ast.myBinop.kind.binopToTok())][1].get()
+    )
+    result.add " " & ast.myBinop.right.toRepr()
+    result.add ")"
+  of astAssignEtc:
+    #result.add "("
+    result.add i & ast.myAssignEtc.left.toRepr() & " "
+    result.add(
+      helperTokKindSeq[
+        uint(ast.myAssignEtc.kind.assignEtcToTok())
+      ][1].get()
+    )
+    result.add " " & ast.myAssignEtc.right.toRepr()
+    #result.add ")"
+  of astNamedType:
+    result.add ast.myNamedType.ident.toRepr()
+    result.add ast.myNamedType.genericImpl.toRepr()
+  of astType:
+    if ast.myType.kwVar:
+      doAssert(
+        ast.myType.ptrDim == 0,
+        "eek! " & $ast
+      )
+      result.add "var "
+    if ast.myType.ptrDim > 0:
+      doAssert(
+        not ast.myType.kwVar,
+        "eek! " & $ast
+      )
+      for idx in 0 ..< ast.myType.ptrDim:
+        result.add "ptr "
+    result.add ast.myType.child.toRepr()
+  of astFuncCall:
+    result.add ast.myFuncCall.ident.toRepr()
+    result.add ast.myFuncCall.genericImpl.toRepr()
+    result.add "("
+    for idx in 0 ..< ast.myFuncCall.argImplSeq.len():
+      result.add ast.myFuncCall.argImplSeq[idx].toRepr()
+      if idx + 1 < ast.myFuncCall.argImplSeq.len():
+        result.add ", "
+    result.add ")"
+  of astFuncNamedArgImpl:
+    result.add ast.myFuncNamedArgImpl.ident.toRepr() & "="
+    result.add ast.myFuncNamedArgImpl.expr.toRepr()
+  of astGenericNamedArgImpl:
+    result.add ast.myGenericNamedArgImpl.ident.toRepr() & "="
+    result.add ast.myGenericNamedArgImpl.type.toRepr()
+  of astGenericList:
+    if ast.myGenericList.mySeq.len() > 0:
+      result.add "["
+      for idx in 0 ..< ast.myGenericList.mySeq.len():
+        result.add ast.myGenericList.mySeq[idx].toRepr()
+        if idx + 1 < ast.myGenericList.mySeq.len():
+          result.add ", "
+      result.add "]"
+  of astVarEtcDeclMost:
+    result.add ast.myVarEtcDeclMost.ident.toRepr() & ": "
+    result.add ast.myVarEtcDeclMost.type.toRepr()
+

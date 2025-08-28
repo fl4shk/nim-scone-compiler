@@ -20,31 +20,57 @@ def dot[T](a: var Vec2[T], b: var Vec2[T]) -> T {
 
 def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
 	#const result: T = a.x * b.x + a.y * b.y;
-	const result: T = a.dot[T](b);
+	const result: T = a.dot[T](b=b);
+	var c: ptr i32 = addr d.c.e.g;
 	#--------
-	switch result {
-	case T(3) {
-	}
-	case T(5) {
-	}
-	default {
-	}
+	if asdf {
+		switch addr result {
+		case T(3) {
+		}
+		case T(5) {
+			var d: i32 = 3;
+			d += 8;
+		}
+		default {
+		}
+		};
 	};
 	#--------
 	if result == T(3) {
-		return T(5);
+		if a.dot(b) == 8 {
+			return T(5);
+		} elif asdf == 8 {
+			return 8;
+		} else {
+			return aaaa;
+		};
 	} elif result == T(2) {
 		return T(3);
 	} elif result == T(5) {
-		#
+		while yoshi.throw {
+		};
+	} elif result == 3 {
 	} else {
 		return T(25);
+	};
+	for i in 0 until 3 {
+		const a: i32 = 5;
+		while (b + c.d@) {
+		};
 	};
 	return result;
 };
 struct Vec2[T] {
 	x: T;
 	y: T;
+};
+struct Vec2Ptr[T] {
+	x: ptr T;
+	y: ptr T;
+};
+struct Vec2Arr3[T] {
+	x: array[3; Vec2[T]];
+	y: array[3; Vec2[T]];
 };
 #--------
 
