@@ -22,6 +22,7 @@ def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
 	#const result: T = a.x * b.x + a.y * b.y;
 	const result: T = a.dot[T](b=b);
 	var c: ptr i32 = addr d.c.e.g;
+	c = -(- d@);
 	#--------
 	if asdf {
 		switch addr result {

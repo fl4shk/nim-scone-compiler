@@ -59,81 +59,141 @@ type
     assignEtcBitShl,
     assignEtcBitShr,
 
-const `binopPrioSeq`*: seq[HashSet[AstBinopKind]] = @[
+  #AstOtherExprOpKind* = enum
+  #  otherExprOpDot,
+
+  AstExprOpKind* = enum
+    exprOpUnop,
+    exprOpBinop,
+    exprOpDerefDotCallEtc,
+    #exprOpOther,
+    #opAssignEtc,
+
+  AstExprOp* = object
+    kind*: AstExprOpKind
+    myUnop*: AstUnopKind
+    myBinop*: AstBinopKind
+    #case kind*: AstExprOpKind
+    #of exprOpUnop: myUnop*: AstUnopKind
+    #of exprOpBinop: myBinop*: AstBinopKind
+    ##of exprOpOther: myOther*: bool
+    ##of opAssignEtc: myAssignEtc*: AstAssignEtcKind
+
+const `exprOpPrioSeq`*: seq[HashSet[AstExprOp]] = @[
   toHashSet([
-    binopLogicOr,
+    AstExprOp(kind: exprOpBinop, myBinop: binopLogicOr),
   ]),
   toHashSet([
-    binopLogicAnd,
+    AstExprOp(kind: exprOpBinop, myBinop: binopLogicAnd),
   ]),
   toHashSet([
-    binopBitOr,
+    AstExprOp(kind: exprOpBinop, myBinop: binopBitOr),
   ]),
   toHashSet([
-    binopBitXor,
+    AstExprOp(kind: exprOpBinop, myBinop: binopBitXor),
   ]),
   toHashSet([
-    binopBitAnd,
+    AstExprOp(kind: exprOpBinop, myBinop: binopBitAnd),
   ]),
   toHashSet([
-    binopCmpEq,
-    binopCmpNe,
+    AstExprOp(kind: exprOpBinop, myBinop: binopCmpEq),
+    AstExprOp(kind: exprOpBinop, myBinop: binopCmpNe),
   ]),
   toHashSet([
-    binopCmpLt,
-    binopCmpGt,
-    binopCmpLe,
-    binopCmpGe,
+    AstExprOp(kind: exprOpBinop, myBinop: binopCmpLt),
+    AstExprOp(kind: exprOpBinop, myBinop: binopCmpGt),
+    AstExprOp(kind: exprOpBinop, myBinop: binopCmpLe),
+    AstExprOp(kind: exprOpBinop, myBinop: binopCmpGe),
   ]),
   toHashSet([
-    binopBitShl,
-    binopBitShr,
+    AstExprOp(kind: exprOpBinop, myBinop: binopBitShl),
+    AstExprOp(kind: exprOpBinop, myBinop: binopBitShr),
   ]),
   toHashSet([
-    binopPlus,
-    binopMinus,
+    AstExprOp(kind: exprOpBinop, myBinop: binopPlus),
+    AstExprOp(kind: exprOpBinop, myBinop: binopMinus),
   ]),
   toHashSet([
-    binopMul,
-    binopDiv,
-    binopMod,
-  ])
+    AstExprOp(kind: exprOpBinop, myBinop: binopMul),
+    AstExprOp(kind: exprOpBinop, myBinop: binopDiv),
+    AstExprOp(kind: exprOpBinop, myBinop: binopMod),
+  ]),
+  toHashSet([
+    AstExprOp(kind: exprOpUnop, myUnop: unopPlus),
+    AstExprOp(kind: exprOpUnop, myUnop: unopMinus),
+    AstExprOp(kind: exprOpUnop, myUnop: unopLogicNot),
+    AstExprOp(kind: exprOpUnop, myUnop: unopBitInvert),
+    AstExprOp(kind: exprOpUnop, myUnop: unopAddr),
+  ]),
+  toHashSet([
+    AstExprOp(kind: exprOpDerefDotCallEtc),
+  ]),
 ]
 
 proc `cmpPrio`*(
-  a: AstBinopKind,
-  b: AstBinopKind,
+  a: AstExprOp,
+  b: AstExprOp,
 ): int =
+  #var aPrio: int = 0
+  #var bPrio: int = 0
+  #for idx in 0 ..< binopPrioSeq.len():
+  #  if a in binopPrioSeq[idx]:
+  #    aPrio = idx
+  #  if b in binopPrioSeq[idx]:
+  #    bPrio = idx
+  #if aPrio < bPrio:
+  #  return -1
+  #elif aPrio == bPrio:
+  #  return 0
+  #else: # if aPrio > bPrio:
+  #  return 1
+
   var aPrio: int = 0
   var bPrio: int = 0
-  for idx in 0 ..< binopPrioSeq.len():
-    if a in binopPrioSeq[idx]:
-      aPrio = idx
-    if b in binopPrioSeq[idx]:
-      bPrio = idx
+  for idx in 0 ..< exprOpPrioSeq.len():
+    let myHashSet = exprOpPrioSeq[idx]
+    for myExprOp in myHashSet:
+      case myExprOp.kind:
+      of exprOpUnop:
+        if a.kind == exprOpUnop and a.myUnop == myExprOp.myUnop:
+          aPrio = idx
+        if b.kind == exprOpUnop and b.myUnop == myExprOp.myUnop:
+          bPrio = idx
+      of exprOpBinop:
+        if a.kind == exprOpBinop and a.myBinop == myExprOp.myBinop:
+          aPrio = idx
+        if b.kind == exprOpBinop and b.myBinop == myExprOp.myBinop:
+          bPrio = idx
+      of exprOpDerefDotCallEtc:
+        if a.kind == exprOpDerefDotCallEtc:
+          aPrio = idx
+        if b.kind == exprOpDerefDotCallEtc:
+          bPrio = idx
+    #case myExprOp.kind:
+    #of exprOpUnop:
+    #  discard
+    #of exprOpDot:
+    #  discard
   if aPrio < bPrio:
     return -1
   elif aPrio == bPrio:
     return 0
   else: # if aPrio > bPrio:
     return 1
-
-  #return aPrio < bPrio
-  #if aPr
   
 proc `cmpPrioLt`*(
-  a: AstBinopKind,
-  b: AstBinopKind,
+  a: AstExprOp,
+  b: AstExprOp,
 ): bool =
   result = (a.cmpPrio b) < 0
 proc `cmpPrioEq`*(
-  a: AstBinopKind,
-  b: AstBinopKind,
+  a: AstExprOp,
+  b: AstExprOp,
 ): bool =
   result = (a.cmpPrio b) == 0
 proc `cmpPrioGt`*(
-  a: AstBinopKind,
-  b: AstBinopKind,
+  a: AstExprOp,
+  b: AstExprOp,
 ): bool =
   result = (a.cmpPrio b) > 0
 
