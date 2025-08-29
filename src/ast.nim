@@ -1205,13 +1205,13 @@ proc toRepr*(
   proc helperStmtSeq(
     stmtSeq: seq[AstNode],
     toSub: int=0,
-    includeSemicolon: bool=true,
+    #includeSemicolon: bool=true,
   ): string =
     for idx in 0 ..< stmtSeq.len():
-      result.add stmtSeq[idx].myToRepr(x - toSub)
-      if includeSemicolon:
-        result.add ";"
-      result.add "\n"
+      result.add stmtSeq[idx].myToRepr(x - toSub) & "\n"
+      #if includeSemicolon:
+      #  result.add ";"
+      #result.add "\n"
     
 
   case ast.kind:
@@ -1247,9 +1247,11 @@ proc toRepr*(
     result.add i & "var " & ast.myVar.child.myToRepr()
     if ast.myVar.optExpr.isSome:
       result.add " = " & ast.myVar.optExpr.get().myToRepr()
+    result.add ";"
   of astConst:
     result.add i & "const " & ast.myConst.child.myToRepr()
     result.add " = " & ast.myConst.expr.myToRepr()
+    result.add ";"
   of astDef:
     result.add "def " & ast.myDef.ident.myToRepr()
     result.add ast.myDef.genericDecl.myToRepr()
@@ -1319,7 +1321,7 @@ proc toRepr*(
     result.add i & "}"
   of astSwitch:
     result.add i & "switch " & ast.mySwitch.expr.myToRepr() & " {\n"
-    result.add helperStmtSeq(ast.mySwitch.caseSeq, includeSemicolon=false)
+    result.add helperStmtSeq(ast.mySwitch.caseSeq)
     if ast.mySwitch.optDefault.isSome:
       result.add i & ast.mySwitch.optDefault.get().myToRepr(x - 2)
       result.add "\n"
@@ -1349,13 +1351,14 @@ proc toRepr*(
     result.add helperStmtSeq(ast.myWhile.stmtSeq)
     result.add i & "}"
   of astContinue:
-    result.add i & "continue"
+    result.add i & "continue" & ";"
   of astBreak:
-    result.add i & "break"
+    result.add i & "break" & ";"
   of astReturn:
     result.add i & "return"
     if ast.myReturn.optExpr.isSome:
       result.add " " & ast.myReturn.optExpr.get().myToRepr(x)
+    result.add ";"
   of astArray:
     result.add "array["
     result.add ast.myArray.dim.myToRepr() & "; "
@@ -1420,6 +1423,8 @@ proc toRepr*(
     result.add(
       helperTokKindSeq[uint(ast.myUnop.kind.unopToTok())][1].get()
     )
+    if ast.myUnop.kind == unopAddr:
+      result.add " "
     result.add ast.myUnop.obj.myToRepr()
     if inclParens:
       result.add ")"
@@ -1467,6 +1472,7 @@ proc toRepr*(
     )
     result.add " " & ast.myAssignEtc.right.myToRepr()
     #result.add ")"
+    result.add ";"
   of astNamedType:
     result.add ast.myNamedType.ident.myToRepr()
     result.add ast.myNamedType.genericImpl.myToRepr()
@@ -1494,6 +1500,10 @@ proc toRepr*(
       if idx + 1 < ast.myFuncCall.argImplSeq.len():
         result.add ", "
     result.add ")"
+  of astStmtExprLhs:
+    result.add i & ast.myStmtExprLhs.expr.myToRepr() & ";"
+  #of astStmtFuncCall:
+  #  result.add i & ast.myStmtFuncCall.funcCall.myToRepr() & ";"
   of astFuncNamedArgImpl:
     result.add ast.myFuncNamedArgImpl.ident.myToRepr() & "="
     result.add ast.myFuncNamedArgImpl.expr.myToRepr()

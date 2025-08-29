@@ -23,7 +23,7 @@ funcDecl:
 	( '[' genericDeclList ']' )?
 	'(' funcArgDeclList? ')' '->' typeWithOptPreKwVar '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}' ';'
 	;
 
@@ -66,13 +66,13 @@ varEtcDeclMost: // "Most" is short for "Most of it"
 
 //--------
 stmtVarDecl:
-	'var' varEtcDeclMost ('=' expr)?
+	'var' varEtcDeclMost ('=' expr)? ';'
 	;
 //letDecl:
-//	'let' varEtcDeclMost '=' expr
+//	'let' varEtcDeclMost '=' expr ';'
 //	;
 stmtConstDecl:
-	'const' varEtcDeclMost '=' expr
+	'const' varEtcDeclMost '=' expr ';'
 	;
 //--------
 stmt:
@@ -86,34 +86,34 @@ stmt:
 	;
 	
 //stmtList:
-//	(stmt ';')* 
+//	stmt* 
 //	;
 
 stmtBreak:
-	'break'
+	'break' ';'
 	;
 stmtContinue:
-	'continue'
+	'continue' ';'
 	;
 
 stmtFor:
 	'for' ident 'in' expr ('to' | 'until') expr '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}'
 	;
 
 stmtWhile:
 	'while' expr '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}'
 	;
 
 stmtIf:
 	'if' expr '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}'
 	stmtElif*
 	stmtElse?
@@ -121,13 +121,13 @@ stmtIf:
 stmtElif:
 	'elif' expr '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}'
 	;
 stmtElse:
 	'else' '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}'
 	;
 
@@ -140,25 +140,25 @@ stmtSwitch:
 stmtCase:
 	'case' expr '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}'
 	;
 stmtDefault:
 	'default' '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}'
 	;
 
 stmtScope:
 	'scope' '{'
 		//stmtList
-		(stmt ';')*
+		stmt*
 	'}'
 	;
 
 stmtReturn:
-	'return' expr?
+	'return' expr? ';'
 	;
 
 assignOp:
@@ -175,6 +175,7 @@ stmtCallOrAssignEtc:
 		assignOp
 		expr
 	)?
+	';'
 	;
 //--------
 exprLowestNonOp:

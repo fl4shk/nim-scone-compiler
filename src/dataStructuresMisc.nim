@@ -556,6 +556,18 @@ const `helperTokKindSeq`*: seq[(
     ]
   ),
   (
+    "StmtExprLhs", none(string), true,
+    @[
+      ("expr", astValAstNode),
+    ],
+  ),
+  #(
+  #  "StmtFuncCall", none(string), true,
+  #  @[
+  #    ("funcCall", astValAstNode),
+  #  ],
+  #),
+  (
     "FuncNamedArgImpl", none(string), true,
     @[
       ("ident", astValAstNode),

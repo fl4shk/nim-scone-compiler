@@ -1284,7 +1284,7 @@ proc subParseStmtList(
   while myStmt.foundTok.isSome:
     myStmt = self.parseStmt(chk=false)
     stmtSeq.add myStmt.ast
-    self.lexAndExpect(tokSemicolon)
+    #self.lexAndExpect(tokSemicolon)
     myStmt = self.parseStmt(chk=true)
 
 
@@ -2182,6 +2182,7 @@ proc parseStmtVarDecl(
   if self.lexAndCheck(chk=true, tok=tokAssign).isSome:
     self.lex()
     result.ast.myVar.optExpr = some(self.parseExpr(chk=false).ast)
+  self.lexAndExpect(tokSemicolon)
 
 proc parseStmtConstDecl(
   self: var Scone,
@@ -2192,17 +2193,20 @@ proc parseStmtConstDecl(
   result.ast.myConst.child = self.parseVarEtcDeclMost(chk=false).ast
   discard self.lexAndCheck(chk=false, tok=tokAssign)
   result.ast.myConst.expr = self.parseExpr(chk=false).ast
+  self.lexAndExpect(tokSemicolon)
 
 proc parseStmtBreak(
   self: var Scone,
   chk: bool,
 ): SppResult =
   discard doChkTok(tokBreak)
+  self.lexAndExpect(tokSemicolon)
 proc parseStmtContinue(
   self: var Scone,
   chk: bool,
 ): SppResult =
   discard doChkTok(tokContinue)
+  self.lexAndExpect(tokSemicolon)
 
 proc parseStmtFor(
   self: var Scone,
@@ -2340,6 +2344,7 @@ proc parseStmtReturn(
   var myExpr = self.parseExpr(chk=true)
   if myExpr.foundTok.isSome:
     result.ast.myReturn.optExpr = some(self.parseExpr(chk=false).ast)
+  self.lexAndExpect(tokSemicolon)
 
 
 proc subParseExprLhsTokAddr(
@@ -2447,6 +2452,11 @@ proc parseStmtCallOrAssignEtc(
     )
     result.ast.myAssignEtc.left = myExprLhs
     result.ast.myAssignEtc.right = self.parseExpr(chk=false).ast
+  else:
+    var myExprLhs = result.ast
+    result.ast = mkAst(astStmtExprLhs)
+    result.ast.myStmtExprLhs.expr = myExprLhs
+  self.lexAndExpect(tokSemicolon)
 
 proc parseStmt(
   self: var Scone,

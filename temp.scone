@@ -9,9 +9,10 @@ def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
   const result: T = dot[T](a, b=b);
   var c: i32 = (d.c.e.g + a) * b;
   c = -(-d@);
-  var x: i32 = b(d, asdf=asdf) + c * 3;
+  b(a);
+  var x: i32 = b[g](d, asdf=asdf) + c * 3;
   if asdf {
-    switch addrresult {
+    switch addr result {
     case T(3) {
     }
     case T(5) {
@@ -20,8 +21,8 @@ def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
     }
     default {
     }
-    };
-  };
+    }
+  }
   if result == T(3) {
     if dot(a, b) == 8 {
       return T(5);
@@ -29,21 +30,21 @@ def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
       return 8;
     } else {
       return aaaa;
-    };
+    }
   } elif result == T(2) {
     return T(3);
   } elif result == T(5) {
     while yoshi.throw {
-    };
+    }
   } elif result == 3 {
   } else {
     return T(25);
-  };
+  }
   for i in 0 until 3 {
     const a: i32 = 5;
     while b + c.d@ {
-    };
-  };
+    }
+  }
   return result;
 };
 

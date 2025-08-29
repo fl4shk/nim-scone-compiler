@@ -1,78 +1,79 @@
 module test;
 
 #def dot[T](a: var array[plus(a, b=c); Vec2[T=U]], b: array[3; Vec2[D=T]]) -> T {
-#	#return a.x * b.x + a.y * b.y;
+# #return a.x * b.x + a.y * b.y;
 #};
 
 #def dot[T](a: Vec2[T], b: array[3 * f 4 ; Vec2[T]]) -> T {
-#	#return a.x * b.x + a.y * b.y;
+# #return a.x * b.x + a.y * b.y;
 #};
 #
 #struct Vec2[T] {
-#	x: ptr D[A, B];
-#	y: T;
+# x: ptr D[A, B];
+# y: T;
 #};
 
 def dot[T](a: var Vec2[T], b: var Vec2[T]) -> T {
-	const result: T = a.x * b.x + a.y * b.y;
-	return result;
+  const result: T = a.x * b.x + a.y * b.y;
+  return result;
 };
 
 def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
-	#const result: T = a.x * b.x + a.y * b.y;
-	const result: T = a.dot[T](b=b);
-	var c: i32 = (d.c.e.g + a) * b;
-	c = -(- d@);
-	var x: i32 = d.b(asdf=asdf) + c * 3;
-	#--------
-	if asdf {
-		switch addr result {
-		case T(3) {
-		}
-		case T(5) {
-			var d: i32 = 3;
-			d += 8;
-		}
-		default {
-		}
-		};
-	};
-	#--------
-	if result == T(3) {
-		if a.dot(b) == 8 {
-			return T(5);
-		} elif asdf == 8 {
-			return 8;
-		} else {
-			return aaaa;
-		};
-	} elif result == T(2) {
-		return T(3);
-	} elif result == T(5) {
-		while yoshi.throw {
-		};
-	} elif result == 3 {
-	} else {
-		return T(25);
-	};
-	for i in 0 until 3 {
-		const a: i32 = 5;
-		while (b + c.d@) {
-		};
-	};
-	return result;
+  #const result: T = a.x * b.x + a.y * b.y;
+  const result: T = a.dot[T](b=b);
+  var c: i32 = (d.c.e.g + a) * b;
+  c = -(- d@);
+  a.b();
+  var x: i32 = d.b[g](asdf=asdf) + c * 3;
+  #--------
+  if asdf {
+    switch addr result {
+    case T(3) {
+    }
+    case T(5) {
+      var d: i32 = 3;
+      d += 8;
+    }
+    default {
+    }
+    }
+  }
+  #--------
+  if result == T(3) {
+    if a.dot(b) == 8 {
+      return T(5);
+    } elif asdf == 8 {
+      return 8;
+    } else {
+      return aaaa;
+    }
+  } elif result == T(2) {
+    return T(3);
+  } elif result == T(5) {
+    while yoshi.throw {
+    }
+  } elif result == 3 {
+  } else {
+    return T(25);
+  }
+  for i in 0 until 3 {
+    const a: i32 = 5;
+    while (b + c.d@) {
+    }
+  }
+  return result;
 };
 struct Vec2[T] {
-	x: T;
-	y: T;
+  x: T;
+  y: T;
 };
 struct Vec2Ptr[T] {
-	x: ptr T;
-	y: ptr T;
+  x: ptr T;
+  y: ptr T;
 };
 struct Vec2Arr3[T] {
-	x: array[3; Vec2[T]];
-	y: array[3; Vec2[T]];
+  x: array[3; Vec2[T]];
+  y: array[3; Vec2[T]];
 };
 #--------
 
@@ -101,9 +102,9 @@ struct Vec2Arr3[T] {
 #(a).b(d) #b[T](a, c)
 
 #def plus(left: i32, right: i32) -> i32 {
-#	#return left + right;
+# #return left + right;
 #};
 #
 #struct Temp {
-#	x: array[a plus c; u32];
+# x: array[a plus c; u32];
 #};
