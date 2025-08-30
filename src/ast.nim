@@ -1371,34 +1371,6 @@ proc toRepr*(
     result.add ast.myArray.dim.myToRepr() & "; "
     result.add ast.myArray.elemType.myToRepr()
     result.add "]"
-  #of astVoid:
-  #  result.add "void"
-  #of astBool:
-  #  result.add "bool"
-  #of astU8:
-  #  result.add "u8"
-  #of astI8:
-  #  result.add "i8"
-  #of astU16:
-  #  result.add "u16"
-  #of astI16:
-  #  result.add "i16"
-  #of astU32:
-  #  result.add "u32"
-  #of astI32:
-  #  result.add "i32"
-  #of astU64:
-  #  result.add "u64"
-  #of astI64:
-  #  result.add "i64"
-  #of astF32:
-  #  result.add "f32"
-  #of astF64:
-  #  result.add "f64"
-  #of astChar:
-  #  result.add "char"
-  #of astString:
-  #  result.add "string"
   of astUnop:
     var inclParens: bool = false
     let myUnopExprOp = (
