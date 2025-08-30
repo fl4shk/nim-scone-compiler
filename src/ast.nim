@@ -664,6 +664,8 @@ macro mkAstHier(): untyped =
         identDefs.add ident("AstBinopKind")
       of astValAssignEtcKind:
         identDefs.add ident("AstAssignEtcKind")
+      of astValBasicTypeKind:
+        identDefs.add ident("AstBasicTypeKind")
 
       identDefs.add newNimNode(nnkEmpty)
       recList.add identDefs
@@ -977,7 +979,7 @@ proc toStr*(
               result.add(
                 #"\n" & i & 
                 (
-                  " " & `mbrStr` & " " & "!isSome" #& ")\n"
+                  `tempI` & `mbrStr` & " " & "!isSome" #& ")\n"
                 ) & (
                   `tempNl`
                 )
@@ -1019,6 +1021,11 @@ proc toStr*(
             result.add(
               #`tempNl` & 
               #" " & 
+              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
+            )
+        of astValBasicTypeKind:
+          toAdd = quote do:
+            result.add(
               `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
             )
 
@@ -1231,8 +1238,8 @@ proc toRepr*(
     result.add "true"
   of astFalse:
     result.add "false"
-  of astPtr:
-    result.add "ptr"
+  #of astPtr:
+  #  result.add "ptr"
   #of astAddr:
   #  result.add "(" & "addr " & ast.myAddr.obj.myToRepr(x) & ")"
   of astDeref:
@@ -1364,34 +1371,34 @@ proc toRepr*(
     result.add ast.myArray.dim.myToRepr() & "; "
     result.add ast.myArray.elemType.myToRepr()
     result.add "]"
-  of astVoid:
-    result.add "void"
-  of astBool:
-    result.add "bool"
-  of astU8:
-    result.add "u8"
-  of astI8:
-    result.add "i8"
-  of astU16:
-    result.add "u16"
-  of astI16:
-    result.add "i16"
-  of astU32:
-    result.add "u32"
-  of astI32:
-    result.add "i32"
-  of astU64:
-    result.add "u64"
-  of astI64:
-    result.add "i64"
-  of astF32:
-    result.add "f32"
-  of astF64:
-    result.add "f64"
-  of astChar:
-    result.add "char"
-  of astString:
-    result.add "string"
+  #of astVoid:
+  #  result.add "void"
+  #of astBool:
+  #  result.add "bool"
+  #of astU8:
+  #  result.add "u8"
+  #of astI8:
+  #  result.add "i8"
+  #of astU16:
+  #  result.add "u16"
+  #of astI16:
+  #  result.add "i16"
+  #of astU32:
+  #  result.add "u32"
+  #of astI32:
+  #  result.add "i32"
+  #of astU64:
+  #  result.add "u64"
+  #of astI64:
+  #  result.add "i64"
+  #of astF32:
+  #  result.add "f32"
+  #of astF64:
+  #  result.add "f64"
+  #of astChar:
+  #  result.add "char"
+  #of astString:
+  #  result.add "string"
   of astUnop:
     var inclParens: bool = false
     let myUnopExprOp = (
@@ -1473,6 +1480,36 @@ proc toRepr*(
     result.add " " & ast.myAssignEtc.right.myToRepr()
     #result.add ")"
     result.add ";"
+  of astBasicType:
+    case ast.myBasicType.kind:
+    of basicTypeVoid:
+      result.add "void"
+    of basicTypeBool:
+      result.add "bool"
+    of basicTypeU8:
+      result.add "u8"
+    of basicTypeI8:
+      result.add "i8"
+    of basicTypeU16:
+      result.add "u16"
+    of basicTypeI16:
+      result.add "i16"
+    of basicTypeU32:
+      result.add "u32"
+    of basicTypeI32:
+      result.add "i32"
+    of basicTypeU64:
+      result.add "u64"
+    of basicTypeI64:
+      result.add "i64"
+    of basicTypeF32:
+      result.add "f32"
+    of basicTypeF64:
+      result.add "f64"
+    of basicTypeChar:
+      result.add "char"
+    of basicTypeString:
+      result.add "string"
   of astNamedType:
     result.add ast.myNamedType.ident.myToRepr()
     result.add ast.myNamedType.genericImpl.myToRepr()

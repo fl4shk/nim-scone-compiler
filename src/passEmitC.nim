@@ -4,7 +4,7 @@ import std/strutils
 
 import scone
 
-proc doPassSemantic*(
+proc doPassEmitC*(
   self: var Scone,
 ) =
   discard

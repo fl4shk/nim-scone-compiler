@@ -19,9 +19,13 @@ type
     scoPassParse,
     scoPassSymType,
     #scoPassMacroExpansion,
-    scoPassSemantic,
     scoPassEmitC,
+    #scoPassEmitC,
     limScoPass,
+
+  SconeModule* = object
+    name*: string
+    symS2dIdx*: uint64
 
   Scone* = object
     mode*: Mode
@@ -33,7 +37,10 @@ type
     #ast*: AstNode
     #currAstIdx*: uint64
     symS2d*: seq[seq[Symbol]]
-    symNameToIdxTblSeq*: seq[OrderedTable[string, seq[uint64]]]
+    typeInfoS2d*: seq[seq[TypeInfo]]
+    #symNameToIdxTblS2d*: seq[seq[OrderedTable[string, seq[uint64]]]]
+    symIdxTblSeq*: seq[OrderedTable[string, seq[uint64]]]
+    moduleTblSeq*: seq[OrderedTable[string, SconeModule]]
 
     savedLexMainSeq*: seq[LexMain]
 
@@ -46,6 +53,51 @@ type
     inputFname*: string
     inp*: string
     outp*: string
+
+proc locMsg*(
+  self: var Scone
+): string
+
+proc nextSymTblPass*(
+  self: var Scone,
+) =
+  #if self.symS2d.len() == 0:
+  block:
+    var toAdd: seq[Symbol]
+    self.symS2d.add toAdd
+  block:
+    var toAdd: seq[TypeInfo]
+    self.typeInfoS2d.add toAdd
+  block:
+    var toAdd: OrderedTable[string, seq[uint64]]
+    self.symIdxTblSeq.add toAdd
+  block:
+    var toAdd: OrderedTable[string, SconeModule]
+    self.moduleTblSeq.add toAdd
+  #if self.moduleTblSeq.len() == 0:
+  #  var myTbl: OrderedTable[string, SconeModule]
+  #  self.moduleTblSeq.add myTbl
+
+#proc nextModule(
+#  self: var Scone,
+#  name: string
+#) =
+#  doAssert(
+#    name notin self.moduleTblSeq[^1],
+#    "Error: already have `module` with identifier `" & name & "`"
+#  )
+  
+
+#proc addSym*(
+#  self: var Scone,
+#  toAdd: Symbol,
+#) =
+#  if self.symS2d.len() == 0:
+#    var mySeq: seq[Symbol]
+#    self.symS2d.add mySeq
+#  if self.symS2d[^1].len() == 0:
+#    discard
+    
 
 #proc globalSymSeq*(
 #  self: var Scone,
@@ -133,3 +185,7 @@ proc unstackSavedIlp*(
   #self.savedInpIdxSeq.setLen(oldLenMinus1)
   #self.savedCurrTokSeq.setLen(oldLenMinus1)
 
+proc locMsg*(
+  self: var Scone
+): string =
+  result = self.lexMain.locMsg(moduleName=self.inputFname)

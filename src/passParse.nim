@@ -670,33 +670,34 @@ proc parseTypeBasicBuiltin(
       tokString, tokChar, tokVoid
     ])
   )
+  result.ast = mkAst(astBasicType)
   case result.foundTok.get():
   of tokU8:
-    result.ast = mkAst(astU8)
+    result.ast.myBasicType.kind = basicTypeU8
   of tokU16:
-    result.ast = mkAst(astU16)
+    result.ast.myBasicType.kind = basicTypeU16
   of tokU32:
-    result.ast = mkAst(astU32)
+    result.ast.myBasicType.kind = basicTypeU32
   of tokU64:
-    result.ast = mkAst(astU64)
+    result.ast.myBasicType.kind = basicTypeU64
   of tokI8:
-    result.ast = mkAst(astI8)
+    result.ast.myBasicType.kind = basicTypeI8
   of tokI16:
-    result.ast = mkAst(astI16)
+    result.ast.myBasicType.kind = basicTypeI16
   of tokI32:
-    result.ast = mkAst(astI32)
+    result.ast.myBasicType.kind = basicTypeI32
   of tokI64:
-    result.ast = mkAst(astI64)
+    result.ast.myBasicType.kind = basicTypeI64
   of tokF32:
-    result.ast = mkAst(astF32)
+    result.ast.myBasicType.kind = basicTypeF32
   of tokF64:
-    result.ast = mkAst(astF64)
+    result.ast.myBasicType.kind = basicTypeF64
   of tokString:
-    result.ast = mkAst(astString)
+    result.ast.myBasicType.kind = basicTypeString
   of tokChar:
-    result.ast = mkAst(astChar)
+    result.ast.myBasicType.kind = basicTypeChar
   of tokVoid:
-    result.ast = mkAst(astVoid)
+    result.ast.myBasicType.kind = basicTypeVoid
   else:
     doAssert(
       false,

@@ -25,25 +25,21 @@ type
     genericIdxSeq*: seq[uint64]
     argIdxSeq*: seq[uint64]     # function arguments
 
-  TypeKind* = enum
-    typeToResolve,      # this needs to be resolved in a later pass
-                        # because it's a forward reference
-    typeBuiltinType,
-    typeStruct,
-    typeFunc,
+  TypeInfoKind* = enum
+    tiToResolve,      # this needs to be resolved in a later pass
+                        # because it's a forward reference, generic, etc.
+    tiBuiltinType,
+    tiStruct,
+    tiFunc,
     #typeVar,
     #typeLim,
   TypeInfo* = object
     main*: TypeInfoMain
-    case kind*: TypeKind
-    of typeToResolve:
-      myToResolve: TypeInfoToResolve
-    of typeBuiltinType:
-      myBuiltinType: TypeInfoBuiltinType
-    of typeStruct:
-      myStruct: TypeInfoStruct
-    of typeFunc:
-      myFunc: TypeInfoFunc
+    case kind*: TypeInfoKind
+    of tiToResolve: myToResolve*: TypeInfoToResolve
+    of tiBuiltinType: myBuiltinType*: TypeInfoBuiltinType
+    of tiStruct: myStruct*: TypeInfoStruct
+    of tiFunc: myFunc*: TypeInfoFunc
 
 proc name*(
   self: var TypeInfo
@@ -77,13 +73,15 @@ type
     symFuncDecl,
     symFuncGeneric,
     symFuncArg,
+    symFuncReturnType,
 
   Symbol* = object
+    moduleName*: string
     name*: string
     kind*: SymKind
     typeInfoIdx*: uint32  # surely we don't need to support 
                           # more than 1 << 32 types, right?
     initValAstIdx*: Option[uint64]  # index into the `seq[AstNode]`
                                     # indicating the initial value
-    scopeIdxSeq: seq[uint64]
+    chIdxSeq: seq[uint64]
 

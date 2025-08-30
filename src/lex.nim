@@ -302,17 +302,6 @@ proc lexInternal*(
   if self.inpChar == '"':
     discard
 
-proc locMsg*(
-  self: var Scone
-): string =
-  result = (
-    (
-      "at this location: " & self.inputFname & ":"
-    ) & (
-      $self.lineNum & "," & $self.locInLine
-    )
-  )
-
 proc expect*(
   self: var Scone,
   tokSet: HashSet[TokKind],

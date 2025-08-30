@@ -9,7 +9,7 @@ import ast
 import scone
 import passParse
 import passSymType
-import passSemantic
+import passEmitC
 
 
 proc doCompileModeOneFile(
@@ -43,10 +43,8 @@ proc doCompileModeOneFile(
       echo $self.astRoot
     of scoPassSymType:
       self.doPassSymType()
-    of scoPassSemantic:
-      self.doPassSemantic()
     of scoPassEmitC:
-      discard
+      self.doPassEmitC()
     else:
       doAssert(
         false,

@@ -17,6 +17,7 @@ type
     astValUnopKind,
     astValBinopKind,
     astValAssignEtcKind,
+    astValBasicTypeKind,
 
   AstUnopKind* = enum
     unopPlus,
@@ -58,6 +59,22 @@ type
     assignEtcBitXor,
     assignEtcBitShl,
     assignEtcBitShr,
+
+  AstBasicTypeKind* = enum
+    basicTypeVoid,
+    basicTypeBool,
+    basicTypeU8,
+    basicTypeI8,
+    basicTypeU16,
+    basicTypeI16,
+    basicTypeU32,
+    basicTypeI32,
+    basicTypeU64,
+    basicTypeI64,
+    basicTypeF32,
+    basicTypeF64,
+    basicTypeChar,
+    basicTypeString,
 
   #AstOtherExprOpKind* = enum
   #  otherExprOpDot,
@@ -257,7 +274,7 @@ const `helperTokKindSeq`*: seq[(
   ("Semicolon", some(";"), false, @[]),
   ("Colon", some(":"), false, @[]),
   #--------
-  ("Ptr", some("ptr"), true, @[]),
+  ("Ptr", some("ptr"), false, @[]),
   (
     "Addr", some("addr"), false, # address of an expression
     @[
@@ -454,20 +471,20 @@ const `helperTokKindSeq`*: seq[(
       ("elemType", astValAstNode),
     ]
   ),
-  ("Void", some("void"), true, @[]),
-  ("Bool", some("bool"), true, @[]),
-  ("U8", some("u8"), true, @[]),
-  ("I8", some("i8"), true, @[]),
-  ("U16", some("u16"), true, @[]),
-  ("I16", some("i16"), true, @[]),
-  ("U32", some("u32"), true, @[]),
-  ("I32", some("i32"), true, @[]),
-  ("U64", some("u64"), true, @[]),
-  ("I64", some("i64"), true, @[]),
-  ("F32", some("f32"), true, @[]),
-  ("F64", some("f64"), true, @[]),
-  ("Char", some("char"), true, @[]),
-  ("String", some("string"), true, @[]),
+  ("Void", some("void"), false, @[]),
+  ("Bool", some("bool"), false, @[]),
+  ("U8", some("u8"), false, @[]),
+  ("I8", some("i8"), false, @[]),
+  ("U16", some("u16"), false, @[]),
+  ("I16", some("i16"), false, @[]),
+  ("U32", some("u32"), false, @[]),
+  ("I32", some("i32"), false, @[]),
+  ("U64", some("u64"), false, @[]),
+  ("I64", some("i64"), false, @[]),
+  ("F32", some("f32"), false, @[]),
+  ("F64", some("f64"), false, @[]),
+  ("Char", some("char"), false, @[]),
+  ("String", some("string"), false, @[]),
   #--------
   ("CmpEq", some("=="), false, @[]),
   ("CmpNe", some("!="), false, @[]),
@@ -527,6 +544,12 @@ const `helperTokKindSeq`*: seq[(
       ("left", astValAstNode),
       ("right", astValAstNode),
     ]
+  ),
+  (
+    "BasicType", none(string), true,
+    @[
+      ("kind", astValBasicTypeKind),
+    ],
   ),
   (
     "NamedType", none(string), true,
@@ -708,3 +731,15 @@ type
     inpIdx*: int
     currTok*: CurrTok
       
+proc locMsg*(
+  lexMain: LexMain,
+  #inputFname: string,
+  moduleName: string,
+): string =
+  result = (
+    (
+      "at this location: " & moduleName & ":"
+    ) & (
+      $lexMain.lineNum & "," & $lexMain.locInLine
+    )
+  )
