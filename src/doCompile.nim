@@ -7,7 +7,9 @@ import std/options
 import dataStructuresMisc
 import ast
 import scone
-import parse
+import passParse
+import passSymType
+import passSemantic
 
 
 proc doCompileModeOneFile(
@@ -33,7 +35,23 @@ proc doCompileModeOneFile(
   #echo $self.currTok
 
   #self.parseModule()
-  self.parseSrcFile()
+  for passUint in 0u ..< uint(limScoPass):
+    self.pass = SconePass(passUint)
+    case self.pass:
+    of scoPassParse:
+      self.doPassParse()
+      echo $self.astRoot
+    of scoPassSymType:
+      self.doPassSymType()
+    of scoPassSemantic:
+      self.doPassSemantic()
+    of scoPassEmitC:
+      discard
+    else:
+      doAssert(
+        false,
+        "eek! " & $self.pass
+      )
 
 proc mkScone*(
   myMode: Mode,

@@ -6,27 +6,37 @@ import std/options
 
 import dataStructuresMisc
 import ast
+import symType
+
+const
+  sconeMaxMacroExpansion*: uint = 1024u
 
 type
+  #SconeParserPass* = enum
+  #  sconeParserPass0,
+  #  sconeParserPassFwdRef,
+  SconePass* = enum
+    scoPassParse,
+    scoPassSymType,
+    #scoPassMacroExpansion,
+    scoPassSemantic,
+    scoPassEmitC,
+    limScoPass,
+
   Scone* = object
     mode*: Mode
+    pass*: SconePass
+    #macroLim*: uint
+    #parserPass*: SconeParserPass
     #ast*: seq[AstNode]
     astRoot*: AstNode
     #ast*: AstNode
     #currAstIdx*: uint64
-    symSeq*: seq[Symbol]
-    symNameToIdxTbl*: OrderedTable[string, uint64]
+    symS2d*: seq[seq[Symbol]]
+    symNameToIdxTblSeq*: seq[OrderedTable[string, seq[uint64]]]
 
-    #savedLocInLineSeq*: seq[uint64]
-    #savedLineNumSeq*: seq[uint64]
-    #savedInpIdxSeq*: seq[int]
-    #savedCurrTokSeq*: seq[CurrTok]
     savedLexMainSeq*: seq[LexMain]
 
-    #locInLine*: uint64
-    #lineNum*: uint64
-    #inpIdx*: int
-    #currTok*: CurrTok
     lexMain*: LexMain
     #parentExprS2d*: seq[ptr AstNode]
     parentTempSeq*: seq[AstNode]
@@ -36,6 +46,36 @@ type
     inputFname*: string
     inp*: string
     outp*: string
+
+#proc globalSymSeq*(
+#  self: var Scone,
+#): var seq[Symbol] =
+#  result = self.symS2d[0]
+#
+#proc genericSymSeq*(
+#  self: var Scone,
+#): var seq[Symbol] =
+#  result = self.symS2d[1]
+#proc funcArgSymSeq*(
+#  self: var Scone,
+#): var seq[Symbol] =
+#  result = self.symS2d[1]
+#proc structFieldSymSeq*(
+#  self: var Scone,
+#): var seq[Symbol] =
+#  result = self.symS2d[1]
+#
+#proc currSymSeq*(
+#  self: var Scone,
+#): var seq[Symbol] =
+#  result = self.symS2d[^1]
+
+#proc mkSymScope*(
+#  self: var Scone,
+#) =
+#  block:
+#    var toAdd: seq[Symbol]
+#    self.symS2d.add toAdd
 
 proc locInLine*(
   self: var Scone

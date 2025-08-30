@@ -2476,7 +2476,7 @@ proc parseStmt(
     none(HashSet[TokKind]),
   )
 
-proc parseSrcFile*(
+proc parseSrcFile(
   self: var Scone
 ) =
   self.parseModule(chk=false)
@@ -2511,4 +2511,7 @@ proc parseSrcFile*(
   #if not temp.foundTok.isSome:
   #  discard
 
-
+proc doPassParse*(
+  self: var Scone
+) =
+  self.parseSrcFile()
