@@ -1,7 +1,7 @@
 #import std/strutils
 #import std/sequtils
-import std/tables
-import std/sets
+#import std/tables
+#import std/sets
 import std/options
 
 import dataStructuresMisc
@@ -35,14 +35,33 @@ proc doCompileModeOneFile(
   #echo $self.currTok
 
   #self.parseModule()
-  for passUint in 0u ..< uint(limScoPass):
-    self.pass = SconePass(passUint)
+  for pass in SconePass(0u) ..< limScoPass:
+    self.pass = pass
     case self.pass:
     of scoPassParse:
       self.doPassParse()
-      echo $self.astRoot
+      #echo $self.astRoot
     of scoPassSymType:
       self.doPassSymType()
+      #echo $self.symS2d
+      #echo ""
+      #echo ""
+      #for idx in 0 ..< self.symS2d.len():
+      #  let tempSeq = addr self.symS2d[idx]
+      #  if tempSeq[].len() > 0:
+      #    echo "seq " & $idx & ":"
+      #    echo "  #----"
+      #  for jdx in 0 ..< tempSeq[].len():
+      #    
+      #    #echo $self.symS2d[idx]
+      #    let sym = addr tempSeq[][jdx]
+      #    let typeInfo = addr self.typeInfoS2d[idx][sym[].typeInfoIdx]
+      #    #echo $(sym[], typeInfo[])
+      #    echo "  sym " & $jdx & ": " & $sym[]
+      #    echo "  typeInfo: " & $typeInfo[]
+      #    echo "  #----"
+      #  if tempSeq[].len() > 0:
+      #    echo "#--------"
     of scoPassEmitC:
       self.doPassEmitC()
     else:

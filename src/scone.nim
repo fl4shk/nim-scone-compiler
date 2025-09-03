@@ -1,5 +1,5 @@
 import std/strutils
-#import std/sequtils
+import std/sequtils
 import std/tables
 import std/sets
 import std/options
@@ -23,10 +23,14 @@ type
     #scoPassEmitC,
     limScoPass,
 
-  SconeModule* = object
-    name*: string
-    symS2dIdx*: uint64
+  #SconeModule* = object
+  #  name*: string
+  #  symS2dIdx*: uint64
 
+  SconeCurrSymTblInfo* = object
+    curr*: SymbolTable
+    prev*: SymbolTable
+    #childIdxSeq*: seq[int]
   Scone* = object
     mode*: Mode
     pass*: SconePass
@@ -36,11 +40,15 @@ type
     astRoot*: AstNode
     #ast*: AstNode
     #currAstIdx*: uint64
-    symS2d*: seq[seq[Symbol]]
-    typeInfoS2d*: seq[seq[TypeInfo]]
-    #symNameToIdxTblS2d*: seq[seq[OrderedTable[string, seq[uint64]]]]
-    symIdxTblSeq*: seq[OrderedTable[string, seq[uint64]]]
-    moduleTblSeq*: seq[OrderedTable[string, SconeModule]]
+
+    #symS2d*: seq[seq[Symbol]]
+    #typeInfoS2d*: seq[seq[TypeInfo]]
+    ##symNameToIdxTblS2d*: seq[seq[OrderedTable[string, seq[uint64]]]]
+    #symIdxTblSeq*: seq[OrderedTable[string, seq[uint64]]]
+    #moduleTblSeq*: seq[OrderedTable[string, SconeModule]]
+    symTblSeq*: seq[SymbolTable]
+    #prevCurrSymTbl*: SymbolTable
+    mySymTblInfo*: SconeCurrSymTblInfo
 
     savedLexMainSeq*: seq[LexMain]
 
@@ -48,8 +56,6 @@ type
     #parentExprS2d*: seq[ptr AstNode]
     parentTempSeq*: seq[AstNode]
     
-    #line*: string
-    #identStrS2d*: seq[seq[string]]
     inputFname*: string
     inp*: string
     outp*: string
@@ -62,72 +68,210 @@ proc nextSymTblPass*(
   self: var Scone,
 ) =
   #if self.symS2d.len() == 0:
-  block:
-    var toAdd: seq[Symbol]
-    self.symS2d.add toAdd
-  block:
-    var toAdd: seq[TypeInfo]
-    self.typeInfoS2d.add toAdd
-  block:
-    var toAdd: OrderedTable[string, seq[uint64]]
-    self.symIdxTblSeq.add toAdd
-  block:
-    var toAdd: OrderedTable[string, SconeModule]
-    self.moduleTblSeq.add toAdd
-  #if self.moduleTblSeq.len() == 0:
-  #  var myTbl: OrderedTable[string, SconeModule]
-  #  self.moduleTblSeq.add myTbl
+  var toAdd = SymbolTable()
+  self.symTblSeq.add toAdd
+  #self.currSymTbl[1] = self.symTblSeq[^1]
+  #self.currSymTbl
+  let info = addr self.mySymTblInfo
 
-#proc nextModule(
-#  self: var Scone,
-#  name: string
-#) =
-#  doAssert(
-#    name notin self.moduleTblSeq[^1],
-#    "Error: already have `module` with identifier `" & name & "`"
-#  )
+  if info[].curr != nil and info[].prev == nil:
+    echo "nextSymTblPass(): "
+    echo info[].curr.toStr()
+
+  #if info[].curr != nil:
+  info[].prev = info[].curr
+  info[].curr = self.symTblSeq[^1]
+
+  if self.symTblSeq.len() == 3:
+    self.symTblSeq.delete(0 .. 0)
+  #if self.symTblSeq.len() == 2:
+  #  info[].prev = self.symTblSeq[^2]
+
+
+proc addChildSymTbl(
+  self: var Scone,
+  #child: var SymbolTable,
+  scopeAst: AstNode,
+) =
+  #--------
+  # BEGIN: old version
+  #self.currSymTbl.childSeq.add child
+  #self.currSymTbl.childSeq[^1].parent = self.currSymTbl
+  #self.currSymTbl = self.currSymTbl.childSeq[^1]
+  # END: old version
+  #--------
+  let info = addr self.mySymTblInfo
+  var child = SymbolTable(
+    scopeAst: scopeAst
+  )
+
+  if info[].prev != nil:
+    #echo $info[].prev.scopeAst
+    #echo "curr.childSeq.len():" & $info[].curr.childSeq.len()
+    #echo "prev.childSeq.len():" & $info[].prev.childSeq.len()
+    #echo "curr.parent == nil: " & $(info[].curr.parent == nil)
+    #echo "prev.parent == nil: " & $(info[].prev.parent == nil)
+    info[].prev = info[].prev.childSeq[info[].curr.childSeq.len()]
+
+  info[].curr.childSeq.add child
+  info[].curr.childSeq[^1].parent = info[].curr
+  info[].curr = info[].curr.childSeq[^1]
+  #self.mySymTblInfo.childIdxSeq
+
+proc mkSymbolTableMain(
+  self: var Scone,
+  scopeAst: AstNode,
+): SymbolTable =
+  #var childSymTbl = SymbolTable(
+  #  scopeAst: scopeAst
+  #)
+  self.addChildSymTbl(
+    #child=childSymTbl
+    scopeAst=scopeAst
+  )
+  result = self.mySymTblInfo.curr
+
+proc gotoParentSymTbl*(
+  self: var Scone,
+) =
+  #self.currSymTbl = self.currSymTbl.parent
+  let info = addr self.mySymTblInfo
+  info[].curr = info[].curr.parent
+  if info[].prev != nil:
+    info[].prev = info[].prev.parent
+
+proc sameFuncSignature*(
+  self: var Scone,
+  leftSym: Symbol,
+  rightSym: Symbol,
+): bool =
+  #result = false
+  result = (
+    (
+      leftSym != rightSym
+    ) and (
+      leftSym.name == rightSym.name
+    )
+  )
+
+proc findDuplFuncMain*(
+  self: var Scone,
+  symTbl: var SymbolTable,
+  sym: Symbol,
+): Option[SymbolTable] =
+  result = none(SymbolTable)
+  echo "here's a test: " & sym.name & " " & $sym.kind
+
+  case sym.kind:
+  of symFuncDecl:
+    echo (
+      "sym.name, in tbl? " & (sym.name) & " " & $(sym.name in symTbl.tbl)
+    )
+    if sym.name in symTbl.tbl:
+      let myIdxSeq = symTbl.tbl[sym.name] 
+      for idx in myIdxSeq:
+        let child = symTbl.childSeq[idx]
+        if child.sym.isSome:
+          if self.sameFuncSignature(sym, child.sym.get()):
+            result = some(child)
+    if not result.isSome and symTbl.parent != nil:
+      result = self.findDuplFuncMain(symTbl=symTbl.parent, sym=sym)
+  else:
+    echo "what? " & $sym.kind
+    discard
   
+proc findDuplFunc*(
+  self: var Scone,
+  sym: Symbol
+): Option[SymbolTable] =
+  result = self.findDuplFuncMain(symTbl=self.mySymTblInfo.curr, sym=sym)
 
-#proc addSym*(
-#  self: var Scone,
-#  toAdd: Symbol,
-#) =
-#  if self.symS2d.len() == 0:
-#    var mySeq: seq[Symbol]
-#    self.symS2d.add mySeq
-#  if self.symS2d[^1].len() == 0:
-#    discard
-    
+proc checkDuplSym*(
+  self: var Scone,
+  sym: Symbol,
+) =
+  let info = addr self.mySymTblInfo
+  #let parent = info[].curr.parent
+  #let optSym = parent.childSeq[^1].sym
+  #let optSym = info[].curr.childSeq[^1].sym
+  #if optSym.isSome():
+  #  let sym = optSym.get()
+  case sym.kind:
+  of symFuncDecl:
+    #for idx in currTbl.tbl[sym.name]
+    echo "checkDuplSym: symFuncDecl: " & sym.name & " " & $sym.kind
+    let dupFunc = self.findDuplFunc(sym)
+    echo "testificate: " & $dupFunc.isSome
+    doAssert(
+      not dupFunc.isSome,
+      (
+        "Error: duplicate function signature of name \""
+      ) & (
+        sym.name & "\" "
+      ) & (
+        #parent.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
+        info[].curr.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
+      ) & (
+        " (duplicate function is "
+      ) & (
+        dupFunc.get().scopeAst.lexMain.locMsg(
+          inputFname=dupFunc.get().sym.get().inputFname
+        )
+      ) & (
+        ")"
+      )
+    )
+  else:
+    let mySymTbl = info[].curr#.parent
+    echo $mySymTbl[]
+    doAssert(
+      #sym.name notin parent.tbl,
+      sym.name notin mySymTbl.tbl,
+      (
+        "Error: duplicate non-function symbol of name \""
+      ) & (
+        sym.name & "\" "
+      ) & (
+        "(current instance "
+      ) & (
+        (
+          mySymTbl.childSeq[mySymTbl.tbl[sym.name][0]].scopeAst
+        ).lexMain.locMsg(inputFname=self.inputFname)
+      ) & (
+        #parent.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
+        ") (previous instance "
+      ) & (
+        mySymTbl.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
+      ) & (
+        ")"
+      )
+    )
 
-#proc globalSymSeq*(
-#  self: var Scone,
-#): var seq[Symbol] =
-#  result = self.symS2d[0]
-#
-#proc genericSymSeq*(
-#  self: var Scone,
-#): var seq[Symbol] =
-#  result = self.symS2d[1]
-#proc funcArgSymSeq*(
-#  self: var Scone,
-#): var seq[Symbol] =
-#  result = self.symS2d[1]
-#proc structFieldSymSeq*(
-#  self: var Scone,
-#): var seq[Symbol] =
-#  result = self.symS2d[1]
-#
-#proc currSymSeq*(
-#  self: var Scone,
-#): var seq[Symbol] =
-#  result = self.symS2d[^1]
+proc addSym*(
+  self: var Scone,
+  sym: Option[Symbol],
+  scopeAst: AstNode,
+  #typeInfo: TypeInfo,
+) =
+  let info = addr self.mySymTblInfo
+  #let currTbl = info[].curr
+  #currTbl.childSeq.add SymbolTable()
+  #currTbl.childS
+  self.addChildSymTbl(scopeAst=scopeAst)
+  if sym.isSome:
+    let parent = info[].curr.parent
+    if sym.get().name notin parent.tbl:
+      #var toAdd: seq[int] = @[currTbl.childSeq.len()]
+      parent.tbl[sym.get().name] = @[parent.childSeq.len() - 1]
+    else:
+      parent.tbl[sym.get().name].add parent.childSeq.len() - 1
+    #info[].curr.childSeq[^1].sym = sym
+    #info[].curr.childSeq.add sym
+    info[].curr.sym = sym
 
-#proc mkSymScope*(
-#  self: var Scone,
-#) =
-#  block:
-#    var toAdd: seq[Symbol]
-#    self.symS2d.add toAdd
+  #currTbl.symSeq.add sym
+  #currTbl.symSeq[^1].typeInfoIdx = uint32(currTbl.typeInfoSeq.len())
+  #currTbl.typeInfoSeq.add typeInfo
 
 proc locInLine*(
   self: var Scone
@@ -146,11 +290,11 @@ proc currTok*(
 ): var CurrTok =
   return self.lexMain.currTok
 
-proc stackIdentStrSeq*(
-  self: var Scone,
-) =
-  #self.identStrS2d
-  discard
+#proc stackIdentStrSeq*(
+#  self: var Scone,
+#) =
+#  #self.identStrS2d
+#  discard
 
 
 proc stackSavedIlp*(
@@ -188,4 +332,4 @@ proc unstackSavedIlp*(
 proc locMsg*(
   self: var Scone
 ): string =
-  result = self.lexMain.locMsg(moduleName=self.inputFname)
+  result = self.lexMain.locMsg(inputFname=self.inputFname)

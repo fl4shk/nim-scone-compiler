@@ -754,7 +754,7 @@ macro mkAstHier(): untyped =
 
 mkAstHier()
 
-proc doIndent(
+proc doIndent*(
   indent: uint,
 ): string =
   for idx in 0 ..< indent:
@@ -1531,3 +1531,144 @@ proc toRepr*(
     result.add ast.myVarEtcDeclMost.ident.myToRepr() & ": "
     result.add ast.myVarEtcDeclMost.type.myToRepr()
 
+proc constEval*(
+  ast: AstNode
+): int64 =
+  result = 0i64
+  proc doError() =
+    doAssert(
+      false,
+      "Invalid constant expression"
+    )
+  case ast.kind:
+    of astU64Lit:
+      result = ast.myU64Lit.u64Val.int64()
+    of astBinop:
+      case ast.myBinop.kind:
+      of binopCmpEq:
+        if (
+          ast.myBinop.left.constEval() == ast.myBinop.right.constEval()
+        ):
+          result = 1i64
+        else:
+          result = 0i64
+      of binopCmpNe:
+        if (
+          ast.myBinop.left.constEval() != ast.myBinop.right.constEval()
+        ):
+          result = 1i64
+        else:
+          result = 0i64
+      of binopCmpLt:
+        if (
+          ast.myBinop.left.constEval() < ast.myBinop.right.constEval()
+        ):
+          result = 1i64
+        else:
+          result = 0i64
+      of binopCmpGt:
+        if (
+          ast.myBinop.left.constEval() > ast.myBinop.right.constEval()
+        ):
+          result = 1i64
+        else:
+          result = 0i64
+      of binopCmpLe:
+        if (
+          ast.myBinop.left.constEval() <= ast.myBinop.right.constEval()
+        ):
+          result = 1i64
+        else:
+          result = 0i64
+      of binopCmpGe:
+        if (
+          ast.myBinop.left.constEval() >= ast.myBinop.right.constEval()
+        ):
+          result = 1i64
+        else:
+          result = 0i64
+      #--------
+      of binopPlus:
+        result = (
+          ast.myBinop.left.constEval() + ast.myBinop.right.constEval()
+        )
+      of binopMinus:
+        result = (
+          ast.myBinop.left.constEval() - ast.myBinop.right.constEval()
+        )
+      of binopMul:
+        result = (
+          ast.myBinop.left.constEval() * ast.myBinop.right.constEval()
+        )
+      of binopDiv:
+        result = (
+          ast.myBinop.left.constEval() div ast.myBinop.right.constEval()
+        )
+      of binopMod:
+        result = (
+          ast.myBinop.left.constEval() mod ast.myBinop.right.constEval()
+        )
+      of binopBitAnd:
+        result = (
+          ast.myBinop.left.constEval() and ast.myBinop.right.constEval()
+        )
+      of binopBitOr:
+        result = (
+          ast.myBinop.left.constEval() or ast.myBinop.right.constEval()
+        )
+      of binopBitXor:
+        result = (
+          ast.myBinop.left.constEval() xor ast.myBinop.right.constEval()
+        )
+      of binopLogicAnd:
+        if (
+          (
+            ast.myBinop.left.constEval() != 0i64
+          ) and (
+            ast.myBinop.right.constEval() != 0i64
+          )
+        ):
+          result = 1i64
+        else:
+          result = 0i64
+      of binopLogicOr:
+        if (
+          (
+            ast.myBinop.left.constEval() != 0i64
+          ) or (
+            ast.myBinop.right.constEval() != 0i64
+          )
+        ):
+          result = 1i64
+        else:
+          result = 0i64
+      of binopBitShl:
+        result = (
+          ast.myBinop.left.constEval() shl ast.myBinop.right.constEval()
+        )
+      of binopBitShr:
+        result = (
+          ast.myBinop.left.constEval() shr ast.myBinop.right.constEval()
+        )
+      else:
+        doAssert(
+          false,
+          "eek!"
+        )
+    of astUnop:
+      case ast.myUnop.kind:
+      of unopPlus:
+        result = ast.myUnop.obj.constEval()
+      of unopMinus:
+        result = (-ast.myUnop.obj.constEval())
+      of unopLogicNot:
+        if (ast.myUnop.obj.constEval() != 0i64):
+          result = 1i64
+        else:
+          result = 0i64
+      of unopBitInvert:
+        result = not ast.myUnop.obj.constEval()
+      else:
+        doError()
+    else:
+      doError()

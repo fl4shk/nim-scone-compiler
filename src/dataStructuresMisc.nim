@@ -733,12 +733,12 @@ type
       
 proc locMsg*(
   lexMain: LexMain,
-  #inputFname: string,
-  moduleName: string,
+  inputFname: string,
+  #moduleName: string,
 ): string =
   result = (
     (
-      "at this location: " & moduleName & ":"
+      "at this location: " & inputFname & ":"
     ) & (
       $lexMain.lineNum & "," & $lexMain.locInLine
     )

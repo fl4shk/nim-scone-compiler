@@ -1,6 +1,6 @@
-import std/options
-import std/macros
-import std/strutils
+#import std/options
+#import std/macros
+#import std/strutils
 
 import scone
 
