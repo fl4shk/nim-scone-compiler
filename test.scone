@@ -1,6 +1,6 @@
 module myModule;
 
-def dot[U, T](a: var Vec2[T], b: var Vec2[T]) -> T {
+def dot[U, T, T](a: var Vec2[T], b: var Vec2[T]) -> T {
   const result: T = a.x * b.x + a.y * b.y;
   return result;
 };
@@ -42,26 +42,26 @@ def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
     }
   }
 };
-#def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
-#  var result: Vec2[T];
-#
-#  #for idx in 0 until 2 {
-#  #  result.at(idx) = T(0);
-#  #}
-#
-#  for jdx in 0 until 8 * 3 {
-#    #for idx in 0 until 2 {
-#    #  result.at(idx) = 
-#    #}
-#    if jdx == 0 {
-#      for idx in 0 until 2 {
-#        result.at(idx) = toSum(0).at(idx);
-#      }
-#    } else {
-#      result = result.plus(toSum(jdx));
-#    }
-#  }
-#};
+def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
+  var result: Vec2[T];
+
+  #for idx in 0 until 2 {
+  #  result.at(idx) = T(0);
+  #}
+
+  for jdx in 0 until 8 * 3 {
+    #for idx in 0 until 2 {
+    #  result.at(idx) = 
+    #}
+    if jdx == 0 {
+      for idx in 0 until 2 {
+        result.at(idx) = toSum(0).at(idx);
+      }
+    } else {
+      result = result.plus(toSum(jdx));
+    }
+  }
+};
 #def sum[T](toSum: var Vec2[T]) -> T {
 #  return toSum.x + toSum.y;
 #};
