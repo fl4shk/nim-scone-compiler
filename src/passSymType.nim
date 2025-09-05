@@ -40,12 +40,12 @@ type
     stResultExpr,
     stResultSym,
     stResultType,
-    stResultPair,
+    #stResultPair,
     stResultSeq,
 
-  SymTypeResultPair = object
-    left*: SymTypeResult
-    right*: SymTypeResult
+  #SymTypeResultPair = object
+  #  left*: SymTypeResult
+  #  right*: SymTypeResult
 
   SymTypeResult = ref SymTypeResultObj
   SymTypeResultObj = object
@@ -60,7 +60,7 @@ type
     of stResultExpr: myExpr*: AstNode
     of stResultSym: mySym*: Symbol
     of stResultType: myType*: TypeInfo
-    of stResultPair: myPair*: SymTypeResultPair
+    #of stResultPair: myPair*: SymTypeResultPair
     of stResultSeq: mySeq*: seq[SymTypeResult]
 
 template eek(): untyped =
@@ -140,15 +140,16 @@ template mkScopeEtc(
   #defer:
   defer:
     if argSym.isSome:
-      #args.self[].checkDuplSym(argSym.get())
-      let info = addr args.self[].mySymTblInfo
-      echo "now doing checkDuplSym(): " & argSym.get().name
-      echo "  " & $info[].curr.childSeq.len()
-      #echo "  " & $info[].curr[]
-      echo "  " & $info[].curr.parent.childSeq.len()
-      if info[].curr.sym.isSome:
-        echo "  sym.name: " & info[].curr.sym.get().name
-      args.self[].checkDuplSym()
+      if not args.self[].inFindDecls:
+        #args.self[].checkDuplSym(argSym.get())
+        #let info = addr args.self[].mySymTblInfo
+        #echo "now doing checkDuplSym(): " & argSym.get().name
+        #echo "  " & $info[].curr.childSeq.len()
+        #echo "  " & $info[].curr[]
+        #echo "  " & $info[].curr.parent.childSeq.len()
+        #if info[].curr.sym.isSome:
+        #  echo "  sym.name: " & info[].curr.sym.get().name
+        args.self[].checkDuplSym()
     args.self[].gotoParentSymTbl()
   #defer:
   #defer:
@@ -161,11 +162,15 @@ proc doAstSrcFile(
     kind: stResultNone
   )
   #mkSymbolTable()
+  let self = args.self
+  self[].inFindDecls = (
+    args.subPass == spstFindTopLevelDecls
+  )
+
   mkScopeEtc(none(Symbol), myAst)
   #var mySymTbl = SymbolTable(
   #  scopeAst: 
   #)
-  let self = args.self
   #self[].nextSymTblPass()
   discard myAst.mySrcFile.module.myDoIt(none(Symbol))
   for funcDecl in myAst.mySrcFile.funcDeclSeq:
@@ -285,26 +290,22 @@ proc doAstDef(
         arrDim: 0,
       ),
       kind: tiFunc,
-      #myFunc: TypeInfoFunc(
-      #)
     )
+    mkScopeEtc(some(sym), myAst)
+    #mkSymbolTable()
+    discard myAst.myDef.genericDecl.myDoIt(some(sym))
     block:
-      #mkSymbolTable()
-      mkScopeEtc(some(sym), myAst)
-      discard myAst.myDef.genericDecl.myDoIt(some(sym))
       for idx in 0 ..< myAst.myDef.argDeclSeq.len():
-        discard myAst.myDef.argDeclSeq[idx].myDoIt(some(sym))
-      #self[].checkDuplSym()
-      #echo $sym.typeInfo[]
-      #echo $sym[]
-      #echo $sym.typeInfo[]
-      #echo ""
-    #block:
-    #  self[].checkDuplSym()
-    #self[].addSym(some(sym))
-    #mkScopeEtc
-    #self[].symS2d
-    #self[].typeInfoS2d[^1].add tinfo
+        var mySym = myAst.myDef.argDeclSeq[idx].myDoIt(some(sym))
+        mkScopeEtc(some(mySym.mySym), mySym.scopeAst)
+    block:
+      var resultSym = Symbol(
+        inputFname: self[].inputFname,
+        name: "<result>",
+        kind: symVar,
+      )
+      resultSym.typeInfo = myAst.myDef.returnType.myDoIt(some(sym)).myType
+      mkScopeEtc(some(resultSym), myAst.myDef.returnType)
   of spstFindTopLevelFwdRefs:
     discard
   of spstSubstGenerics:
@@ -314,10 +315,6 @@ proc doAstDef(
   of spstTypeCheck:
     discard
   else:
-    #doAssert(
-    #  false,
-    #  "eek! " & $args.subPass
-    #)
     eek()
 proc doAstModule(
   args: var SymTypeArgs,
@@ -760,33 +757,47 @@ proc doAstVarEtcDeclMost(
     #let parentSym = getParentSym()
     let parentSym = args.parentSymSeq[][^1]
     #--------
-    let ident = (
-      myAst.myVarEtcDeclMost.ident.myDoIt(none(Symbol)).myIdent
+    let identResult = (
+      myAst.myVarEtcDeclMost.ident.myDoIt(none(Symbol))
     )
+    let ident = identResult.myIdent
     var sym = Symbol(
-      #moduleName: args.moduleIdent[],
       inputFname: self[].inputFname,
       name: ident,
       #initValAst: none(AstNode),
     )
-    var tinfo = myAst.myVarEtcDeclMost.type.myDoIt(some(sym))
+    sym.typeInfo = myAst.myVarEtcDeclMost.type.myDoIt(some(sym)).myType
     result = SymTypeResult(
-      scopeAst: myAst,
-      kind: stResultPair,
-      myPair: SymTypeResultPair(
-        left: SymTypeResult(
-          kind: stResultSym,
-          mySym: sym,
-        ),
-        right: tinfo
-      )
+      scopeAst: identResult.scopeAst,
+      kind: stResultSym,
+      mySym: sym,
     )
-    #var tinfo = TypeInfo(
-    #  main: TypeInfoMain(
-    #    moduleName: args.moduleIdent[],
-    #    name: none
+    #result = SymTypeResult(
+    #  scopeAst: (
+    #    #myAst
+    #    identResult.scopeAst
+    #  ),
+    #  kind: stResultPair,
+    #  myPair: SymTypeResultPair(
+    #    left: SymTypeResult(
+    #      scopeAst: identResult.scopeAst,
+    #      kind: stResultSym,
+    #      mySym: sym,
+    #    ),
+    #    right: tinfo
     #  )
     #)
+    #case parentSym[].kind:
+    #of symVar:
+    #  discard
+    #of symConst:
+    #  discard
+    #of symFuncDecl:
+    #  discard
+    #of symStructDecl:
+    #  discard
+    #else:
+    #  parentEek()
   of spstFindTopLevelFwdRefs:
     discard
   of spstSubstGenerics:

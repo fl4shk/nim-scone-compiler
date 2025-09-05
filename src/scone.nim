@@ -34,6 +34,7 @@ type
   Scone* = object
     mode*: Mode
     pass*: SconePass
+    inFindDecls*: bool
     #macroLim*: uint
     #parserPass*: SconeParserPass
     #ast*: seq[AstNode]
@@ -182,10 +183,12 @@ proc sameLexMainEtc*(
       left.sym.get().inputFname == right.sym.get().inputFname
     )
   doAssert(
-    left.scopeAst != nil
+    left.scopeAst != nil,
+    "eek!"
   )
   doAssert(
-    right.scopeAst != nil
+    right.scopeAst != nil,
+    "eek!"
   )
   result = (
     (
@@ -196,6 +199,13 @@ proc sameLexMainEtc*(
       left.scopeAst.lexMain.lineNum == right.scopeAst.lexMain.lineNum
     )
   )
+proc sameType*(
+  self: var Scone,
+  left: SymbolTable,
+  right: SymbolTable,
+): bool =
+  result = false
+
 proc sameFuncSignature*(
   self: var Scone,
   left: SymbolTable,
@@ -210,10 +220,16 @@ proc sameFuncSignature*(
       right=right,
     )
   )
+  let cmpType = (
+    self.sameType(
+      left=left,
+      right=right,
+    )
+  )
   # TODO: support checking the types of the arguments
   result = (
     #cmpNe and cmpSymIsSome and cmpName and cmpLexMainEtc
-    cmpLexMainEtc
+    cmpLexMainEtc and cmpType
   )
   #echo (
   #  (
@@ -299,33 +315,24 @@ proc checkDuplSym*(
   #sym: Symbol,
 ) =
   let info = addr self.mySymTblInfo
-  #let parent = info[].curr.parent
-  #let optSym = parent.childSeq[^1].sym
-  #let optSym = info[].curr.childSeq[^1].sym
-  #if optSym.isSome():
-  #  let sym = optSym.get()
   let optSym = info[].curr.sym
   if optSym.isSome:
     let sym = optSym.get()
     case sym.kind:
     of symFuncDecl:
-      #for idx in currTbl.tbl[sym.name]
-      #echo "checkDuplSym: symFuncDecl: " & sym.name & " " & $sym.kind
-      let dupFunc = self.findDuplFunc(
-        #sym
-      )
-      #echo "testificate: " & $dupFunc.isSome
+      let dupFunc = self.findDuplFunc()
       doAssert(
         not dupFunc.isSome,
         (
-          "Error: duplicate function signature of name \""
+          "Error: duplicate function signature for function of name \""
         ) & (
           sym.name & "\" "
         ) & (
-          #parent.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
+          "(current instance "
+        ) & (
           info[].curr.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
         ) & (
-          " (duplicate function is "
+          ") (previous instance "
         ) & (
           dupFunc.get().scopeAst.lexMain.locMsg(
             inputFname=dupFunc.get().sym.get().inputFname
@@ -336,30 +343,13 @@ proc checkDuplSym*(
       )
     else:
       let mySymTbl = info[].curr.parent
-      echo (
-        (
-          "  sym.name=\"" & sym.name & "\" in mySymTbl.tbl? " 
-        ) & (
-          $(sym.name in mySymTbl.tbl)
-        )
-      )
-      echo "    " & $mySymTbl.tbl
-      for idx in 0 ..< mySymTbl.childSeq.len():
-        let child = mySymTbl.childSeq[idx]
-        echo "    -> " & $child.sym.get()[]
-        echo "        " & $child.sym.get().typeInfo[]
       doAssert(
-        #sym.name notin parent.tbl,
         (
           (
             sym.name notin mySymTbl.tbl
           ) or (
             mySymTbl.tbl[sym.name].len() <= 1
           )
-          #and (
-          #  not self.sameLexMainEtc(
-          #  )
-          #)
         ),
         (
           "Error: duplicate non-function symbol of name \""
@@ -368,17 +358,12 @@ proc checkDuplSym*(
         ) & (
           "(current instance "
         ) & (
-          #(
-          #  mySymTbl.childSeq[mySymTbl.tbl[sym.name][0]].scopeAst
-          #).lexMain.locMsg(inputFname=self.inputFname)
           (
             mySymTbl.childSeq[mySymTbl.tbl[sym.name][1]].scopeAst
           ).lexMain.locMsg(inputFname=self.inputFname)
         ) & (
-          #parent.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
           ") (previous instance "
         ) & (
-          #mySymTbl.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
           (
             mySymTbl.childSeq[mySymTbl.tbl[sym.name][0]].scopeAst
           ).lexMain.locMsg(inputFname=self.inputFname)
@@ -399,7 +384,7 @@ proc addSym*(
   #currTbl.childS
   self.addChildSymTbl(scopeAst=scopeAst)
   if sym.isSome:
-    echo "addSym: sym.isSome: " & sym.get().name
+    #echo "addSym: sym.isSome: " & sym.get().name
     let parent = info[].curr.parent
     if sym.get().name notin parent.tbl:
       #var toAdd: seq[int] = @[currTbl.childSeq.len()]

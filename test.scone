@@ -1,6 +1,6 @@
 module myModule;
 
-def dot[U, T, T](a: var Vec2[T], b: var Vec2[T]) -> T {
+def dot[T](a: var Vec2[T], b: var Vec2[T]) -> T {
   const result: T = a.x * b.x + a.y * b.y;
   return result;
 };

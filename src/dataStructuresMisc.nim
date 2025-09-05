@@ -298,8 +298,6 @@ const `helperTokKindSeq`*: seq[(
   (
     "Var", some("var"), true,
     @[
-      #("ident", astValAstNode),           # `AstIdent` index
-      #("myType", astValAstNode),          # `AstType` index
       ("child", astValAstNode),           # `AstVarEtcDeclMost`
       ("optExpr", astValOptAstNode),      # optional expression index
     ]
@@ -307,8 +305,6 @@ const `helperTokKindSeq`*: seq[(
   (
     "Const", some("const"), true,
     @[
-      #("ident", astValAstNode),         # `AstIdent` index
-      #("myType", astValAstNode),        # `AstType` index
       ("child", astValAstNode),         # `AstVarEtcDeclMost`
       ("expr", astValAstNode),          # expression index
     ]
@@ -610,6 +606,12 @@ const `helperTokKindSeq`*: seq[(
       ("mySeq", astValSeqAstNode)
     ]
   ),
+  #(
+  #  "FuncArgList", none(string), true,
+  #  @[
+  #    ("mySeq", astValSeqAstNode),
+  #  ],
+  #),
   (
     "VarEtcDeclMost", none(string), true,
     @[

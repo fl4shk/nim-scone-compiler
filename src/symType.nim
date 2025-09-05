@@ -15,7 +15,6 @@ type
     arrDim*: uint64         # what are the array dimensions?
                             # (if any. 0 used to indicate that this
                             # *is not* an array)
-    #parentSymIdx*: uint64   # the parent Symbol index
     ast*: AstNode
 
   TypeInfoToResolve* = object
@@ -24,22 +23,23 @@ type
     kind*: AstBasicTypeKind
 
   TypeInfoStruct* = object
-    genericIdxSeq*: seq[uint64]     # generics
-    fieldIdxSeq*: seq[uint64]       # struct fields
+    # These are indices into the `SymbolTable`'s `childSeq`
+    genericIdxSeq*: seq[uint]     # generics
+    fieldIdxSeq*: seq[uint]       # struct fields
 
   TypeInfoFunc* = object
-    genericIdxSeq*: seq[uint64]
-    argIdxSeq*: seq[uint64]     # function arguments
-    returnType*: uint64
+    # These are indices into the `SymbolTable`'s `childSeq`
+    genericIdxSeq*: seq[uint]
+    argIdxSeq*: seq[uint]     # function arguments
+    returnType*: uint
 
   TypeInfoKind* = enum
     tiToResolve,      # this needs to be resolved in a later pass
-                        # because it's a forward reference, generic, etc.
+                      # because it's a forward reference, generic, etc.
     tiBasicType,
     tiStruct,
     tiFunc,
-    #typeVar,
-    #typeLim,
+    #tiVar,
   TypeInfo* = ref TypeInfoObj
   TypeInfoObj* = object
     main*: TypeInfoMain
@@ -48,6 +48,40 @@ type
     of tiBasicType: myBasicType*: TypeInfoBasicType
     of tiStruct: myStruct*: TypeInfoStruct
     of tiFunc: myFunc*: TypeInfoFunc
+
+  SymKind* = enum
+    #symModule,
+    symVar,
+    #symLet,
+    symConst,
+    symGeneric,
+    symStructDecl,
+    symStructField,
+    symFuncDecl,
+    symFuncArg,
+    symFuncReturnType,
+
+  Symbol* = ref SymbolObj
+  SymbolObj* = object
+    inputFname*: string
+    #inputFname*: string
+    name*: string
+    kind*: SymKind
+    initValAst*: Option[AstNode]  # index into the `seq[AstNode]`
+                                  # indicating the initial value
+    typeInfo*: TypeInfo
+    #chIdxSeq: seq[uint64]
+
+  SymbolTable* = ref SymbolTableObj
+  SymbolTableObj* = object
+    scopeAst*: AstNode            # the `AstNode` of the scope
+    sym*: Option[Symbol]          # The `Symbol` this `SymbolTable`
+                                  # represents
+    tbl*: OrderedTable[string, seq[int]]
+                                  # mapping from symbol name
+                                  # to indices into `childSeq`
+    parent*: SymbolTable          # the parent `SymbolTable` of this one
+    childSeq*: seq[SymbolTable]   # the children `SymbolTable`s of this one
 
 proc name*(
   self: var TypeInfo
@@ -75,46 +109,6 @@ proc arrDim*(
 #  result = self.main.parentSymIdx
 
 
-type
-  SymKind* = enum
-    #symModule,
-    symVar,
-    #symLet,
-    symConst,
-    symGeneric,
-    symStructDecl,
-    #symStructGeneric,
-    symStructField,
-    symFuncDecl,
-    #symFuncGeneric,
-    symFuncArg,
-    symFuncReturnType,
-
-  Symbol* = ref SymbolObj
-  SymbolObj* = object
-    inputFname*: string
-    #inputFname*: string
-    name*: string
-    kind*: SymKind
-    #typeInfoIdx*: uint32          # surely we don't need to support 
-    #                              # more than 1 << 32 types, right?
-    initValAst*: Option[AstNode]  # index into the `seq[AstNode]`
-                                  # indicating the initial value
-    typeInfo*: TypeInfo
-    #chIdxSeq: seq[uint64]
-
-  SymbolTable* = ref SymbolTableObj
-  SymbolTableObj* = object
-    scopeAst*: AstNode            # the `AstNode` of the scope
-    #symSeq*: seq[Symbol]          # the `Symbol`s themselves
-    #typeInfoSeq*: seq[TypeInfo]   # the `TypeInfo`s themselves
-    sym*: Option[Symbol]          # The `Symbol` this `SymbolTable`
-                                  # represents
-    #typeInfo*: TypeInfo           # The `TypeInfo` of `sym`
-    tbl*: Table[string, seq[int]] # mapping from symbol name
-                                  # to indices into `childSeq`
-    parent*: SymbolTable          # the parent `SymbolTable` of this one
-    childSeq*: seq[SymbolTable]   # the children `SymbolTable`s of this one
 
 #proc findSymRev*(
 #  self: SymbolTable,
@@ -140,6 +134,7 @@ proc toStr*(
   #echo "self.sym.isSome: " & $self.sym.isSome
   if self.sym.isSome: #!= nil:
     result.add i & "symbol: " & $self.sym.get()[] & "\n"
+    result.add i & "typeInfo: " & $self.sym.get().typeInfo[] & "\n"
     #result.add(
     #  i & "typeInfo: " & $self.typeInfoSeq[sym[].typeInfoIdx] & "\n"
     #)

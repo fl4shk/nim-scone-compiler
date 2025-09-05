@@ -5,10 +5,11 @@ srcFile:
 	(
 		funcDecl
 		| structDecl
+		//| enumDecl
 		//| macroDecl
 		//| variantDecl
 		//| tupleDecl
-		//| constDecl ';'
+		//| stmtConstDecl
 		//| externDecl
 		//| importDecl
 	)*
