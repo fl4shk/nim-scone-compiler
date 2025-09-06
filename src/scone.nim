@@ -20,12 +20,7 @@ type
     scoPassSymType,
     #scoPassMacroExpansion,
     scoPassEmitC,
-    #scoPassEmitC,
     limScoPass,
-
-  #SconeModule* = object
-  #  name*: string
-  #  symS2dIdx*: uint64
 
   SconeCurrSymTblInfo* = object
     curr*: SymbolTable
@@ -35,26 +30,14 @@ type
     mode*: Mode
     pass*: SconePass
     inFindDecls*: bool
-    #macroLim*: uint
-    #parserPass*: SconeParserPass
-    #ast*: seq[AstNode]
     astRoot*: AstNode
-    #ast*: AstNode
-    #currAstIdx*: uint64
 
-    #symS2d*: seq[seq[Symbol]]
-    #typeInfoS2d*: seq[seq[TypeInfo]]
-    ##symNameToIdxTblS2d*: seq[seq[OrderedTable[string, seq[uint64]]]]
-    #symIdxTblSeq*: seq[OrderedTable[string, seq[uint64]]]
-    #moduleTblSeq*: seq[OrderedTable[string, SconeModule]]
     symTblSeq*: seq[SymbolTable]
-    #prevCurrSymTbl*: SymbolTable
     mySymTblInfo*: SconeCurrSymTblInfo
 
     savedLexMainSeq*: seq[LexMain]
 
     lexMain*: LexMain
-    #parentExprS2d*: seq[ptr AstNode]
     parentTempSeq*: seq[AstNode]
     
     inputFname*: string
@@ -211,9 +194,6 @@ proc sameFuncSignature*(
   left: SymbolTable,
   right: SymbolTable,
 ): bool =
-  #let cmpLexMain = left.scopeAst.lexMain.inputFname
-  #echo "left[]:" & $left[]
-  #echo "right[]:" & $right[]
   let cmpLexMainEtc = (
     not self.sameLexMainEtc(
       left=left,
@@ -231,21 +211,6 @@ proc sameFuncSignature*(
     #cmpNe and cmpSymIsSome and cmpName and cmpLexMainEtc
     cmpLexMainEtc and cmpType
   )
-  #echo (
-  #  (
-  #    "testificate: "
-  #  ) & (
-  #    $cmpNe & " " & $cmpSymIsSome & " " & $cmpName & " " & $cmpLexMainEtc
-  #  )
-  #)
-  #if left.sym.isSome:
-  #  echo (
-  #    "left.sym.isSome:" & left.sym.get().name
-  #  )
-  #if right.sym.isSome:
-  #  echo (
-  #    "right.sym.isSome:" & right.sym.get().name
-  #  )
 
 proc findDuplFuncMain*(
   self: var Scone,
@@ -254,16 +219,12 @@ proc findDuplFuncMain*(
   #sym: Symbol,
 ): Option[SymbolTable] =
   result = none(SymbolTable)
-  #echo "here's a test: " & sym.name & " " & $sym.kind
 
   let optSym = toChk.sym
   if optSym.isSome:
     let sym = optSym.get()
     case sym.kind:
     of symFuncDecl:
-      #echo (
-      #  "sym.name, in tbl? " & (sym.name) & " " & $(sym.name in parent.tbl)
-      #)
       if sym.name in parent.tbl:
         let myIdxSeq = parent.tbl[sym.name] 
         for idx in myIdxSeq:
@@ -272,31 +233,17 @@ proc findDuplFuncMain*(
             child.sym.isSome,
             $child[]
           )
-          #if child.sym.isSome:
-          #  #if self.sameFuncSignature(sym, child.sym.get()):
-          #  #  result = some(child)
           if self.sameFuncSignature(child, toChk):
             return some(child)
-      #if not result.isSome and parent.parent != nil:
-      #  result = self.findDuplFuncMain(
-      #    #parent=parent.parent, sym=sym
-      #    #parent=parent.parent, toChk=parent
-      #    parent=parent.parent,
-      #    toChk=toChk,
-      #  )
     else:
-      #echo "what (sym.kind)? " & $sym.kind
       discard
     #--------
-    if not result.isSome and parent.parent != nil:
-      result = self.findDuplFuncMain(
-        #parent=parent.parent, sym=sym
-        #parent=parent.parent, toChk=parent
-        parent=parent.parent,
-        toChk=toChk,
-      )
-  #else:
-  #  echo "what (not optSym.isSome)? " #& $sym.kind
+  #if not result.isSome and parent.parent != nil:
+  if parent.parent != nil:
+    result = self.findDuplFuncMain(
+      parent=parent.parent,
+      toChk=toChk,
+    )
   
 proc findDuplFunc*(
   self: var Scone,
@@ -379,25 +326,14 @@ proc addSym*(
   #typeInfo: TypeInfo,
 ) =
   let info = addr self.mySymTblInfo
-  #let currTbl = info[].curr
-  #currTbl.childSeq.add SymbolTable()
-  #currTbl.childS
   self.addChildSymTbl(scopeAst=scopeAst)
   if sym.isSome:
-    #echo "addSym: sym.isSome: " & sym.get().name
     let parent = info[].curr.parent
     if sym.get().name notin parent.tbl:
-      #var toAdd: seq[int] = @[currTbl.childSeq.len()]
       parent.tbl[sym.get().name] = @[parent.childSeq.len() - 1]
     else:
       parent.tbl[sym.get().name].add parent.childSeq.len() - 1
-    #info[].curr.childSeq[^1].sym = sym
-    #info[].curr.childSeq.add sym
     info[].curr.sym = sym
-
-  #currTbl.symSeq.add sym
-  #currTbl.symSeq[^1].typeInfoIdx = uint32(currTbl.typeInfoSeq.len())
-  #currTbl.typeInfoSeq.add typeInfo
 
 proc locInLine*(
   self: var Scone
@@ -426,34 +362,16 @@ proc currTok*(
 proc stackSavedIlp*(
   self: var Scone
 ) =
-  #echo "stackSavedIlp(): " & $self.currTok
   self.savedLexMainSeq.add self.lexMain
-  #self.savedLocInLineSeq.add self.locInLine
-  #self.savedLineNumSeq.add self.lineNum
-  #self.savedInpIdxSeq.add self.inpIdx
-  #self.savedCurrTokSeq.add self.currTok
 
 proc unstackSavedIlp*(
   self: var Scone
 ) =
-  #let oldLenMinus1 = self.savedLocInLineSeq.len() - 1
-  let oldLenMinus1 = self.savedLexMainSeq.len() - 1
-  #echo "unstackSavedIlp(): before: " & $self.currTok
+  #let oldLenMinus1 = self.savedLexMainSeq.len() - 1
 
-  self.lexMain = self.savedLexMainSeq[oldLenMinus1]
-  #echo "unstackSavedIlp(): after: " & $self.currTok
-  self.savedLexMainSeq.setLen(oldLenMinus1)
-
-  #self.locInLine = self.savedLocInLineSeq[oldLenMinus1]
-  #self.lineNum = self.savedLineNumSeq[oldLenMinus1]
-  #self.inpIdx = self.savedInpIdxSeq[oldLenMinus1]
-  #self.currTok = self.savedCurrTokSeq[oldLenMinus1]
-  ##echo "unstackSavedIlp(): after: " & $self.currTok
-
-  #self.savedLocInLineSeq.setLen(oldLenMinus1)
-  #self.savedLineNumSeq.setLen(oldLenMinus1)
-  #self.savedInpIdxSeq.setLen(oldLenMinus1)
-  #self.savedCurrTokSeq.setLen(oldLenMinus1)
+  #self.lexMain = self.savedLexMainSeq[oldLenMinus1]
+  #self.savedLexMainSeq.setLen(oldLenMinus1)
+  self.lexMain = self.savedLexMainSeq.pop()
 
 proc locMsg*(
   self: var Scone

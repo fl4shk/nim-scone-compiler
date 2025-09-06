@@ -12,7 +12,6 @@ type
     #spstMkSymbolTables,
     #spstHandleImport,
     spstFindTopLevelDecls,
-    spstFindTopLevelFwdRefs,
     spstSubstGenerics,
     spstHandleFuncOverloading,
     spstTypeCheck,
@@ -24,12 +23,11 @@ type
     subPass*: SconeSubPassSymType
     ast*: AstNode
     parentAstSeq*: ptr seq[AstNode]
-    #parentSymIdxSeq*: ptr seq[uint64]
     parentSymSeq*: ptr seq[Symbol]
     #parentResultSeq*: ptr seq[SymTypeResult]
     moduleIdent*: ptr string
     #chkSeq*: ptr seq[bool]
-    chk*: bool
+    #chk*: bool
 
   SymTypeResultKind = enum
     stResultNone,
@@ -40,12 +38,7 @@ type
     stResultExpr,
     stResultSym,
     stResultType,
-    #stResultPair,
     stResultSeq,
-
-  #SymTypeResultPair = object
-  #  left*: SymTypeResult
-  #  right*: SymTypeResult
 
   SymTypeResult = ref SymTypeResultObj
   SymTypeResultObj = object
@@ -60,7 +53,6 @@ type
     of stResultExpr: myExpr*: AstNode
     of stResultSym: mySym*: Symbol
     of stResultType: myType*: TypeInfo
-    #of stResultPair: myPair*: SymTypeResultPair
     of stResultSeq: mySeq*: seq[SymTypeResult]
 
 template eek(): untyped =
@@ -79,17 +71,11 @@ template parentEek(): untyped =
 
 template myDoIt(
   childAst: AstNode,
-  someParentSym: Option[Symbol],#=none(Symbol),
-  #someChk: Option[bool],
-  #parentSymIdx: Option[uint64]=none(uint64),
+  someParentSym: Option[Symbol],
 ): untyped =
   args.parentAstSeq[].add myAst
-  #if symIdx.isSome:
-  #  args.parentSymIdxSeq[].add symIdx.get()
-  #args.parentSymIdxSeq[].add uint64(args.self[].symS2d[^1].len() - 1)
   if someParentSym.isSome:
     args.parentSymSeq[].add someParentSym.get()
-  #args.parentResultSeq[].add result
 
   var hiddenTempArgs = SymTypeArgs(
     self: args.self,
@@ -99,13 +85,10 @@ template myDoIt(
     parentSymSeq: args.parentSymSeq,
     moduleIdent: args.moduleIdent
   )
-  #self.doPassSymTypeMain(subPass=subPass, ast=childAst, parent=ast)
   var hiddenTempResult = hiddenTempArgs.doPassSymTypeMain()
   discard args.parentAstSeq[].pop()
-  #discard args.parentSymIdxSeq[].pop()
   if someParentSym.isSome:
     discard args.parentSymSeq[].pop()
-  #discard args.parentResultSeq[].pop()
   hiddenTempResult
 
 template myAst(): untyped =
@@ -128,31 +111,20 @@ proc doPassSymTypeMain(
 #  #result.isScope =
 #  discard args.self[].mkSymbolTableMain(scopeAst=myAst)
 #  defer: args.self[].gotoParentSymTbl()
+
 template mkScopeEtc(
   argSym: Option[Symbol],
   argScopeAst: AstNode,
 ): untyped =
   args.self[].addSym(
     sym=argSym,
-    #scopeAst=myAst
     scopeAst=argScopeAst,
   )
-  #defer:
   defer:
     if argSym.isSome:
       if not args.self[].inFindDecls:
-        #args.self[].checkDuplSym(argSym.get())
-        #let info = addr args.self[].mySymTblInfo
-        #echo "now doing checkDuplSym(): " & argSym.get().name
-        #echo "  " & $info[].curr.childSeq.len()
-        #echo "  " & $info[].curr[]
-        #echo "  " & $info[].curr.parent.childSeq.len()
-        #if info[].curr.sym.isSome:
-        #  echo "  sym.name: " & info[].curr.sym.get().name
         args.self[].checkDuplSym()
     args.self[].gotoParentSymTbl()
-  #defer:
-  #defer:
 
 proc doAstSrcFile(
   args: var SymTypeArgs
@@ -173,10 +145,17 @@ proc doAstSrcFile(
   #)
   #self[].nextSymTblPass()
   discard myAst.mySrcFile.module.myDoIt(none(Symbol))
+  case args.subPass:
+  of spstFindTopLevelDecls:
+    args.changed = true
+    while args.changed:
+      args.changed = false
+      for structDecl in myAst.mySrcFile.structDeclSeq:
+        discard structDecl.myDoIt(none(Symbol))
+  else:
+    discard
   for funcDecl in myAst.mySrcFile.funcDeclSeq:
     discard funcDecl.myDoIt(none(Symbol))
-  for structDecl in myAst.mySrcFile.structDeclSeq:
-    discard structDecl.myDoIt(none(Symbol))
 
 proc doAstIdent(
   args: var SymTypeArgs,
@@ -186,7 +165,6 @@ proc doAstIdent(
     kind: stResultIdent,
     myIdent: myAst.myIdent.strVal,
   )
-  #let self = args.self
 proc doAstU64Lit(
   args: var SymTypeArgs,
 ): SymTypeResult =
@@ -195,7 +173,6 @@ proc doAstU64Lit(
     kind: stResultU64,
     myU64: myAst.myU64Lit.u64Val,
   )
-  #let self = args.self
 proc doAstStrLit(
   args: var SymTypeArgs,
 ): SymTypeResult =
@@ -204,7 +181,6 @@ proc doAstStrLit(
     kind: stResultString,
     myString: myAst.myStrLit.strLitVal,
   )
-  #let self = args.self
 
 proc doAstTrue(
   args: var SymTypeArgs,
@@ -214,7 +190,6 @@ proc doAstTrue(
     kind: stResultBool,
     myBool: true,
   )
-  #let self = args.self
 proc doAstFalse(
   args: var SymTypeArgs,
 ): SymTypeResult =
@@ -223,12 +198,7 @@ proc doAstFalse(
     kind: stResultBool,
     myBool: false,
   )
-  #let self = args.self
 
-#proc doAstPtr(
-#  args: var SymTypeArgs,
-#): SymTypeResult =
-#  discard
 proc doAstDeref(
   args: var SymTypeArgs,
 ): SymTypeResult =
@@ -292,7 +262,6 @@ proc doAstDef(
       kind: tiFunc,
     )
     mkScopeEtc(some(sym), myAst)
-    #mkSymbolTable()
     discard myAst.myDef.genericDecl.myDoIt(some(sym))
     block:
       for idx in 0 ..< myAst.myDef.argDeclSeq.len():
@@ -306,8 +275,6 @@ proc doAstDef(
       )
       resultSym.typeInfo = myAst.myDef.returnType.myDoIt(some(sym)).myType
       mkScopeEtc(some(resultSym), myAst.myDef.returnType)
-  of spstFindTopLevelFwdRefs:
-    discard
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -487,19 +454,21 @@ proc doAstArray(
   case args.subPass:
   of spstFindTopLevelDecls:
     result = myAst.myArray.elemType.myDoIt(none(Symbol))
-    let tempArrDim = myAst.myArray.dim.constEval()
-    if tempArrDim < 0i64:
+    let tempArrDim = myAst.myArray.dim.constEval(self[].inputFname)
+    if tempArrDim <= 0i64:
       doAssert(
         false,
         (
-          "Error: array dimension invalid: " & $tempArrDim & " < 0: "
+          "Error: evaluated array dimension invalid "
         ) & (
-           self[].locMsg()
+          "(because " & $tempArrDim & " <= 0): ("
+        ) & (
+          myAst.lexMain.locMsg(self[].inputFname)
+        ) & (
+          ")"
         )
       )
     result.myType.arrDim() = uint64(tempArrDim)
-  of spstFindTopLevelFwdRefs:
-    discard
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -558,8 +527,6 @@ proc doAstBasicType(
       ),
       kind: tiBasicType,
     )
-  of spstFindTopLevelFwdRefs:
-    discard
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -602,8 +569,6 @@ proc doAstNamedType(
       kind: tiToResolve,
     )
     #result = myAst.myNamedType.child.myDoIt(none(Symbol))
-  of spstFindTopLevelFwdRefs:
-    discard
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -635,8 +600,6 @@ proc doAstType(
       result.myType.funcVar() = true
     elif myAst.myType.ptrDim > 0:
       result.myType.ptrDim() = myAst.myType.ptrDim
-  of spstFindTopLevelFwdRefs:
-    discard
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -725,8 +688,6 @@ proc doAstGenericList(
         parentEek()
       mkScopeEtc(some(sym), identResult.scopeAst)
       #self[].addSym(some(sym))
-    of spstFindTopLevelFwdRefs:
-      discard
     of spstSubstGenerics:
       discard
     of spstHandleFuncOverloading:
@@ -752,10 +713,7 @@ proc doAstVarEtcDeclMost(
   case args.subPass:
   of spstFindTopLevelDecls:
     #--------
-    #let genericItem = addr myAst.myGenericList.mySeq[idx]
-    #let parentSym = addr self[].symS2d[^1][args.parentSymIdxSeq[][^1]]
-    #let parentSym = getParentSym()
-    let parentSym = args.parentSymSeq[][^1]
+    #let parentSym = args.parentSymSeq[][^1]
     #--------
     let identResult = (
       myAst.myVarEtcDeclMost.ident.myDoIt(none(Symbol))
@@ -772,21 +730,6 @@ proc doAstVarEtcDeclMost(
       kind: stResultSym,
       mySym: sym,
     )
-    #result = SymTypeResult(
-    #  scopeAst: (
-    #    #myAst
-    #    identResult.scopeAst
-    #  ),
-    #  kind: stResultPair,
-    #  myPair: SymTypeResultPair(
-    #    left: SymTypeResult(
-    #      scopeAst: identResult.scopeAst,
-    #      kind: stResultSym,
-    #      mySym: sym,
-    #    ),
-    #    right: tinfo
-    #  )
-    #)
     #case parentSym[].kind:
     #of symVar:
     #  discard
@@ -798,8 +741,6 @@ proc doAstVarEtcDeclMost(
     #  discard
     #else:
     #  parentEek()
-  of spstFindTopLevelFwdRefs:
-    discard
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -912,9 +853,6 @@ proc doPassSymTypeMain(
 proc doPassSymType*(
   self: var Scone,
 ) =
-  #var subPass = spstFindTopLevelDecls
-  #for subPass in SconeSubPassSymType(0) ..< limSpSymType:
-
   var parentAstSeq: seq[AstNode]
   var parentSymSeq: seq[Symbol]
   var moduleIdent: string
@@ -932,7 +870,6 @@ proc doPassSymType*(
     self.nextSymTblPass()
     discard myArgs.doPassSymTypeMain()
     myArgs.parentAstSeq[].setLen(0)
-    #myArgs.parentSymIdxSeq[].setLen(0)
     myArgs.parentSymSeq[].setLen(0)
     #myArgs.parentResultSeq[].setLen(0)
 

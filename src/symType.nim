@@ -63,14 +63,13 @@ type
 
   Symbol* = ref SymbolObj
   SymbolObj* = object
+    #moduleName*: string
     inputFname*: string
-    #inputFname*: string
     name*: string
     kind*: SymKind
     initValAst*: Option[AstNode]  # index into the `seq[AstNode]`
                                   # indicating the initial value
     typeInfo*: TypeInfo
-    #chIdxSeq: seq[uint64]
 
   SymbolTable* = ref SymbolTableObj
   SymbolTableObj* = object
@@ -123,52 +122,24 @@ proc toStr*(
   let x = indent + 2
   let i = doIndent(indent=indent)
 
-  #result.add "self.name: " & self.name
-  #resuld.add "moduleName: " & self.symSeq[0].
-
-  #echo "testificate: " & $self.childSeq.len()
-  #echo "further test: " & $self.tbl
-
-  #var foundIdx
   var foundIdxSeq: HashSet[int]
-  #echo "self.sym.isSome: " & $self.sym.isSome
   if self.sym.isSome: #!= nil:
     result.add i & "symbol: " & $self.sym.get()[] & "\n"
     result.add i & "typeInfo: " & $self.sym.get().typeInfo[] & "\n"
-    #result.add(
-    #  i & "typeInfo: " & $self.typeInfoSeq[sym[].typeInfoIdx] & "\n"
-    #)
-    #result.add(
-    #  i & "typeInfo: " & $self.typeInfo[] & "\n"
-    #)
     result.add "\n"
     for name, idxSeq in self.tbl:
       foundIdxSeq = foundIdxSeq.union(toHashSet(idxSeq))
       for idx in idxSeq:
         let child = self.childSeq[idx]
         result.add child.toStr(x)
-        #let sym = child.sym
-        #let typeInfo = child.typeInfo
-        #result.add i & "symbol: " & $sym[] & "\n"
-        ##result.add(
-        ##  i & "typeInfo: " & $self.typeInfoSeq[sym[].typeInfoIdx] & "\n"
-        ##)
-        #result.add(
-        #  i & "typeInfo: " & $typeInfo & "\n"
-        #)
-        #result.add "\n"
   result.add "----\n"
   for idx in 0 ..< self.childSeq.len():
     if idx in foundIdxSeq:
       #echo "idx found: " & $idx
       continue
-    else:
-      #echo "idx not found: " & $idx
-      discard
+    #else:
+    #  #echo "idx not found: " & $idx
+    #  discard
     let child = self.childSeq[idx]
     result.add child.toStr(x)
   result.add "--------\n\n"
-  #result.add i & "#---- ----\n"
-  #for childSymTbl in self.childSeq:
-  #  result.add childSymTbl.toStr(x)
-  #result.add "\n\n"
