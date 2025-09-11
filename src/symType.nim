@@ -24,14 +24,14 @@ type
 
   TypeInfoStruct* = object
     # These are indices into the `SymbolTable`'s `childSeq`
-    genericIdxSeq*: seq[uint]     # generics
-    fieldIdxSeq*: seq[uint]       # struct fields
+    genericIdxSeq*: seq[int]     # generics
+    fieldIdxSeq*: seq[int]       # struct fields
 
   TypeInfoFunc* = object
     # These are indices into the `SymbolTable`'s `childSeq`
-    genericIdxSeq*: seq[uint]
-    argIdxSeq*: seq[uint]     # function arguments
-    returnType*: uint
+    genericIdxSeq*: seq[int]
+    argIdxSeq*: seq[int]     # function arguments
+    returnTypeIdx*: int
 
   TypeInfoKind* = enum
     tiToResolve,      # this needs to be resolved in a later pass
@@ -54,12 +54,23 @@ type
     symVar,
     #symLet,
     symConst,
-    symGeneric,
+    symGenericDecl,
+    symGenericImpl,
     symStructDecl,
-    symStructField,
+    symStructDeclField,
+    symStructImpl,
+    symStructImplField,
+    #symVariantDecl,
+    #symVariantField,
     symFuncDecl,
-    symFuncArg,
-    symFuncReturnType,
+    # #symFuncDeclArg,
+    # #symFuncDeclReturnType,
+
+    symFuncCall,
+    symFuncCallArg,
+    # #symMacroDecl,
+    # #symMacroArg
+    # #symMacroReturnType,
 
   Symbol* = ref SymbolObj
   SymbolObj* = object
@@ -67,13 +78,14 @@ type
     inputFname*: string
     name*: string
     kind*: SymKind
-    initValAst*: Option[AstNode]  # index into the `seq[AstNode]`
-                                  # indicating the initial value
+    initValAst*: Option[AstNode]  # the `AstNode` indicating the initial
+                                  # value/`const` value
     typeInfo*: TypeInfo
+    #parent*: SymbolTable
 
   SymbolTable* = ref SymbolTableObj
   SymbolTableObj* = object
-    scopeAst*: AstNode            # the `AstNode` of the scope
+    ast*: AstNode                 # the `AstNode` of the scope
     sym*: Option[Symbol]          # The `Symbol` this `SymbolTable`
                                   # represents
     tbl*: OrderedTable[string, seq[int]]
@@ -81,6 +93,17 @@ type
                                   # to indices into `childSeq`
     parent*: SymbolTable          # the parent `SymbolTable` of this one
     childSeq*: seq[SymbolTable]   # the children `SymbolTable`s of this one
+
+    #decl*: Option[SymbolTable]    # The `SymbolTable` of the declaration
+    #                              # that is implemented by this
+    #                              # `SymbolTable`
+    #                              # (for example, the specific function
+    #                              # that is overloaded by this instance)
+
+    # These `OrderedTable`s map names to 
+    #structNameTbl*: OrderedTable[string, int]
+    #funcNameTbl*: OrderedTable[string, seq[int]]
+    #varNameTbl*: OrderedTable[string, seq[int]]
 
 proc name*(
   self: var TypeInfo
@@ -108,6 +131,11 @@ proc arrDim*(
 #  result = self.main.parentSymIdx
 
 
+#proc findSymSeq*(
+#  self: SymbolTable,
+#  name: string,
+#): seq[Symbol] =
+#  #result = none(seq[Symbol])
 
 #proc findSymRev*(
 #  self: SymbolTable,

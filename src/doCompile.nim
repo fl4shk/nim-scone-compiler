@@ -40,7 +40,7 @@ proc doCompileModeOneFile(
     case self.pass:
     of scoPassParse:
       self.doPassParse()
-      echo $self.astRoot
+      #echo $self.astRoot
     of scoPassSymType:
       self.doPassSymType()
       #echo $self.symS2d

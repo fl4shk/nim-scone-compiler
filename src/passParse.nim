@@ -16,8 +16,8 @@ import lex
 #template currParent(): untyped =
 #  currAst.parent
 
-template myAst(): untyped =
-  self.ast
+#template myAst(): untyped =
+#  self.ast
 
 #template stack(
 #  arg: untyped

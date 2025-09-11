@@ -3,302 +3,10 @@ import std/macros
 import std/strutils
 
 import dataStructuresMisc
+#import symType
 
+import reduceEtc
 
-#type
-#  AstLitValKind* = enum
-#    astLvKindI64,
-#    astLvKindU64,
-#    #astLvKindF32,
-#    #astLvKindF64,
-#    astLvKindStr,
-#
-#  AstLitVal* = object
-#    case kind: AstLitValKind
-#    of astLvKindI64:
-#      i64Val: int64
-#    of astLvKindU64:
-#      u64Val: uint64
-#    #of astLvKindF32:
-#    #  f32Val: string
-#    #of astLvKindF64:
-#    #  f64Val: string
-#    of astLvKindStr:
-#      strVal: string
-
-#type
-#  AstIdent* = object
-#    
-
-
-
-#type
-#  AstSrcFile* = object
-#    module*: AstNode
-#    funcDeclSeq*: seq[AstNode]
-#    structDeclSeq*: seq[AstNode]
-#
-#  AstIdent* = object
-#    strVal*: string
-#  AstU64Lit* = object
-#    u64Val*: uint64
-#  AstStrLit* = object
-#    strLitVal*: string
-##--------
-#  AstTrue* = object
-#  AstFalse* = object
-##--------
-#  #AstLBracket* = object
-#  #AstRBracket* = object
-##--------
-#  AstPtr* = object
-#  AstAddr* = object
-#  AstDeref* = object
-#  AstDot* = object
-##--------
-#  AstVar* = object
-#    ident*: AstNode                # `AstIdent`
-#    myType*: AstNode               # `AstType`
-#    optExpr*: Option[AstNode]      # optional expression
-#  AstConst* = object
-#    ident*: AstNode                # `AstIdent`
-#    myType*: AstNode               # `AstType`
-#    expr*: AstNode                 # expression
-#  AstDef* = object
-#    ident*: AstNode                # `AstIdent`
-#    genericDeclSeq*: seq[AstNode]  # seq of `AstIdent`
-#    argDeclSeq*: seq[AstNode]      # seq of `AstVar`
-#    stmtSeq*: seq[AstNode]
-#
-##("Macro", some("macro")),
-#    # Maybe save `macro` for the bootstrapped compiler?
-#    # I'm not sure I outright need macros for this version of the
-#    # compiler
-#  AstModule* = object
-#    ident*: AstNode                # `AstIdent`
-#
-#  AstStruct* = object
-#    genericDeclSeq*: seq[AstNode]  # seq of `AstIdent`
-#    fieldSeq*: seq[AstNode]        # `seq` of `AstVar`
-#
-#  AstEnum* = object
-#    # TODO: come back to this later
-#  AstExtern* = object
-#    # TODO: come back to this later
-#  AstCextern* = object
-#    # TODO: come back to this later
-#  AstImport* = object
-#    # TODO: come back to this later
-#  AstCImport* = object
-#    # TODO: come back to this later
-##--------
-#  AstScope* = object
-#    # TODO: come back to this later
-#  AstIf* = object
-#    expr*: AstNode                 # (condition) expression
-#    stmtSeq*: seq[AstNode]         # the list of statements within the scope
-#    optChild*: Option[AstNode]     # optional `AstElif` or `AstElse`
-#  AstElif* = object
-#    expr*: AstNode                 # (condition) expression
-#    stmtSeq*: seq[AstNode]         # the list of statements within the scope
-#    optChild*: Option[AstNode]     # optional `AstElif` or `AstElse`
-#  AstElse* = object
-#    stmtSeq*: seq[AstNode]         # the list of statements within the scope
-#  AstSwitch* = object
-#    expr*: AstNode                 # the condition
-#    childSeq*: seq[AstNode]        # the list of `case` or `default`
-#  AstCase* = object
-#    expr*: AstNode                 # the condition
-#    stmtSeq*: seq[AstNode]         # the list of statements within the scope
-#  AstDefault* = object
-#    stmtSeq*: seq[AstNode]         # the list of statements within the scope
-#  AstFor* = object
-#    ident*: AstNode                # name of the indexing variable
-#    exprPre*: AstNode              # 
-#    exprPost*: AstNode             #
-#    isUntil*: bool
-#    stmtSeq*: seq[AstNode]
-#  AstWhile* = object
-#    expr*: AstNode                 # (conditional) expression
-#    stmtSeq*: seq[AstNode]         # the list of statements within the scope
-#  AstContinue* = object
-#  AstBreak* = object
-#  #AstResult* = object
-#  AstReturn* = object
-#    optExpr*: Option[AstNode]
-##--------
-#  AstArray* = object
-#    dim*: AstNode
-#    elemType*: AstNode
-#
-#  AstVoid* = object
-#  AstBool* = object
-#  AstU8* = object
-#  AstI8* = object
-#  AstU16* = object
-#  AstI16* = object
-#  AstU32* = object
-#  AstI32* = object
-#  AstU64* = object
-#  AstI64* = object
-#  AstF32* = object
-#  AstF64* = object
-#  AstChar* = object
-#  AstString* = object
-##--------
-#
-#  #AstUnopKind* = enum
-#  #  unopPlus,
-#  #  unopMinus,
-#  #  unopLogicNot,
-#  #  unopBitInvert,
-#
-#  AstUnop* = object
-#    #tok*: TokKind
-#    kind*: AstUnopKind
-#    child*: AstNode
-#
-#
-#  #AstBinopKind* = enum
-#  #  binopCmpEq,
-#  #  binopCmpNe,
-#  #  binopCmpLt,
-#  #  binopCmpGt,
-#  #  binopCmpLe,
-#  #  binopCmpGe,
-#  #  #--------
-#  #  binopPlus,
-#  #  binopMinus,
-#  #  binopMul,
-#  #  binopDiv,
-#  #  binopMod,
-#  #  binopBitAnd,
-#  #  binopBitOr,
-#  #  binopBitXor,
-#  #  binopLogicAnd,
-#  #  binopLogicOr,
-#  #  binopBitShl,
-#  #  binopBitShr,
-#
-#  AstBinop* = object
-#    #tok*: TokKind
-#    kind*: AstBinopKind
-#    left*: AstNode
-#    right*: AstNode
-#
-##--------
-#  #AstAssignEtcKind* = enum
-#  #  assignEtcRegular,
-#  #  assignEtcPlus,
-#  #  assignEtcMinus,
-#  #  assignEtcMul,
-#  #  assignEtcDiv,
-#  #  assignEtcMod,
-#  #  assignEtcBitAnd,
-#  #  assignEtcBitOr,
-#  #  assignEtcBitXor,
-#  #  assignEtcBitShl,
-#  #  assignEtcBitShr,
-#  AstAssignEtc* = object
-#    kind*: AstAssignEtcKind
-#    left*: AstNode
-#    right*: AstNode
-#
-#  AstNamedType* = object
-#    ident*: AstNode
-#    genericImplSeq*: seq[AstNode]
-#
-#  AstType* = object
-#    #ident*: AstNode
-#    #genericImplSeq*: seq[AstNode]
-#    childSeq*: seq[AstNode]
-#
-#  AstFuncCall* = object
-#    ident*: AstNode
-#    genericImplSeq*: seq[AstNode]
-#    argImplSeq*: seq[AstNode]
-#
-#  AstNode* = ref AstNodeObj
-#  AstNodeObj* = object
-#    #tok*: TokKind
-#    #kind*: AstKind
-#    #lineNum*: uint64
-#    lexMain*: LexMain
-#    #u64Val*: uint64
-#    #strVal*: string
-#    #litVal*: Option[AstLitVal]
-#    #symIdxSeq*: seq[uint64]
-#    #chIdxSeq*: seq[uint64]    # indices into `Scone.ast` children
-#    parent*: AstNode
-#
-#    case kind*: AstKind:
-#    of astSrcFile: srcFileVal*: AstSrcFile
-#    of astIdent: identVal*: AstIdent    # identifiers
-#    of astU64Lit: u64LitVal*: AstU64Lit # 0-9, hex numbers, binary numbers, etc.
-#    of astStrLit: strLitVal*: AstStrLit # string literals
-#    #--------
-#    of astTrue: trueVal*: AstTrue
-#    of astFalse: falseVal*: AstFalse
-#    #--------
-#    #of astLBracket: lBracketVal*: AstLBracket
-#    #of astRBracket: rBracketVal*: AstRBracket
-#    #--------
-#    of astPtr: ptrVal*: AstPtr
-#    of astAddr: addrVal*: AstAddr
-#    of astDeref: derefVal*: AstDeref # pointer dereference
-#    of astDot: dotVal*: AstDot
-#    #--------
-#    of astVar: varVal*: AstVar
-#    of astConst: constVal*: AstConst
-#    of astDef: defVal*: AstDef
-#    #("Macro", some("macro")),
-#        # Maybe save `macro` for the bootstrapped compiler?
-#        # I'm not sure I outright need macros for this version of the
-#        # compiler
-#    of astModule: moduleVal*: AstModule
-#    of astStruct: structVal*: AstStruct
-#    of astEnum: enumVal*: AstEnum
-#    of astExtern: externVal*: AstExtern
-#    of astCextern: cexternVal*: AstCextern
-#    of astImport: importVal*: AstImport
-#    of astCImport: cImportVal*: AstCImport
-#    #--------
-#    of astScope: scopeVal*: AstScope
-#    of astIf: ifVal*: AstIf
-#    of astElif: elifVal*: AstElif
-#    of astElse: elseVal*: AstElse
-#    of astSwitch: switchVal*: AstSwitch
-#    of astCase: caseVal*: AstCase
-#    of astDefault: defaultVal*: AstDefault
-#    of astFor: forVal*: AstFor
-#    of astWhile: whileVal*: AstWhile
-#    of astContinue: continueVal*: AstContinue
-#    of astBreak: breakVal*: AstBreak
-#    #of astResult: resultVal*: AstResult
-#    of astReturn: returnVal*: AstReturn
-#    #--------
-#    of astArray: arrayVal*: AstArray
-#    of astVoid: voidVal*: AstVoid
-#    of astBool: boolVal*: AstBool
-#    of astU8: u8Val*: AstU8
-#    of astI8: i8Val*: AstI8
-#    of astU16: u16Val*: AstU16
-#    of astI16: i16Val*: AstI16
-#    of astU32: u32Val*: AstU32
-#    of astI32: i32Val*: AstI32
-#    of astU64: u64Val*: AstU64
-#    of astI64: i64Val*: AstI64
-#    of astF32: f32Val*: AstF32
-#    of astF64: f64Val*: AstF64
-#    of astChar: charVal*: AstChar
-#    of astString: stringVal*: AstString
-#    #--------
-#    of astBinop: binopVal*: AstBinop
-#    of astUnop: unopVal*: AstUnop
-#    of astAssignEtc: assignEtcVal*: AstAssignEtc
-#    of astNamedType: namedTypeVal*: AstNamedType
-#    of astType: typeVal*: AstType
-#    of astFuncCall: funcCallVal*: AstFuncCall
 
 proc tokToUnop*(
   tok: TokKind,
@@ -478,108 +186,6 @@ proc tokToAssignEtc*(
   else:
     return none(AstAssignEtcKind)
 
-#  TypeSection
-#    TypeDef
-#      Postfix
-#        Ident "*"
-#        Ident "AstSrcFile"
-#      Empty
-#      ObjectTy
-#        Empty
-#        Empty
-#        RecList
-#          IdentDefs
-#            Postfix
-#              Ident "*"
-#              Ident "module"
-#            Ident "AstNode"
-#            Empty
-#          IdentDefs
-#            Postfix
-#              Ident "*"
-#              Ident "funcDeclSeq"
-#            BracketExpr
-#              Ident "seq"
-#              Ident "AstNode"
-#            Empty
-#          IdentDefs
-#            Postfix
-#              Ident "*"
-#              Ident "structDeclSeq"
-#            BracketExpr
-#              Ident "seq"
-#              Ident "AstNode"
-#            Empty
-#    TypeDef
-#      Postfix
-#        Ident "*"
-#        Ident "AstIdent"
-#      Empty
-#      ObjectTy
-#        Empty
-#        Empty
-#        RecList
-#          IdentDefs
-#            Postfix
-#              Ident "*"
-#              Ident "strVal"
-#            Ident "string"
-#            Empty
-
-
-
-#    TypeDef
-#      Postfix
-#        Ident "*"
-#        Ident "AstNode"
-#      Empty
-#      RefTy
-#        Ident "AstNodeObj"
-#    TypeDef
-#      Postfix
-#        Ident "*"
-#        Ident "AstNodeObj"
-#      Empty
-#      ObjectTy
-#        Empty
-#        Empty
-#        RecList
-#          IdentDefs
-#            Postfix
-#              Ident "*"
-#              Ident "lexMain"
-#            Ident "LexMain"
-#            Empty
-#          IdentDefs
-#            Postfix
-#              Ident "*"
-#              Ident "parent"
-#            Ident "AstNode"
-#            Empty
-#          RecCase
-#            IdentDefs
-#              Postfix
-#                Ident "*"
-#                Ident "kind"
-#              Ident "AstKind"
-#              Empty
-#            OfBranch
-#              Ident "astSrcFile"
-#              IdentDefs
-#                Postfix
-#                  Ident "*"
-#                  Ident "srcFileVal"
-#                Ident "AstSrcFile"
-#                Empty
-#            OfBranch
-#              Ident "astIdent"
-#              IdentDefs
-#                Postfix
-#                  Ident "*"
-#                  Ident "identVal"
-#                Ident "AstIdent"
-#                Empty
-#            OfBranch
 proc mkPubIdent(
   name: string
 ): NimNode =
@@ -675,7 +281,7 @@ macro mkAstHier(): untyped =
 
     result.add typeDef
 
-  if true:
+  block:
     var typeDef = newNimNode(nnkTypeDef)
     typeDef.add mkPubIdent("AstNode")
     typeDef.add newNimNode(nnkEmpty)
@@ -685,7 +291,7 @@ macro mkAstHier(): untyped =
     result.add typeDef
     #echo result.repr()
 
-  if true:
+  block:
     var typeDef = newNimNode(nnkTypeDef)
     typeDef.add mkPubIdent("AstNodeObj")
     typeDef.add newNimNode(nnkEmpty)
@@ -694,7 +300,7 @@ macro mkAstHier(): untyped =
     objTy.add(
       newNimNode(nnkEmpty), newNimNode(nnkEmpty), newNimNode(nnkRecList)
     )
-    if true:
+    block:
       var identDefs = newNimNode(nnkIdentDefs)
       identDefs.add(
         mkPubIdent("lexMain"),
@@ -702,7 +308,7 @@ macro mkAstHier(): untyped =
         newNimNode(nnkEmpty),
       )
       recList.add identDefs
-    #if true:
+    #block:
     #  var identDefs = newNimNode(nnkIdentDefs)
     #  identDefs.add(
     #    mkPubIdent("parentExpr"),
@@ -710,7 +316,7 @@ macro mkAstHier(): untyped =
     #    newNimNode(nnkEmpty),
     #  )
     #  recList.add identDefs
-    if true:
+    block:
       var recCase = newNimNode(nnkRecCase)
       var identDefs = newNimNode(nnkIdentDefs)
       identDefs.add(
@@ -1034,29 +640,12 @@ proc toStr*(
 
         stmtList.add toAdd
       #if h[3].len() == 0:
-      if true:
+      block:
         var toAdd: NimNode = nil
-        if (
-          (
-            h[3].len() == 0
-          ) or (
-            (
-              h[3].len() == 1
-            ) 
-            #and (
-            #  #not 
-            #  (
-            #    (
-            #      h[3][0][1] == astValAstNode
-            #    ) or (
-            #      h[3][0][1] == astValSeqAstNode
-            #    ) or (
-            #      h[3][0][1] == astValOptAstNode
-            #    )
-            #  )
-            #)
-          )
-        ):
+        if orR(@[
+          h[3].len() == 0,
+          h[3].len() == 1,
+        ]):
           toAdd = quote do:
             result.add(")")
         else:

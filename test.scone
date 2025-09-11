@@ -4,6 +4,9 @@ def dot[T](a: var Vec2[T], b: var Vec2[T]) -> T {
   const result: T = a.x * b.x + a.y * b.y;
   return result;
 };
+def plus[T](a: var T, b: var T) -> T {
+  return a + b;
+};
 def plus[T](a: var Vec2[T], b: var Vec2[T]) -> Vec2[T] {
   var result: Vec2[T];
   for idx in 0 until 2 {
@@ -13,6 +16,17 @@ def plus[T](a: var Vec2[T], b: var Vec2[T]) -> Vec2[T] {
     #}
     result.at(idx) = a.at(idx) + b.at(idx);
   }
+  return result;
+};
+def times[T](a: T, b: T) -> T {
+  return a * b;
+};
+def times[T](a: Vec2[T], scale: T) -> Vec2[T] {
+  var result: Vec2[T];
+  for idx in 0 until 2 {
+    result.at(idx) = a.at(idx).times(scale);
+  }
+  return result;
 };
 
 def at[T](self: var Vec2[T], idx: u32) -> var T {
@@ -41,30 +55,28 @@ def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
       result = result.plus(toSum(jdx));
     }
   }
+  return result;
 };
-def times[T](a: T, b: T) -> T {
-  return a * b;
-};
-def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
-  var result: Vec2[T];
-
-  #for idx in 0 until 2 {
-  #  result.at(idx) = T(0);
-  #}
-
-  for jdx in 0 until 8 * 3 {
-    #for idx in 0 until 2 {
-    #  result.at(idx) = 
-    #}
-    if jdx == 0 {
-      for idx in 0 until 2 {
-        result.at(idx) = toSum(0).at(idx);
-      }
-    } else {
-      result = result.plus(toSum(jdx));
-    }
-  }
-};
+#def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
+#  var result: Vec2[T];
+#
+#  #for idx in 0 until 2 {
+#  #  result.at(idx) = T(0);
+#  #}
+#
+#  for jdx in 0 until 8 * 3 {
+#    #for idx in 0 until 2 {
+#    #  result.at(idx) = 
+#    #}
+#    if jdx == 0 {
+#      for idx in 0 until 2 {
+#        result.at(idx) = toSum(0).at(idx);
+#      }
+#    } else {
+#      result = result.plus(toSum(jdx));
+#    }
+#  }
+#};
 #def sum[T](toSum: var Vec2[T]) -> T {
 #  return toSum.x + toSum.y;
 #};
@@ -74,14 +86,15 @@ struct Vec2[T] {
   y: T;
 };
 
-#struct Vec2Ptr[T] {
-#  x: ptr T;
-#  y: ptr T;
-#};
-#struct Vec2Arr3[T] {
-#  x: array[3; Vec2[T]];
-#  y: array[3; Vec2[T]];
-#};
+struct Vec2Ptr[T] {
+  x: ptr T;
+  y: ptr T;
+};
+struct Vec3Arr3Vec2[T] {
+  x: array[3; Vec2[T]];
+  y: array[3; Vec2[T]];
+  z: array[3; Vec2[T]];
+};
 
 #def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {
 #  for idx in 0 to 1 {

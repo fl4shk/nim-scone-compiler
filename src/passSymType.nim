@@ -6,21 +6,14 @@ import scone
 import dataStructuresMisc
 import ast
 import symType
+import reduceEtc
 
 type
-  SconeSubPassSymType = enum
-    #spstMkSymbolTables,
-    #spstHandleImport,
-    spstFindTopLevelDecls,
-    spstSubstGenerics,
-    spstHandleFuncOverloading,
-    spstTypeCheck,
-    limSpSymType,
-
   SymTypeArgs = object
     self*: ptr Scone
-    changed: bool
-    subPass*: SconeSubPassSymType
+    changed*: bool
+    topLevelChanged*: bool
+    #subPass*: SconeSubPassSymType
     ast*: AstNode
     parentAstSeq*: ptr seq[AstNode]
     parentSymSeq*: ptr seq[Symbol]
@@ -43,7 +36,7 @@ type
   SymTypeResult = ref SymTypeResultObj
   SymTypeResultObj = object
     #isScope*: bool
-    scopeAst*: AstNode
+    ast*: AstNode
     case kind*: SymTypeResultKind
     of stResultNone: myResultNone*: uint8
     of stResultIdent: myIdent*: string
@@ -55,6 +48,11 @@ type
     of stResultType: myType*: TypeInfo
     of stResultSeq: mySeq*: seq[SymTypeResult]
 
+template subPass(
+  args: untyped
+): untyped =
+  args.self[].symTypeSubPass
+
 template eek(): untyped =
   doAssert(
     false,
@@ -63,7 +61,14 @@ template eek(): untyped =
 template parentEek(): untyped =
   doAssert(
     false,
-    "eek! " & $parentSym[].kind & " " & $args.parentAstSeq[][^1]
+    sconcat(@[
+      "eek! ",
+      $parentSym[].kind,
+      " ",
+      $parentSym[].typeInfo[],
+      ";  ",
+      $args.parentAstSeq[][^1]
+    ])
   )
 #template getParentSym(): untyped =
 #  addr self[].symS2d[^1][args.parentSymIdxSeq[][^1]]
@@ -79,7 +84,7 @@ template myDoIt(
 
   var hiddenTempArgs = SymTypeArgs(
     self: args.self,
-    subPass: args.subPass,
+    #subPass: args.subPass,
     ast: childAst,
     parentAstSeq: args.parentAstSeq,
     parentSymSeq: args.parentSymSeq,
@@ -104,64 +109,190 @@ proc doPassSymTypeMain(
 
 #template mkSymbolTable(): untyped =
 #  #var hiddenSymTbl = SymbolTable(
-#  #  scopeAst: myAst,
+#  #  ast: myAst,
 #  #)
 #  #self[].addChildSymTbl(hiddenSymTbl)
 #  #hiddenSymTbl
 #  #result.isScope =
-#  discard args.self[].mkSymbolTableMain(scopeAst=myAst)
+#  discard args.self[].mkSymbolTableMain(ast=myAst)
 #  defer: args.self[].gotoParentSymTbl()
 
-template mkScopeEtc(
+template mkScopePre(
   argSym: Option[Symbol],
-  argScopeAst: AstNode,
-): untyped =
+  argAst: AstNode,
+): SymbolTable =
+  #let curr = args.self[].mySymTblInfo.curr
   args.self[].addSym(
     sym=argSym,
-    scopeAst=argScopeAst,
+    ast=argAst,
   )
-  defer:
-    if argSym.isSome:
-      if not args.self[].inFindDecls:
-        args.self[].checkDuplSym()
-    args.self[].gotoParentSymTbl()
+  #let curr = args.self[].mySymTblInfo.curr
+  let curr = args.self[].mySymTblInfo.curr#.parent
+  curr
+
+template mkScopePost(
+  argSym: Option[Symbol],
+  argAst: AstNode,
+): untyped =
+  #defer:
+  let curr = args.self[].mySymTblInfo.curr#.parent
+  if argSym.isSome:
+    if not args.self[].inFindAllDecls:
+      args.self[].checkDuplSym()
+    #if isGenericList:
+    #  #case argSym.get().kind:
+    #  #of symStructDecl:
+    #  #  argSym.get().typeInfo
+    #  #of symFuncDecl:
+    #  #  discard
+    #  #else:
+    #  #  discard
+    #if args.subPass == spstFindTopLevelDecls:
+    case args.subPass:
+    of spstFindTopLevelDecls:
+      echo "debug: "
+      echo sconcat(@[
+        "curr.parent: ", $curr.parent[]
+      ])
+      echo sconcat(@[
+        "curr: ", $curr[], " ", $curr.childSeq.len()
+      ])
+      echo sconcat(@[
+        "argSym.get(): ", $argSym.get()[]
+      ])
+      echo sconcat(@[
+        "argSym.get().typeInfo: ", $argSym.get().typeInfo[]
+      ])
+      echo "----"
+      #if argSym.isSome:#curr.sym.isSome:
+      if curr.parent.sym.isSome:
+        #if child.sym.get().kind == symGeneric:
+        #case argSym.get().kind:
+        case curr.parent.sym.get().kind:
+        #of symGenericImpl:
+        #  #let tinfo = argSym.get().typeInfo
+        #  discard
+        of symGenericDecl:
+          let tinfo = curr.parent.sym.get().typeInfo
+          #let tinfo = argSym.get().typeInfo
+
+          case tinfo.kind:
+          of tiStruct:
+            tinfo.myStruct.genericIdxSeq.add curr.childSeq.len() #- 1
+            echo sconcat(@[
+              "sym.name: ", argSym.get().name
+            ])
+            echo sconcat(@[
+              "tinfo.kind: ", $tinfo.kind
+            ])
+          of tiFunc:
+            tinfo.myFunc.genericIdxSeq.add curr.childSeq.len() #- 1
+            echo sconcat(@[
+              "sym.name: ", argSym.get().name
+            ])
+            echo sconcat(@[
+              "tinfo.kind: ", $tinfo.kind
+            ])
+          else:
+            #eek()
+            echo sconcat(@[
+              "sym.name: ", argSym.get().name
+            ])
+            echo sconcat(@[
+              "other tinfo.kind: ", $tinfo.kind
+            ])
+        else:
+          discard
+      #else:
+      #  echo sconcat(@[
+      #    "not curr.parent.sym.isSome: ",
+      #    $curr.sym.isSome
+      #  ])
+      #  if curr.sym.isSome:
+      #    echo $curr.sym.get()[]
+    else:
+      discard
+  args.self[].gotoParentSymTbl()
+  #curr
+
+#template handleGenerics(
+#  argSym: Symbol
+#): untyped =
+  
 
 proc doAstSrcFile(
   args: var SymTypeArgs
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #mkSymbolTable()
   let self = args.self
-  self[].inFindDecls = (
+  self[].inFindAllDecls = (
     args.subPass == spstFindTopLevelDecls
   )
 
-  mkScopeEtc(none(Symbol), myAst)
+  echo sconcat(@[
+    "doAstSrcFile: pre mkScopeEtc"
+  ])
+  discard mkScopePre(none(Symbol), myAst)
+  defer:
+    mkScopePost(none(Symbol), myAst)
+  echo sconcat(@[
+    "doAstSrcFile: post mkScopeEtc"
+  ])
   #var mySymTbl = SymbolTable(
-  #  scopeAst: 
+  #  ast: 
   #)
   #self[].nextSymTblPass()
   discard myAst.mySrcFile.module.myDoIt(none(Symbol))
-  case args.subPass:
-  of spstFindTopLevelDecls:
-    args.changed = true
-    while args.changed:
-      args.changed = false
-      for structDecl in myAst.mySrcFile.structDeclSeq:
-        discard structDecl.myDoIt(none(Symbol))
-  else:
-    discard
-  for funcDecl in myAst.mySrcFile.funcDeclSeq:
-    discard funcDecl.myDoIt(none(Symbol))
+
+  #--------
+  args.topLevelChanged = true
+  while args.topLevelChanged:
+    args.topLevelChanged = false
+    for structDecl in myAst.mySrcFile.structDeclSeq:
+      discard structDecl.myDoIt(none(Symbol))
+  #--------
+  args.topLevelChanged = true
+  while args.topLevelChanged:
+    args.topLevelChanged = false
+    for funcDecl in myAst.mySrcFile.funcDeclSeq:
+      discard funcDecl.myDoIt(none(Symbol))
+  #--------
+  #case args.subPass:
+  #of spstFindTopLevelDecls:
+  #  #--------
+  #  args.topLevelChanged = true
+  #  while args.topLevelChanged:
+  #    args.topLevelChanged = false
+  #    for structDecl in myAst.mySrcFile.structDeclSeq:
+  #      discard structDecl.myDoIt(none(Symbol))
+  #  #--------
+  #  args.topLevelChanged = true
+  #  while args.topLevelChanged:
+  #    args.topLevelChanged = false
+  #    for funcDecl in myAst.mySrcFile.funcDeclSeq:
+  #      discard funcDecl.myDoIt(none(Symbol))
+  #  #--------
+  #else:
+  #  #--------
+  #  if args.subPass == spstSubstGenerics:
+  #    args.changed = false
+  #  #--------
+  #  for structDecl in myAst.mySrcFile.structDeclSeq:
+  #    discard structDecl.myDoIt(none(Symbol))
+  #  #--------
+  #  for funcDecl in myAst.mySrcFile.funcDeclSeq:
+  #    discard funcDecl.myDoIt(none(Symbol))
+  #  #--------
 
 proc doAstIdent(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultIdent,
     myIdent: myAst.myIdent.strVal,
   )
@@ -169,7 +300,7 @@ proc doAstU64Lit(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultU64,
     myU64: myAst.myU64Lit.u64Val,
   )
@@ -177,7 +308,7 @@ proc doAstStrLit(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultString,
     myString: myAst.myStrLit.strLitVal,
   )
@@ -186,7 +317,7 @@ proc doAstTrue(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultBool,
     myBool: true,
   )
@@ -194,7 +325,7 @@ proc doAstFalse(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultBool,
     myBool: false,
   )
@@ -203,28 +334,28 @@ proc doAstDeref(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
 proc doAstDot(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
 proc doAstVar(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
 proc doAstConst(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
 proc doAstDef(
@@ -261,12 +392,18 @@ proc doAstDef(
       ),
       kind: tiFunc,
     )
-    mkScopeEtc(some(sym), myAst)
-    discard myAst.myDef.genericDecl.myDoIt(some(sym))
+    let curr = mkScopePre(some(sym), myAst)
+    defer:
+      mkScopePost(some(sym), myAst)
+    block:
+      discard myAst.myDef.genericDecl.myDoIt(some(sym))
     block:
       for idx in 0 ..< myAst.myDef.argDeclSeq.len():
         var mySym = myAst.myDef.argDeclSeq[idx].myDoIt(some(sym))
-        mkScopeEtc(some(mySym.mySym), mySym.scopeAst)
+        var tempScope = mkScopePre(some(mySym.mySym), mySym.ast)
+        defer:
+          mkScopePost(some(mySym.mySym), mySym.ast)
+        sym.typeInfo.myFunc.argIdxSeq.add curr.childSeq.len() - 1
     block:
       var resultSym = Symbol(
         inputFname: self[].inputFname,
@@ -274,7 +411,10 @@ proc doAstDef(
         kind: symVar,
       )
       resultSym.typeInfo = myAst.myDef.returnType.myDoIt(some(sym)).myType
-      mkScopeEtc(some(resultSym), myAst.myDef.returnType)
+      discard mkScopePre(some(resultSym), myAst.myDef.returnType)
+      defer:
+        mkScopePost(some(resultSym), myAst.myDef.returnType)
+      sym.typeInfo.myFunc.returnTypeIdx = curr.childSeq.len() - 1
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -287,7 +427,7 @@ proc doAstModule(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #assert(
@@ -302,16 +442,78 @@ proc doAstStruct(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
+  let self = args.self
+  let info = addr self[].mySymTblInfo
+
+  case args.subPass:
+  of spstFindTopLevelDecls:
+    var sym = Symbol(
+      inputFname: self[].inputFname,
+      name: myAst.myStruct.ident.myIdent.strVal,
+      kind: symStructDecl,
+    )
+    sym.typeInfo = TypeInfo(
+      main: TypeInfoMain(
+        inputFname: self[].inputFname,
+        name: some(myAst.myStruct.ident.myIdent.strVal),
+        funcVar: false,
+        ptrDim: 0,
+        arrDim: 0,
+      ),
+      kind: tiStruct,
+    )
+    let curr = mkScopePre(some(sym), myAst)
+    defer:
+      mkScopePost(some(sym), myAst)
+    block:
+      discard myAst.myStruct.genericDecl.myDoIt(some(sym))
+      for idx in 0 ..< curr.childSeq.len():
+        discard
+      echo sconcat(@[
+        "testificate: ", $curr.parent.childSeq.len()
+      ])
+    block:
+      #echo sconcat(@[
+      #  "myAst.myStruct.fieldSeq.len(): ",
+      #  $myAst.myStruct.fieldSeq.len()
+      #])
+      for idx in 0 ..< myAst.myStruct.fieldSeq.len():
+        var mySym = myAst.myStruct.fieldSeq[idx].myDoIt(some(sym))
+        #echo sconcat(@[
+        #  "testificate: mySym.mySym: ", $mySym.mySym[]
+        #])
+        #echo sconcat(@[
+        #  "mySym.typeInfo: ", $mySym.mySym.typeInfo[]
+        #])
+        discard mkScopePre(some(mySym.mySym), mySym.ast)
+        defer:
+          mkScopePost(some(mySym.mySym), mySym.ast)
+  else:
+    discard
+    # TODO (maybe): support struct definitions besides at of the top level
+    # of a `module`?
+    #for name, idxSeq in info[].prev.tbl:
+    #  for idx in idxSeq:
+    #    let child = info[].prev.childSeq[idx]
+    #    if child.sym.isSome:
+    #      let sym = child.sym.get()
+    #      if sym.kind != symStructDecl:
+    #        continue
+    #      if name notin info[].curr.tbl:
+    #        info[].curr.tbl[name] = @[info[].curr.childSeq.len()]
+    #      else:
+    #        info[].curr.tbl[name].add info[].curr.childSeq.len()
+    #      info[].curr.childSeq.add info[].prev.childSeq[idx]
   #let self = args.self
   #if args.self.symS2d
 proc doAstEnum(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -319,7 +521,7 @@ proc doAstExtern(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -327,7 +529,7 @@ proc doAstCextern(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -335,7 +537,7 @@ proc doAstImport(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -343,7 +545,7 @@ proc doAstCImport(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -351,7 +553,7 @@ proc doAstScope(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -359,7 +561,7 @@ proc doAstIf(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -367,7 +569,7 @@ proc doAstElif(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -375,7 +577,7 @@ proc doAstElse(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -383,7 +585,7 @@ proc doAstSwitch(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -391,7 +593,7 @@ proc doAstCase(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -399,7 +601,7 @@ proc doAstDefault(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -407,7 +609,7 @@ proc doAstFor(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -415,7 +617,7 @@ proc doAstWhile(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -423,7 +625,7 @@ proc doAstContinue(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -431,7 +633,7 @@ proc doAstBreak(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -439,7 +641,7 @@ proc doAstReturn(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -447,7 +649,7 @@ proc doAstArray(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   let self = args.self
@@ -481,7 +683,7 @@ proc doAstUnop(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -489,7 +691,7 @@ proc doAstBinop(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -497,7 +699,7 @@ proc doAstAssignEtc(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -505,14 +707,14 @@ proc doAstBasicType(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   let self = args.self
   case args.subPass:
   of spstFindTopLevelDecls:
     result = SymTypeResult(
-      scopeAst: myAst,
+      ast: myAst,
       kind: stResultType
     )
     result.myType = TypeInfo(
@@ -540,7 +742,7 @@ proc doAstNamedType(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   let self = args.self
@@ -552,7 +754,7 @@ proc doAstNamedType(
     #)
     let ident = myAst.myNamedType.ident.myDoIt(none(Symbol)).myIdent
     result = SymTypeResult(
-      scopeAst: myAst,
+      ast: myAst,
       kind: stResultType,
     )
 
@@ -583,7 +785,7 @@ proc doAstType(
 ): SymTypeResult =
   #result = SymTypeResult(kind: stResultType)
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   case args.subPass:
@@ -613,7 +815,7 @@ proc doAstFuncCall(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -621,7 +823,7 @@ proc doAstStmtExprLhs(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -629,7 +831,7 @@ proc doAstFuncNamedArgImpl(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -637,7 +839,7 @@ proc doAstGenericNamedArgImpl(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   #let self = args.self
@@ -645,7 +847,7 @@ proc doAstGenericList(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   let self = args.self
@@ -680,15 +882,54 @@ proc doAstGenericList(
         kind: tiToResolve
       )
       case parentSym[].kind:
+      of symVar, symConst, symFuncCall, symFuncCallArg:
+        sym.kind = symGenericImpl
       of symStructDecl, symFuncDecl:
-        sym.kind = symGeneric #symStructGeneric
+        # TODO: support other kinds of top-level symbol declarations,
+        # probably mostly `variant`s
+        sym.kind = symGenericDecl #symStructGeneric
+        #let parentTinfo = parentSym[].typeInfo
+        #case parentTinfo.kind:
+        #of 
+        #case parentSym[].kind:
+        #of symVar:
+        #  discard
+        #of symConst:
+        #  discard
+        #of symStructDecl:
+        #  discard
       #of symFuncDecl:
       #  sym.kind = symGeneric #symFuncGeneric
       else:
         parentEek()
-      mkScopeEtc(some(sym), identResult.scopeAst)
+
+      #case parentSym[].kind:
+      #of symVar:
+      #  discard
+      #of symConst:
+      #  discard
+      #of symStructDecl:
+      #  discard
+      #of symFuncDecl:
+      #  discard
+      #else:
+      #  parentEek()
+
+      discard mkScopePre(
+        some(sym),
+        identResult.ast
+        #myAst #
+      )
+      defer: mkScopePost(
+        some(sym),
+        identResult.ast
+        #myAst #
+      )
       #self[].addSym(some(sym))
     of spstSubstGenerics:
+      #case parentSym[].kind:
+      #else:
+      #  discard
       discard
     of spstHandleFuncOverloading:
       discard
@@ -706,7 +947,7 @@ proc doAstVarEtcDeclMost(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
-    scopeAst: myAst,
+    ast: myAst,
     kind: stResultNone
   )
   let self = args.self
@@ -726,7 +967,7 @@ proc doAstVarEtcDeclMost(
     )
     sym.typeInfo = myAst.myVarEtcDeclMost.type.myDoIt(some(sym)).myType
     result = SymTypeResult(
-      scopeAst: identResult.scopeAst,
+      ast: identResult.ast,
       kind: stResultSym,
       mySym: sym,
     )
@@ -856,16 +1097,20 @@ proc doPassSymType*(
   var parentAstSeq: seq[AstNode]
   var parentSymSeq: seq[Symbol]
   var moduleIdent: string
+
   var myArgs = SymTypeArgs(
     self: addr self,
     changed: false,
-    subPass: SconeSubPassSymType(0u),
+    #subPass: SconeSubPassSymType(0u),
     ast: self.astRoot,
     parentAstSeq: addr parentAstSeq,
     parentSymSeq: addr parentSymSeq,
     moduleIdent: addr moduleIdent
   )
+  #myArgs.subPass = SconeSubPassSymType(0u)
+
   let subPass = addr myArgs.subPass
+  subPass[] = SconeSubPassSymType(0u)
   while subPass[] < limSpSymType:
     self.nextSymTblPass()
     discard myArgs.doPassSymTypeMain()

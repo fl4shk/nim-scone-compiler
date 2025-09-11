@@ -8,6 +8,8 @@ import dataStructuresMisc
 import ast
 import symType
 
+import reduceEtc
+
 const
   sconeMaxMacroExpansion*: uint = 1024u
 
@@ -21,15 +23,27 @@ type
     #scoPassMacroExpansion,
     scoPassEmitC,
     limScoPass,
+  SconeSubPassSymType* = enum
+    #spstMkSymbolTables,
+    #spstHandleImport,
+    spstFindTopLevelDecls,
+    spstSubstGenerics,
+    spstHandleFuncOverloading,
+    spstTypeCheck,
+    limSpSymType,
 
   SconeCurrSymTblInfo* = object
+    decls*: SymbolTable
     curr*: SymbolTable
     prev*: SymbolTable
+    astTbl*: OrderedTable[AstNode, int]
     #childIdxSeq*: seq[int]
   Scone* = object
     mode*: Mode
     pass*: SconePass
-    inFindDecls*: bool
+    symTypeSubPass*: SconeSubPassSymType
+    inFindAllDecls*: bool
+    inFindTypeDecls*: bool
     astRoot*: AstNode
 
     symTblSeq*: seq[SymbolTable]
@@ -51,31 +65,29 @@ proc locMsg*(
 proc nextSymTblPass*(
   self: var Scone,
 ) =
-  #if self.symS2d.len() == 0:
   var toAdd = SymbolTable()
   self.symTblSeq.add toAdd
-  #self.currSymTbl[1] = self.symTblSeq[^1]
-  #self.currSymTbl
   let info = addr self.mySymTblInfo
 
   if info[].curr != nil and info[].prev == nil:
     echo "nextSymTblPass(): "
     echo info[].curr.toStr()
+    info[].decls = info.curr
 
-  #if info[].curr != nil:
   info[].prev = info[].curr
   info[].curr = self.symTblSeq[^1]
 
-  if self.symTblSeq.len() == 3:
-    self.symTblSeq.delete(0 .. 0)
-  #if self.symTblSeq.len() == 2:
-  #  info[].prev = self.symTblSeq[^2]
+  #if self.symTblSeq.len() == 3:
+  #  self.symTblSeq.delete(0 .. 0)
+
+  if self.symTblSeq.len() == 4:
+    self.symTblSeq.delete(1 .. 1)
 
 
 proc addChildSymTbl(
   self: var Scone,
   #child: var SymbolTable,
-  scopeAst: AstNode,
+  ast: AstNode,
 ) =
   #--------
   # BEGIN: old version
@@ -86,45 +98,73 @@ proc addChildSymTbl(
   #--------
   let info = addr self.mySymTblInfo
   var child = SymbolTable(
-    scopeAst: scopeAst
+    ast: ast
   )
 
   if info[].prev != nil:
-    #echo $info[].prev.scopeAst
-    #echo "curr.childSeq.len():" & $info[].curr.childSeq.len()
-    #echo "prev.childSeq.len():" & $info[].prev.childSeq.len()
-    #echo "curr.parent == nil: " & $(info[].curr.parent == nil)
-    #echo "prev.parent == nil: " & $(info[].prev.parent == nil)
     info[].prev = info[].prev.childSeq[info[].curr.childSeq.len()]
 
+  echo sconcat(@[
+    "addChildSymTbl: childSeq.len(): ", $info[].curr.childSeq.len()
+  ])
+  #echo sconcat(@[
+  #  "addChildSymTbl: child: ", $child[]
+  #])
+  #if info[].curr.childSeq.len() == 1:
+  #  doAssert(
+  #    false,
+  #    sconcat(@[
+  #      "addChildSymTbl: debug msg: ",
+  #      $(info[].curr.parent != nil),
+  #    ])
+  #  )
   info[].curr.childSeq.add child
   info[].curr.childSeq[^1].parent = info[].curr
+  echo sconcat(@[
+    "addChildSymTbl: post set parent: ",
+    $(info[].curr.childSeq[^1].parent != nil), " ",
+    $(info[].curr.childSeq.len())
+  ])
   info[].curr = info[].curr.childSeq[^1]
   #self.mySymTblInfo.childIdxSeq
 
-proc mkSymbolTableMain(
-  self: var Scone,
-  scopeAst: AstNode,
-): SymbolTable =
-  #var childSymTbl = SymbolTable(
-  #  scopeAst: scopeAst
-  #)
-  self.addChildSymTbl(
-    #child=childSymTbl
-    scopeAst=scopeAst
-  )
-  result = self.mySymTblInfo.curr
+#proc mkSymbolTableMain(
+#  self: var Scone,
+#  ast: AstNode,
+#): SymbolTable =
+#  #var childSymTbl = SymbolTable(
+#  #  ast: ast
+#  #)
+#  self.addChildSymTbl(
+#    #child=childSymTbl
+#    ast=ast
+#  )
+#  result = self.mySymTblInfo.curr
 
 proc gotoParentSymTbl*(
   self: var Scone,
 ) =
   #self.currSymTbl = self.currSymTbl.parent
   let info = addr self.mySymTblInfo
+  echo sconcat(@[
+    "gotoParentSymTbl: parent != nil: ",
+    $(info[].curr.parent != nil)
+  ])
+  if info[].curr.childSeq.len() == 1:
+    doAssert(
+      false,
+      sconcat(@[
+        "gotoParentSymTbl: debug msg: ",
+        $(info[].curr.parent != nil)
+      ])
+    )
   info[].curr = info[].curr.parent
   if info[].prev != nil:
     info[].prev = info[].prev.parent
 
-#proc sameFuncSignature*(
+
+
+#proc sameFuncDeclSignature*(
 #  self: var Scone,
 #  leftSym: Symbol,
 #  rightSym: Symbol,
@@ -133,8 +173,8 @@ proc gotoParentSymTbl*(
 #  #let cmpNe = (leftSym != rightSym)
 #
 #  let cmpName = (leftSym.name == rightSym.name)
-#  #echo "sameFuncSignature: " & $cmpNe & " " & $cmpName
-#  echo "sameFuncSignature: " & $cmpName
+#  #echo "sameFuncDeclSignature: " & $cmpNe & " " & $cmpName
+#  echo "sameFuncDeclSignature: " & $cmpName
 #  echo "  " & leftSym.name & " " & rightSym.name
 #  result = (
 #    (
@@ -166,96 +206,305 @@ proc sameLexMainEtc*(
       left.sym.get().inputFname == right.sym.get().inputFname
     )
   doAssert(
-    left.scopeAst != nil,
+    left.ast != nil,
     "eek!"
   )
   doAssert(
-    right.scopeAst != nil,
+    right.ast != nil,
     "eek!"
   )
   result = (
-    (
-      subCmpInputFname
-    ) and (
-      left.scopeAst.lexMain.locInLine == right.scopeAst.lexMain.locInLine
-    ) and (
-      left.scopeAst.lexMain.lineNum == right.scopeAst.lexMain.lineNum
-    )
+    andR(@[
+      subCmpInputFname,
+      left.ast.lexMain.locInLine == right.ast.lexMain.locInLine,
+      left.ast.lexMain.lineNum == right.ast.lexMain.lineNum,
+    ])
   )
+
 proc sameType*(
   self: var Scone,
   left: SymbolTable,
   right: SymbolTable,
 ): bool =
   result = false
+  if not andR(@[left.sym.isSome, right.sym.isSome]):
+    return
 
-proc sameFuncSignature*(
+  let lSym = left.sym.get()
+  let rSym = right.sym.get()
+  let lTinfo = lSym.typeInfo
+  let rTinfo = rSym.typeInfo
+
+  if lTinfo.kind != rTinfo.kind:
+    return
+
+  case lTinfo.kind:
+  of tiToResolve:
+    return
+  of tiBasicType:
+    return (
+      lTinfo.myBasicType.kind == rTinfo.myBasicType.kind
+    )
+  of tiStruct:
+    discard
+  of tiFunc:
+    discard
+
+#type
+#  ScoreTree = ref ScoreTreeObj
+#
+#  ScoreTreeObj = object
+#    #scone: ptr Scone
+#    ast: AstNode
+#    valid: bool
+#    parent: ScoreTree
+#    childSeq: seq[ScoreTree]
+#
+#proc mkScoreTree(
+#  self: var Scone,
+#  ast: AstNode,
+#  #ast: AstNode=nil,
+#  parent: ScoreTree=nil,
+#): ScoreTree =
+#  doAssert(
+#    ast != nil,
+#    sconcat(@[
+#      "eek!"
+#    ])
+#  )
+#  result = ScoreTree(
+#    ast: ast,
+#    valid: false,
+#    parent: parent,
+#  )
+#  #if ast == nil:
+#  #  doAssert(
+#  #    parent == nil,
+#  #    sconcat(@[
+#  #      "eek! ", 
+#  #      "funcCallAst:", $funcCallAst,
+#  #      "parent:", $parent[]
+#  #    ])
+#  #  )
+#  #  result = ScoreTree(
+#  #    ast: funcCallAst,
+#  #    parent: nil,
+#  #  )
+#  #else:
+#  #  doAssert(
+#  #    ast != nil,
+#  #    sconcat(@[
+#  #      "eek! ", 
+#  #      "ast:", $ast,
+#  #      "parent:", $parent[]
+#  #    ])
+#  #  )
+#  #  result = ScoreTree(
+#  #    ast: ast,
+#  #    parent: parent,
+#  #  )
+
+
+#type
+#  TypeTree = ref TypeTreeObj
+#  TypeTreeObj = object
+#    ast*: AstNode
+#    parent*: TypeTree
+#    childSeq*: 
+
+proc isBetterMatch(
   self: var Scone,
-  left: SymbolTable,
-  right: SymbolTable,
+  funcCall: AstNode,
+  funcDecl0: SymbolTable,
+  funcDecl1: SymbolTable,
 ): bool =
-  let cmpLexMainEtc = (
-    not self.sameLexMainEtc(
-      left=left,
-      right=right,
-    )
-  )
-  let cmpType = (
-    self.sameType(
-      left=left,
-      right=right,
-    )
-  )
-  # TODO: support checking the types of the arguments
-  result = (
-    #cmpNe and cmpSymIsSome and cmpName and cmpLexMainEtc
-    cmpLexMainEtc and cmpType
-  )
+  result = false
 
-proc findDuplFuncMain*(
+  doAssert(
+    funcDecl0.sym.isSome,
+    sconcat(@[
+      "eek! ", $funcDecl0.ast
+    ])
+  )
+  doAssert(
+    funcDecl1.sym.isSome,
+    sconcat(@[
+      "eek! ", $funcDecl1.ast
+    ])
+  )
+  let sym0 = funcDecl0.sym.get()
+  let sym1 = funcDecl1.sym.get()
+  let tinfo0 = sym0.typeInfo
+  let tinfo1 = sym1.typeInfo
+
+  if orR(@[
+    sym0.kind != symFuncDecl,
+    sym1.kind != symFuncDecl,
+    tinfo0.kind != tiFunc,
+    tinfo1.kind != tiFunc,
+    tinfo0.myFunc.argIdxSeq.len() != tinfo1.myFunc.argIdxSeq.len(),
+  ]):
+    return
+
+  #proc cmpAst(
+  #  self: var Scone,
+  #  callArg: AstNode,
+  #  declArg: AstNode,
+  #  idx: int,
+  #): int32 =
+  #  result = 0
+
+  #proc myMatchFunc(
+  #  self: var Scone,
+  #  param: AstNode,
+  #  ast0: AstNode,
+  #  ast1: AstNode,
+  #): int32 =
+  #  result = 0
+  #  #var cmp0 = self.cmpAst(param=param, ast=ast0)
+  #  #var cmp1 = self.cmpAst(param=param, ast=ast1)
+  #  #if cmp0 < cmp1:
+  #  #  discard
+  #  #elif cmp0 > cmp1:
+  #  #  discard
+  #  #else:
+  #  #  discard
+  #var mySeq0: seq[int32] = @[]
+  #var mySeq1: seq[int32] = @[]
+  #for idx in 0 ..< tinfo0.myFunc.argIdxSeq.len():
+  #  discard
+
+  #var isGeneric0: bool = false
+  #var isGeneric1: bool = false
+
+proc gatherFuncDecls*(
   self: var Scone,
-  parent: var SymbolTable,
-  toChk: var SymbolTable,
-  #sym: Symbol,
+  #name: string
+  funcCallAst: AstNode,
+): seq[SymbolTable] =
+  doAssert(
+    funcCallAst.kind == astFuncCall,
+    sconcat(@[
+      "eek! ", $funcCallAst[],
+    ])
+  )
+  doAssert(
+    self.mySymTblInfo.decls != nil,
+    "eek!"
+  )
+  let info = addr self.mySymTblInfo
+  let decls = info[].decls
+  let name = funcCallAst.myFuncCall.ident.myIdent.strVal
+  doAssert(
+    name in decls.tbl,
+    sconcat(@[
+      "Unknown called function of name ",
+      "\"", name, "\" ",
+      funcCallAst.lexMain.locMsg(self.inputFname)
+    ])
+  )
+  #var scoreTree = ScoreTree(
+  #)
+
+  #var highestScore: int = 0
+
+  let myIdxSeq = decls.tbl[name]
+  for idx in myIdxSeq:
+    let child = decls.childSeq[idx]
+    result.add child
+
+proc resolveFuncCallOverload*(
+  self: var Scone,
+  funcCallAst: AstNode,
 ): Option[SymbolTable] =
   result = none(SymbolTable)
-
-  let optSym = toChk.sym
-  if optSym.isSome:
-    let sym = optSym.get()
-    case sym.kind:
-    of symFuncDecl:
-      if sym.name in parent.tbl:
-        let myIdxSeq = parent.tbl[sym.name] 
-        for idx in myIdxSeq:
-          let child = parent.childSeq[idx]
-          doAssert(
-            child.sym.isSome,
-            $child[]
-          )
-          if self.sameFuncSignature(child, toChk):
-            return some(child)
-    else:
-      discard
-    #--------
-  #if not result.isSome and parent.parent != nil:
-  if parent.parent != nil:
-    result = self.findDuplFuncMain(
-      parent=parent.parent,
-      toChk=toChk,
-    )
-  
-proc findDuplFunc*(
-  self: var Scone,
-  #sym: Symbol
-): Option[SymbolTable] =
-  let info = addr self.mySymTblInfo
-  result = self.findDuplFuncMain(
-    #toChk=self.mySymTblInfo.curr,
-    #sym=sym
-    parent=info[].curr.parent,
-    toChk=info[].curr,
+  let mySeq = self.gatherFuncDecls(funcCallAst)
+  let name = funcCallAst.myFuncCall.ident.myIdent.strVal
+  doAssert(
+    mySeq.len() == 1,
+    sconcat(@[
+      "Unable to automatically resolve overload of function of name ",
+      "\"", name, "\"",
+      "(", funcCallAst.lexMain.locMsg(inputFname=self.inputFname), ")"
+    ]),
   )
+  result = some(mySeq[0])
+  #doAssert(
+  #  funcCall.sym.isSome,
+  #  sconcat(@[
+  #    "eek! ", $funcCall[],
+  #  ])
+  #)
+  #let prev = addr sel
+
+
+#proc sameFuncDeclSignature*(
+#  self: var Scone,
+#  left: SymbolTable,
+#  right: SymbolTable,
+#): bool =
+#  let cmpLexMainEtc = (
+#    not self.sameLexMainEtc(
+#      left=left,
+#      right=right,
+#    )
+#  )
+#  let cmpType = (
+#    self.sameType(
+#      left=left,
+#      right=right,
+#    )
+#  )
+#  # TODO: support checking the types of the arguments
+#  result = (
+#    #cmpNe and cmpSymIsSome and cmpName and cmpLexMainEtc
+#    cmpLexMainEtc and cmpType
+#  )
+#
+#proc findDuplFuncMain*(
+#  self: var Scone,
+#  parent: var SymbolTable,
+#  toChk: var SymbolTable,
+#  #sym: Symbol,
+#): Option[SymbolTable] =
+#  result = none(SymbolTable)
+#
+#  let optSym = toChk.sym
+#  if optSym.isSome:
+#    let sym = optSym.get()
+#    case sym.kind:
+#    of symFuncDecl:
+#      if sym.name in parent.tbl:
+#        let myIdxSeq = parent.tbl[sym.name] 
+#        for idx in myIdxSeq:
+#          let child = parent.childSeq[idx]
+#          doAssert(
+#            child.sym.isSome,
+#            $child[]
+#          )
+#          if self.sameFuncDeclSignature(child, toChk):
+#            return some(child)
+#    else:
+#      discard
+#    #--------
+#  #if not result.isSome and parent.parent != nil:
+#  if parent.parent != nil:
+#    result = self.findDuplFuncMain(
+#      parent=parent.parent,
+#      toChk=toChk,
+#    )
+#  
+#proc findDuplFunc*(
+#  self: var Scone,
+#  #sym: Symbol
+#): Option[SymbolTable] =
+#  let info = addr self.mySymTblInfo
+#  result = self.findDuplFuncMain(
+#    #toChk=self.mySymTblInfo.curr,
+#    #sym=sym
+#    parent=info[].curr.parent,
+#    toChk=info[].curr,
+#  )
 
 proc checkDuplSym*(
   self: var Scone,
@@ -267,69 +516,75 @@ proc checkDuplSym*(
     let sym = optSym.get()
     case sym.kind:
     of symFuncDecl:
-      let dupFunc = self.findDuplFunc()
-      doAssert(
-        not dupFunc.isSome,
-        (
-          "Error: duplicate function signature for function of name \""
-        ) & (
-          sym.name & "\" "
-        ) & (
-          "(current instance "
-        ) & (
-          info[].curr.scopeAst.lexMain.locMsg(inputFname=self.inputFname)
-        ) & (
-          ") (previous instance "
-        ) & (
-          dupFunc.get().scopeAst.lexMain.locMsg(
-            inputFname=dupFunc.get().sym.get().inputFname
-          )
-        ) & (
-          ")"
-        )
-      )
+      #let dupFunc = self.findDuplFunc()
+      #doAssert(
+      #  not dupFunc.isSome,
+      #  sconcat(@[
+      #    "Error: duplicate function signature for function of name ",
+      #    "\"", sym.name, "\" ",
+      #    "(current instance ",
+      #      info[].curr.ast.lexMain.locMsg(inputFname=self.inputFname),
+      #    ") ",
+      #    "(previous instance ",
+      #      dupFunc.get().ast.lexMain.locMsg(
+      #        inputFname=dupFunc.get().sym.get().inputFname
+      #      ),
+      #    ")"
+      #  ])
+      #)
+      # wait until we attempt to resolve function overloads
+      discard
     else:
       let mySymTbl = info[].curr.parent
       doAssert(
         (
-          (
-            sym.name notin mySymTbl.tbl
-          ) or (
-            mySymTbl.tbl[sym.name].len() <= 1
-          )
+          orR(@[
+            sym.name notin mySymTbl.tbl,
+            mySymTbl.tbl[sym.name].len() <= 1,
+          ])
         ),
-        (
-          "Error: duplicate non-function symbol of name \""
-        ) & (
-          sym.name & "\" "
-        ) & (
-          "(current instance "
-        ) & (
-          (
-            mySymTbl.childSeq[mySymTbl.tbl[sym.name][1]].scopeAst
-          ).lexMain.locMsg(inputFname=self.inputFname)
-        ) & (
-          ") (previous instance "
-        ) & (
-          (
-            mySymTbl.childSeq[mySymTbl.tbl[sym.name][0]].scopeAst
-          ).lexMain.locMsg(inputFname=self.inputFname)
-        ) & (
+        sconcat(@[
+          "Error: duplicate non-function symbol of name ",
+          "\"", sym.name, "\" ",
+          "(current instance ",
+            (
+              mySymTbl.childSeq[mySymTbl.tbl[sym.name][1]].ast
+            ).lexMain.locMsg(inputFname=self.inputFname),
+          ") ",
+          "(previous instance ",
+            (
+              mySymTbl.childSeq[mySymTbl.tbl[sym.name][0]].ast
+            ).lexMain.locMsg(inputFname=self.inputFname),
           ")"
-        )
+        ])
       )
 
 proc addSym*(
   self: var Scone,
   sym: Option[Symbol],
-  scopeAst: AstNode,
+  ast: AstNode,
   #typeInfo: TypeInfo,
 ) =
   let info = addr self.mySymTblInfo
-  self.addChildSymTbl(scopeAst=scopeAst)
+  self.addChildSymTbl(ast=ast)
   if sym.isSome:
     let parent = info[].curr.parent
+    #echo sconcat(@[
+    #  "addSym: parent: ", $parent[]
+    #])
+    #echo sconcat(@[
+    #  "addSym: curr: ", $info[].curr[], " ", $info[].curr.childSeq.len()
+    #])
+    echo sconcat(@[
+      "addSym: sym: ", $sym.get()[]
+    ])
+    echo sconcat(@[
+      "addSym: tinfo: ", $sym.get().typeInfo[]
+    ])
     if sym.get().name notin parent.tbl:
+      echo sconcat(@[
+        "addsym: testificate: ", $(parent.childSeq.len() - 1)
+      ])
       parent.tbl[sym.get().name] = @[parent.childSeq.len() - 1]
     else:
       parent.tbl[sym.get().name].add parent.childSeq.len() - 1
