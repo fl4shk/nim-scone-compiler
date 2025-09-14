@@ -18,6 +18,19 @@ def plus[T](a: var Vec2[T], b: var Vec2[T]) -> Vec2[T] {
   }
   return result;
 };
+#def plus[T](a: var Vec2[Vec2[T]], b: var Vec2[Vec2[T]]) -> Vec2[Vec2[T]] {
+#  var result: Vec2[Vec2[T]];
+#  for jdx in 0 until 2 {
+#    for idx in 0 until 2 {
+#      #if idx == 0 {
+#      #  result.x = 
+#      #} else {
+#      #}
+#      result.at(jdx)at(idx) = a.at(jdx).at(idx) + b.ast(jdx).at(idx);
+#    }
+#  }
+#  return result;
+#};
 def times[T](a: T, b: T) -> T {
   return a * b;
 };
@@ -80,6 +93,15 @@ def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
 #def sum[T](toSum: var Vec2[T]) -> T {
 #  return toSum.x + toSum.y;
 #};
+
+struct Aaaa {
+  x: T;
+};
+
+struct Vec2I32 {
+  x: i32;
+  y: i32;
+};
 
 struct Vec2[T] {
   x: T;

@@ -850,7 +850,8 @@ proc toRepr*(
     result.add ";"
   of astDef:
     result.add "def " & ast.myDef.ident.myToRepr()
-    result.add ast.myDef.genericDecl.myToRepr()
+    if ast.myDef.genericDecl.isSome:
+      result.add ast.myDef.genericDecl.get().myToRepr()
     result.add "("
     #result.add ast.myDef.argDeclSeq
     for idx in 0 ..< ast.myDef.argDeclSeq.len():
@@ -866,7 +867,8 @@ proc toRepr*(
     result.add "module " & ast.myModule.ident.myToRepr()
   of astStruct:
     result.add "struct " & ast.myStruct.ident.myToRepr()
-    result.add ast.myStruct.genericDecl.myToRepr() & " {\n"
+    if ast.myStruct.genericDecl.isSome:
+      result.add ast.myStruct.genericDecl.get().myToRepr() & " {\n"
     for idx in 0 ..< ast.myStruct.fieldSeq.len():
       result.add(
         (

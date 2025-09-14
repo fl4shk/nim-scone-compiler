@@ -150,59 +150,56 @@ template mkScopePost(
     #if args.subPass == spstFindTopLevelDecls:
     case args.subPass:
     of spstFindTopLevelDecls:
-      echo "debug: "
-      echo sconcat(@[
-        "curr.parent: ", $curr.parent[]
-      ])
-      echo sconcat(@[
-        "curr: ", $curr[], " ", $curr.childSeq.len()
-      ])
-      echo sconcat(@[
-        "argSym.get(): ", $argSym.get()[]
-      ])
-      echo sconcat(@[
-        "argSym.get().typeInfo: ", $argSym.get().typeInfo[]
-      ])
-      echo "----"
       #if argSym.isSome:#curr.sym.isSome:
+      #echo sconcat(@[
+      #  "mkScopePost(): parent.sym.isSome: ",
+      #  $curr.parent.sym.isSome
+      #])
       if curr.parent.sym.isSome:
+        #echo sconcat(@[
+        #  "mkScopePost: parent.sym.get(): ",
+        #  $curr.parent.sym.get()[]
+        #])
+        #echo sconcat(@[
+        #  "mkScopePost: parent.sym.get().typeInfo: ",
+        #  $curr.parent.sym.get().typeInfo[]
+        #])
         #if child.sym.get().kind == symGeneric:
         #case argSym.get().kind:
-        case curr.parent.sym.get().kind:
-        #of symGenericImpl:
-        #  #let tinfo = argSym.get().typeInfo
-        #  discard
-        of symGenericDecl:
-          let tinfo = curr.parent.sym.get().typeInfo
-          #let tinfo = argSym.get().typeInfo
+        if curr.sym.isSome:
+          #echo sconcat(@[
+          #  "mkScopePost: sym.get(): ",
+          #  $curr.sym.get()[]
+          #])
+          #echo sconcat(@[
+          #  "mkScopePost: sym.get().typeInfo: ",
+          #  $curr.sym.get().typeInfo[]
+          #])
+          case curr.sym.get().kind:
+          #of symGenericImpl:
+          #  #let tinfo = argSym.get().typeInfo
+          #  discard
+          of symGenericDecl:
+            let tinfo = curr.parent.sym.get().typeInfo
+            #let tinfo = argSym.get().typeInfo
 
-          case tinfo.kind:
-          of tiStruct:
-            tinfo.myStruct.genericIdxSeq.add curr.childSeq.len() #- 1
-            echo sconcat(@[
-              "sym.name: ", argSym.get().name
-            ])
-            echo sconcat(@[
-              "tinfo.kind: ", $tinfo.kind
-            ])
-          of tiFunc:
-            tinfo.myFunc.genericIdxSeq.add curr.childSeq.len() #- 1
-            echo sconcat(@[
-              "sym.name: ", argSym.get().name
-            ])
-            echo sconcat(@[
-              "tinfo.kind: ", $tinfo.kind
-            ])
+            case tinfo.kind:
+            of tiStruct:
+              tinfo.myStruct.genericIdxSeq.add(
+                curr.parent.childSeq.len() - 1
+              )
+            of tiFunc:
+              tinfo.myFunc.genericIdxSeq.add(
+                curr.parent.childSeq.len() - 1
+              )
+            else:
+              #eek()
+              discard
           else:
-            #eek()
-            echo sconcat(@[
-              "sym.name: ", argSym.get().name
-            ])
-            echo sconcat(@[
-              "other tinfo.kind: ", $tinfo.kind
-            ])
+            discard
         else:
           discard
+        #echo ""
       #else:
       #  echo sconcat(@[
       #    "not curr.parent.sym.isSome: ",
@@ -233,15 +230,9 @@ proc doAstSrcFile(
     args.subPass == spstFindTopLevelDecls
   )
 
-  echo sconcat(@[
-    "doAstSrcFile: pre mkScopeEtc"
-  ])
-  discard mkScopePre(none(Symbol), myAst)
-  defer:
-    mkScopePost(none(Symbol), myAst)
-  echo sconcat(@[
-    "doAstSrcFile: post mkScopeEtc"
-  ])
+  #discard mkScopePre(none(Symbol), myAst)
+  #defer:
+  #  mkScopePost(none(Symbol), myAst)
   #var mySymTbl = SymbolTable(
   #  ast: 
   #)
@@ -396,7 +387,8 @@ proc doAstDef(
     defer:
       mkScopePost(some(sym), myAst)
     block:
-      discard myAst.myDef.genericDecl.myDoIt(some(sym))
+      if myAst.myDef.genericDecl.isSome:
+        discard myAst.myDef.genericDecl.get().myDoIt(some(sym))
     block:
       for idx in 0 ..< myAst.myDef.argDeclSeq.len():
         var mySym = myAst.myDef.argDeclSeq[idx].myDoIt(some(sym))
@@ -414,7 +406,7 @@ proc doAstDef(
       discard mkScopePre(some(resultSym), myAst.myDef.returnType)
       defer:
         mkScopePost(some(resultSym), myAst.myDef.returnType)
-      sym.typeInfo.myFunc.returnTypeIdx = curr.childSeq.len() - 1
+      sym.typeInfo.myFunc.resultIdx = curr.childSeq.len() - 1
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -469,28 +461,17 @@ proc doAstStruct(
     defer:
       mkScopePost(some(sym), myAst)
     block:
-      discard myAst.myStruct.genericDecl.myDoIt(some(sym))
-      for idx in 0 ..< curr.childSeq.len():
-        discard
-      echo sconcat(@[
-        "testificate: ", $curr.parent.childSeq.len()
-      ])
+      if myAst.myStruct.genericDecl.isSome:
+        discard myAst.myStruct.genericDecl.get().myDoIt(some(sym))
+      #for idx in 0 ..< curr.childSeq.len():
+      #  discard
     block:
-      #echo sconcat(@[
-      #  "myAst.myStruct.fieldSeq.len(): ",
-      #  $myAst.myStruct.fieldSeq.len()
-      #])
       for idx in 0 ..< myAst.myStruct.fieldSeq.len():
         var mySym = myAst.myStruct.fieldSeq[idx].myDoIt(some(sym))
-        #echo sconcat(@[
-        #  "testificate: mySym.mySym: ", $mySym.mySym[]
-        #])
-        #echo sconcat(@[
-        #  "mySym.typeInfo: ", $mySym.mySym.typeInfo[]
-        #])
         discard mkScopePre(some(mySym.mySym), mySym.ast)
         defer:
           mkScopePost(some(mySym.mySym), mySym.ast)
+        sym.typeInfo.myStruct.fieldIdxSeq.add curr.childSeq.len() - 1
   else:
     discard
     # TODO (maybe): support struct definitions besides at of the top level
@@ -996,6 +977,8 @@ proc doPassSymTypeMain(
   args: var SymTypeArgs
 ): SymTypeResult =
   result = SymTypeResult(kind: stResultNone)
+  if myAst == nil:
+    return
   case myAst.kind:
   of astSrcFile:
     # `module`: come back to this for when multiple Scone source files are

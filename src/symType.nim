@@ -4,6 +4,7 @@ import std/sets
 
 import dataStructuresMisc
 import ast
+import reduceEtc
 
 type
   TypeInfoMain* = object
@@ -31,7 +32,7 @@ type
     # These are indices into the `SymbolTable`'s `childSeq`
     genericIdxSeq*: seq[int]
     argIdxSeq*: seq[int]     # function arguments
-    returnTypeIdx*: int
+    resultIdx*: int
 
   TypeInfoKind* = enum
     tiToResolve,      # this needs to be resolved in a later pass
@@ -152,15 +153,18 @@ proc toStr*(
 
   var foundIdxSeq: HashSet[int]
   if self.sym.isSome: #!= nil:
-    result.add i & "symbol: " & $self.sym.get()[] & "\n"
-    result.add i & "typeInfo: " & $self.sym.get().typeInfo[] & "\n"
+    result.add i & "named: \"" & self.sym.get().name & "\"\n"
+    result.add i & "* " & "symbol: " & $self.sym.get()[] & "\n"
+    result.add i & "* " & "typeInfo: " & $self.sym.get().typeInfo[] & "\n"
     result.add "\n"
     for name, idxSeq in self.tbl:
       foundIdxSeq = foundIdxSeq.union(toHashSet(idxSeq))
       for idx in idxSeq:
         let child = self.childSeq[idx]
         result.add child.toStr(x)
-  result.add "----\n"
+  #result.add "----\n"
+  if foundIdxSeq.len() < self.childSeq.len():
+    result.add i & "unnamed:" & "\n"
   for idx in 0 ..< self.childSeq.len():
     if idx in foundIdxSeq:
       #echo "idx found: " & $idx
@@ -169,5 +173,10 @@ proc toStr*(
     #  #echo "idx not found: " & $idx
     #  discard
     let child = self.childSeq[idx]
-    result.add child.toStr(x)
-  result.add "--------\n\n"
+    result.add sconcat(@[
+      child.toStr(x)
+    ])
+  if foundIdxSeq.len() < self.childSeq.len():
+    #result.add i & "unnamed:" & "\n"
+    result.add i & "--------\n"
+  #result.add "--------\n\n"

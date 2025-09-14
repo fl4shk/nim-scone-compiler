@@ -944,13 +944,19 @@ proc parseGenericDeclItem(
         self.parentTempSeq[^1]
       case parent.kind:
       of astDef:
-        if parent.myDef.genericDecl == nil:
-          parent.myDef.genericDecl = mkAst(astGenericList)
-        parent.myDef.genericDecl.myGenericList.mySeq.add result.ast
+        #if parent.myDef.genericDecl == nil:
+        if not parent.myDef.genericDecl.isSome:
+          parent.myDef.genericDecl = some(mkAst(astGenericList))
+        parent.myDef.genericDecl.get().myGenericList.mySeq.add(
+          result.ast
+        )
       of astStruct:
-        if parent.myStruct.genericDecl == nil:
-          parent.myStruct.genericDecl = mkAst(astGenericList)
-        parent.myStruct.genericDecl.myGenericList.mySeq.add result.ast
+        #if parent.myStruct.genericDecl == nil:
+        if not parent.myStruct.genericDecl.isSome:
+          parent.myStruct.genericDecl = some(mkAst(astGenericList))
+        parent.myStruct.genericDecl.get().myGenericList.mySeq.add(
+          result.ast
+        )
       else:
         doAssert(
           false,

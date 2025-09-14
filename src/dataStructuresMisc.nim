@@ -313,7 +313,7 @@ const `helperTokKindSeq`*: seq[(
     "Def", some("def"), true,
     @[
       ("ident", astValAstNode),               # `AstIdent`
-      ("genericDecl", astValAstNode),         # `AstGenericList`
+      ("genericDecl", astValOptAstNode),      # `Option[AstGenericList]`
       ("argDeclSeq", astValSeqAstNode),       # seq of `AstVarEtcDeclMost`
       ("returnType", astValAstNode),          # `AstType`
       ("stmtSeq", astValSeqAstNode),
@@ -338,7 +338,7 @@ const `helperTokKindSeq`*: seq[(
     "Struct", some("struct"), true,
     @[
       ("ident", astValAstNode),             # `AstIdent`
-      ("genericDecl", astValAstNode),       # `AstGenericList`
+      ("genericDecl", astValOptAstNode),    # `Option[AstGenericList]`
       ("fieldSeq", astValSeqAstNode),       # `seq` of `AstVarEtcDeclMost`
     ],
   ),
