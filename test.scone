@@ -113,9 +113,9 @@ struct Vec2Ptr[T] {
   y: ptr T;
 };
 struct Vec3Arr3Vec2[T] {
-  x: array[3; Vec2[T]];
-  y: array[3; Vec2[T]];
-  z: array[3; Vec2[T]];
+  x: array[1 * 3; Vec2[T]];
+  y: array[1 * 3; Vec2[T]];
+  z: array[1 * 3; Vec2[T]];
 };
 
 #def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {

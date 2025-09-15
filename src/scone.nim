@@ -33,6 +33,7 @@ type
     limSpSymType,
 
   SconeCurrSymTblInfo* = object
+    symTblId*: int
     decls*: SymbolTable
     curr*: SymbolTable
     prev*: SymbolTable
@@ -223,34 +224,34 @@ proc sameLexMainEtc*(
     ])
   )
 
-proc sameType*(
-  self: var Scone,
-  left: SymbolTable,
-  right: SymbolTable,
-): bool =
-  result = false
-  if not andR(@[left.sym.isSome, right.sym.isSome]):
-    return
-
-  let lSym = left.sym.get()
-  let rSym = right.sym.get()
-  let lTinfo = lSym.typeInfo
-  let rTinfo = rSym.typeInfo
-
-  if lTinfo.kind != rTinfo.kind:
-    return
-
-  case lTinfo.kind:
-  of tiToResolve:
-    return
-  of tiBasicType:
-    return (
-      lTinfo.myBasicType.kind == rTinfo.myBasicType.kind
-    )
-  of tiStruct:
-    discard
-  of tiFunc:
-    discard
+#proc sameType*(
+#  self: var Scone,
+#  left: SymbolTable,
+#  right: SymbolTable,
+#): bool =
+#  result = false
+#  if not andR(@[left.sym.isSome, right.sym.isSome]):
+#    return
+#
+#  let lSym = left.sym.get()
+#  let rSym = right.sym.get()
+#  let lTinfo = lSym.typeInfo
+#  let rTinfo = rSym.typeInfo
+#
+#  if lTinfo.kind != rTinfo.kind:
+#    return
+#
+#  case lTinfo.kind:
+#  of tiToResolve:
+#    return
+#  of tiBasicType:
+#    return (
+#      lTinfo.myBasicType.kind == rTinfo.myBasicType.kind
+#    )
+#  of tiStruct:
+#    discard
+#  of tiFunc:
+#    discard
 
 #type
 #  ScoreTree = ref ScoreTreeObj
@@ -313,6 +314,51 @@ proc sameType*(
 #    ast*: AstNode
 #    parent*: TypeTree
 #    childSeq*: 
+
+
+#proc lookupAndSetSymTblId*(
+#  self: var Scone,
+#  ast: AstNode,
+#): Option[SymbolTable] =
+#  result = none(SymbolTable)
+#  case ast.kind:
+#  of astIdent:
+#    discard
+#  of astU64Lit:
+#    discard
+#  of astStrLit:
+#    discard
+#  of astTrue:
+#    discard
+#  of astFalse:
+#    discard
+#  of astDeref:
+#    discard
+#  of astDot:
+#    discard
+#  #of astVar:
+#  #  discard
+#  #of astConst:
+#  #  discard
+#  of astUnop:
+#    discard
+#  of astBinop:
+#    discard
+#  of astFuncCall:
+#    discard
+#  of astFuncNamedArgImpl:
+#    discard
+#  of astGenericNamedArgImpl:
+#    discard
+#  of astVarEtcDeclMost:
+#    discard
+#  else:
+#    doAssert(
+#      false,
+#      sconcat(@[
+#        "eek! ", $ast
+#      ])
+#    )
 
 proc isBetterMatch(
   self: var Scone,
@@ -398,7 +444,7 @@ proc gatherFuncDecls*(
   let decls = info[].decls
   let name = funcCallAst.myFuncCall.ident.myIdent.strVal
   doAssert(
-    name in decls.tbl,
+    name in decls.nameTbl,
     sconcat(@[
       "Unknown called function of name ",
       "\"", name, "\" ",
@@ -410,7 +456,7 @@ proc gatherFuncDecls*(
 
   #var highestScore: int = 0
 
-  let myIdxSeq = decls.tbl[name]
+  let myIdxSeq = decls.nameTbl[name]
   for idx in myIdxSeq:
     let child = decls.childSeq[idx]
     result.add child
@@ -476,8 +522,8 @@ proc resolveFuncCallOverload*(
 #    let sym = optSym.get()
 #    case sym.kind:
 #    of symFuncDecl:
-#      if sym.name in parent.tbl:
-#        let myIdxSeq = parent.tbl[sym.name] 
+#      if sym.name in parent.nameTbl:
+#        let myIdxSeq = parent.nameTbl[sym.name] 
 #        for idx in myIdxSeq:
 #          let child = parent.childSeq[idx]
 #          doAssert(
@@ -541,8 +587,8 @@ proc checkDuplSym*(
       doAssert(
         (
           orR(@[
-            sym.name notin mySymTbl.tbl,
-            mySymTbl.tbl[sym.name].len() <= 1,
+            sym.name notin mySymTbl.nameTbl,
+            mySymTbl.nameTbl[sym.name].len() <= 1,
           ])
         ),
         sconcat(@[
@@ -550,12 +596,12 @@ proc checkDuplSym*(
           "\"", sym.name, "\" ",
           "(current instance ",
             (
-              mySymTbl.childSeq[mySymTbl.tbl[sym.name][1]].ast
+              mySymTbl.childSeq[mySymTbl.nameTbl[sym.name][1]].ast
             ).lexMain.locMsg(inputFname=self.inputFname),
           ") ",
           "(previous instance ",
             (
-              mySymTbl.childSeq[mySymTbl.tbl[sym.name][0]].ast
+              mySymTbl.childSeq[mySymTbl.nameTbl[sym.name][0]].ast
             ).lexMain.locMsg(inputFname=self.inputFname),
           ")"
         ])
@@ -583,13 +629,13 @@ proc addSym*(
     #echo sconcat(@[
     #  "addSym: tinfo: ", $sym.get().typeInfo[]
     #])
-    if sym.get().name notin parent.tbl:
+    if sym.get().name notin parent.nameTbl:
       #echo sconcat(@[
       #  "addsym: testificate: ", $(parent.childSeq.len() - 1)
       #])
-      parent.tbl[sym.get().name] = @[parent.childSeq.len() - 1]
+      parent.nameTbl[sym.get().name] = @[parent.childSeq.len() - 1]
     else:
-      parent.tbl[sym.get().name].add parent.childSeq.len() - 1
+      parent.nameTbl[sym.get().name].add parent.childSeq.len() - 1
     info[].curr.sym = sym
 
 proc locInLine*(

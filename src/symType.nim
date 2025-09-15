@@ -89,7 +89,7 @@ type
     ast*: AstNode                 # the `AstNode` of the scope
     sym*: Option[Symbol]          # The `Symbol` this `SymbolTable`
                                   # represents
-    tbl*: OrderedTable[string, seq[int]]
+    nameTbl*: OrderedTable[string, seq[int]]
                                   # mapping from symbol name
                                   # to indices into `childSeq`
     parent*: SymbolTable          # the parent `SymbolTable` of this one
@@ -105,6 +105,10 @@ type
     #structNameTbl*: OrderedTable[string, int]
     #funcNameTbl*: OrderedTable[string, seq[int]]
     #varNameTbl*: OrderedTable[string, seq[int]]
+proc isNamed*(
+  self: Symbol
+): bool =
+  result = (self.name.len() > 0)
 
 proc name*(
   self: var TypeInfo
@@ -157,7 +161,7 @@ proc toStr*(
     result.add i & "* " & "symbol: " & $self.sym.get()[] & "\n"
     result.add i & "* " & "typeInfo: " & $self.sym.get().typeInfo[] & "\n"
     result.add "\n"
-    for name, idxSeq in self.tbl:
+    for name, idxSeq in self.nameTbl:
       foundIdxSeq = foundIdxSeq.union(toHashSet(idxSeq))
       for idx in idxSeq:
         let child = self.childSeq[idx]

@@ -308,6 +308,38 @@ macro mkAstHier(): untyped =
         newNimNode(nnkEmpty),
       )
       recList.add identDefs
+    block:
+      #IdentDefs
+      #  Postfix
+      #    Ident "*"
+      #    Ident "symTblId"
+      #  BracketExpr
+      #    Ident "Option"
+      #    Ident "int"
+      #  Empty
+
+      var identDefs = newNimNode(nnkIdentDefs)
+      var bracketExpr = newNimNode(nnkBracketExpr)
+      bracketExpr.add(
+        ident("Option"),
+        ident("int"),
+      )
+      identDefs.add(
+        mkPubIdent("symTblId"),
+        #ident("int"),
+        bracketExpr,
+        newNimNode(nnkEmpty),
+      )
+      recList.add identDefs
+      #echo recList.repr()
+      #dumpTree:
+      #  type 
+      #    Aaaa = object
+      #      symTblId*: Option[int]
+      #let tempNode = quote do:
+      #  symTblId*: Option[int]
+      #  
+      #recList.add tempNode
     #block:
     #  var identDefs = newNimNode(nnkIdentDefs)
     #  identDefs.add(

@@ -238,7 +238,6 @@ proc doAstSrcFile(
   #)
   #self[].nextSymTblPass()
   discard myAst.mySrcFile.module.myDoIt(none(Symbol))
-
   #--------
   args.topLevelChanged = true
   while args.topLevelChanged:
@@ -476,17 +475,17 @@ proc doAstStruct(
     discard
     # TODO (maybe): support struct definitions besides at of the top level
     # of a `module`?
-    #for name, idxSeq in info[].prev.tbl:
+    #for name, idxSeq in info[].prev.nameTbl:
     #  for idx in idxSeq:
     #    let child = info[].prev.childSeq[idx]
     #    if child.sym.isSome:
     #      let sym = child.sym.get()
     #      if sym.kind != symStructDecl:
     #        continue
-    #      if name notin info[].curr.tbl:
-    #        info[].curr.tbl[name] = @[info[].curr.childSeq.len()]
+    #      if name notin info[].curr.nameTbl:
+    #        info[].curr.nameTbl[name] = @[info[].curr.childSeq.len()]
     #      else:
-    #        info[].curr.tbl[name].add info[].curr.childSeq.len()
+    #        info[].curr.nameTbl[name].add info[].curr.childSeq.len()
     #      info[].curr.childSeq.add info[].prev.childSeq[idx]
   #let self = args.self
   #if args.self.symS2d
