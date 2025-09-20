@@ -6,7 +6,8 @@ import std/options
 
 import dataStructuresMisc
 import ast
-import symType
+import typeInfo
+import symTbl
 
 import reduceEtc
 

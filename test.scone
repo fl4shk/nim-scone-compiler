@@ -37,7 +37,7 @@ def times[T](a: T, b: T) -> T {
 def times[T](a: Vec2[T], scale: T) -> Vec2[T] {
   var result: Vec2[T];
   for idx in 0 until 2 {
-    result.at(idx) = a.at(idx).times(scale);
+    result.at(idx) = a.at(idx).times(b=scale);
   }
   return result;
 };
@@ -65,6 +65,8 @@ def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
         result.at(idx) = toSum(0).at(idx);
       }
     } else {
+      #result = plus(result, plus(result, toSum(jdx)));
+      result = plus(a=result, b=toSum(jdx));
       result = result.plus(toSum(jdx));
     }
   }
@@ -116,6 +118,16 @@ struct Vec3Arr3Vec2[T] {
   x: array[1 * 3; Vec2[T]];
   y: array[1 * 3; Vec2[T]];
   z: array[1 * 3; Vec2[T]];
+};
+struct Vec3OarrVec2[T] {
+  x: openarray[Vec2[T]];
+  y: openarray[Vec2[T]];
+  z: openarray[Vec2[T]];
+};
+struct Vec3Oarr[T] {
+  #x: openarray[T];
+  #y: openarray[T];
+  #z: openarray[T];
 };
 
 #def testFunc[T](a: var Vec2[T], b: var Vec2[T]) -> T {

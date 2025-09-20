@@ -318,11 +318,20 @@ exprLhs:
 	;
 
 exprIdentOrFuncCall:
-	ident
-
-	exprFuncCallPostIdent?	// if we have `exprFuncCallPostIdent`,
-							// this indicates calling either 
-							// a function or method
+	(
+		ident
+		exprFuncCallPostIdent?	// if we have `exprFuncCallPostIdent`,
+								// this indicates calling either 
+								// a function or method
+	) | (
+		typeBuiltinWithoutOptPreKwVar '(' funcUnnamedArgImplList? ')'
+		//exprFuncCallPostGeneric
+	) | (
+		exprOpenarrayLit
+	)
+	;
+exprOpenarrayLit:
+	'$(' funcUnnamedArgImplList? ')'
 	;
 
 exprIdentOrFuncCallPostDot:
@@ -371,10 +380,15 @@ exprFuncCallPostGenericMain:
 	
 //--------
 
-typeMain:
+typeMainBuiltin:
 	typeBasicBuiltin
-	| typeToResolve
 	| typeArray
+	| typeOpenarray
+	;
+	
+typeMain:
+	typeMainBuiltin
+	| typeToResolve
 	//| 'array' '[' expr (',' expr)* ':' typeWithoutOptPreKwVar ']'
 	//| 'array' '{'
 	//	('dim' '=')? expr ','
@@ -385,8 +399,14 @@ typeMain:
 typeArray:
 	'array' '[' expr ';' typeWithoutOptPreKwVar ']'
 	;
+typeOpenarray:
+	'openarray' '[' typeWithoutOptPreKwVar ']'
+	;
 
 
+typeBuiltinWithoutOptPreKwVar:
+	('ptr')* typeMainBuiltin
+	;
 typeWithoutOptPreKwVar:
 	('ptr')* typeMain //typeArrDim*
 	;

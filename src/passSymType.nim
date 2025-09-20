@@ -5,7 +5,8 @@ import std/options
 import scone
 import dataStructuresMisc
 import ast
-import symType
+import typeInfo
+import symTbl
 import reduceEtc
 
 type
@@ -302,6 +303,18 @@ proc doAstStrLit(
     kind: stResultString,
     myString: myAst.myStrLit.strLitVal,
   )
+proc doAstOpenarrLit(
+  args: var SymTypeArgs,
+): SymTypeResult =
+  #result = SymTypeResult(
+  #  ast: myAst,
+  #  kind: stResultString,
+  #  myString: myAst.myStrLit.strLitVal,
+  #)
+  result = SymTypeResult(
+    ast: myAst,
+    kind: stResultNone
+  )
 
 proc doAstTrue(
   args: var SymTypeArgs,
@@ -497,6 +510,13 @@ proc doAstEnum(
     kind: stResultNone
   )
   #let self = args.self
+proc doAstVariant(
+  args: var SymTypeArgs,
+): SymTypeResult =
+  result = SymTypeResult(
+    ast: myAst,
+    kind: stResultNone
+  )
 proc doAstExtern(
   args: var SymTypeArgs,
 ): SymTypeResult =
@@ -659,6 +679,46 @@ proc doAstArray(
     discard
   else:
     eek()
+proc doAstOpenarray(
+  args: var SymTypeArgs,
+): SymTypeResult =
+  result = SymTypeResult(
+    ast: myAst,
+    kind: stResultNone,
+  )
+  let self = args.self
+  case args.subPass:
+  of spstFindTopLevelDecls:
+    #result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
+    discard
+  of spstSubstGenerics:
+    discard
+  of spstHandleFuncOverloading:
+    discard
+  of spstTypeCheck:
+    discard
+  else:
+    eek()
+proc doAstBuiltinTypeCast(
+  args: var SymTypeArgs,
+): SymTypeResult =
+  result = SymTypeResult(
+    ast: myAst,
+    kind: stResultNone,
+  )
+  let self = args.self
+  case args.subPass:
+  of spstFindTopLevelDecls:
+    #result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
+    discard
+  of spstSubstGenerics:
+    discard
+  of spstHandleFuncOverloading:
+    discard
+  of spstTypeCheck:
+    discard
+  else:
+    eek()
 proc doAstUnop(
   args: var SymTypeArgs,
 ): SymTypeResult =
@@ -705,7 +765,7 @@ proc doAstBasicType(
         funcVar: false,
         ptrDim: 0,
         arrDim: 0,
-        ast: myAst
+        #ast: myAst
       ),
       kind: tiBasicType,
     )
@@ -746,7 +806,7 @@ proc doAstNamedType(
         funcVar: false,
         ptrDim: 0,
         arrDim: 0,
-        ast: myAst,
+        #ast: myAst,
       ),
       kind: tiToResolve,
     )
@@ -989,8 +1049,10 @@ proc doPassSymTypeMain(
     result = args.doAstU64Lit()
   of astStrLit:
     result = args.doAstStrLit()
+  of astOpenarrLit:
+    result = args.doAstOpenarrLit()
   of astTrue:
-    result =args.doAstTrue()
+    result = args.doAstTrue()
   of astFalse:
     result = args.doAstFalse()
   #of astPtr:
@@ -1011,6 +1073,8 @@ proc doPassSymTypeMain(
     result = args.doAstStruct()
   of astEnum:
     result = args.doAstEnum()
+  of astVariant:
+    result = args.doAstVariant()
   of astExtern:
     result = args.doAstExtern()
   of astCextern:
@@ -1045,6 +1109,10 @@ proc doPassSymTypeMain(
     result = args.doAstReturn()
   of astArray:
     result = args.doAstArray()
+  of astOpenarray:
+    result = args.doAstOpenarray()
+  of astBuiltinTypeCast:
+    result = args.doAstBuiltinTypeCast()
   of astUnop:
     result = args.doAstUnop()
   of astBinop:

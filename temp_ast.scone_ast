@@ -2,436 +2,239 @@ nextSymTblPass():
 unnamed:
   named: "Aaaa"
   * symbol: (inputFname: "test.scone", name: "Aaaa", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: some("Aaaa"), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiStruct, myStruct: (genericIdxSeq: @[], fieldIdxSeq: @[0]))
+  * typeInfo: (main: (inputFname: "test.scone", name: some("Aaaa"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiStruct, myStruct: (genericIdxSeq: @[], fieldIdxSeq: @[0]))
 
     named: "x"
     * symbol: (inputFname: "test.scone", name: "x", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "Vec2I32"
   * symbol: (inputFname: "test.scone", name: "Vec2I32", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2I32"), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiStruct, myStruct: (genericIdxSeq: @[], fieldIdxSeq: @[0, 1]))
+  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2I32"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiStruct, myStruct: (genericIdxSeq: @[], fieldIdxSeq: @[0, 1]))
 
     named: "x"
     * symbol: (inputFname: "test.scone", name: "x", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstBasicType kind basicTypeI32)), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
 
     named: "y"
     * symbol: (inputFname: "test.scone", name: "y", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstBasicType kind basicTypeI32)), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
 
   named: "Vec2"
   * symbol: (inputFname: "test.scone", name: "Vec2", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2]))
+  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2]))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "x"
     * symbol: (inputFname: "test.scone", name: "x", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "y"
     * symbol: (inputFname: "test.scone", name: "y", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "Vec2Ptr"
   * symbol: (inputFname: "test.scone", name: "Vec2Ptr", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2Ptr"), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2]))
+  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2Ptr"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2]))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "x"
     * symbol: (inputFname: "test.scone", name: "x", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 1, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 1, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "y"
     * symbol: (inputFname: "test.scone", name: "y", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 1, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 1, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "Vec3Arr3Vec2"
   * symbol: (inputFname: "test.scone", name: "Vec3Arr3Vec2", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec3Arr3Vec2"), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2, 3]))
+  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec3Arr3Vec2"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2, 3]))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "x"
     * symbol: (inputFname: "test.scone", name: "x", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 3, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 3), kind: tiToResolve, myToResolve: ())
 
     named: "y"
     * symbol: (inputFname: "test.scone", name: "y", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 3, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 3), kind: tiToResolve, myToResolve: ())
 
     named: "z"
     * symbol: (inputFname: "test.scone", name: "z", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 3, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 3), kind: tiToResolve, myToResolve: ())
+
+  named: "Vec3OarrVec2"
+  * symbol: (inputFname: "test.scone", name: "Vec3OarrVec2", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
+  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec3OarrVec2"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2, 3]))
+
+    named: "T"
+    * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
+
+    named: "x"
+    * symbol: (inputFname: "test.scone", name: "x", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
+    * typeInfo: (main: (inputFname: "test.scone", name: some("openarray"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
+
+    named: "y"
+    * symbol: (inputFname: "test.scone", name: "y", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
+    * typeInfo: (main: (inputFname: "test.scone", name: some("openarray"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
+
+    named: "z"
+    * symbol: (inputFname: "test.scone", name: "z", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
+    * typeInfo: (main: (inputFname: "test.scone", name: some("openarray"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
+
+  named: "Vec3Oarr"
+  * symbol: (inputFname: "test.scone", name: "Vec3Oarr", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
+  * typeInfo: (main: (inputFname: "test.scone", name: some("Vec3Oarr"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[]))
+
+    named: "T"
+    * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "dot"
   * symbol: (inputFname: "test.scone", name: "dot", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
+  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "a"
     * symbol: (inputFname: "test.scone", name: "a", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "b"
     * symbol: (inputFname: "test.scone", name: "b", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "<result>"
     * symbol: (inputFname: "test.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "plus"
   * symbol: (inputFname: "test.scone", name: "plus", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
+  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "a"
     * symbol: (inputFname: "test.scone", name: "a", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: true, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: true, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "b"
     * symbol: (inputFname: "test.scone", name: "b", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: true, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: true, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "<result>"
     * symbol: (inputFname: "test.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "plus"
   * symbol: (inputFname: "test.scone", name: "plus", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
+  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "a"
     * symbol: (inputFname: "test.scone", name: "a", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "b"
     * symbol: (inputFname: "test.scone", name: "b", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "<result>"
     * symbol: (inputFname: "test.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "times"
   * symbol: (inputFname: "test.scone", name: "times", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
+  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "a"
     * symbol: (inputFname: "test.scone", name: "a", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "b"
     * symbol: (inputFname: "test.scone", name: "b", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "<result>"
     * symbol: (inputFname: "test.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "times"
   * symbol: (inputFname: "test.scone", name: "times", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
+  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "a"
     * symbol: (inputFname: "test.scone", name: "a", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "scale"
     * symbol: (inputFname: "test.scone", name: "scale", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "<result>"
     * symbol: (inputFname: "test.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "at"
   * symbol: (inputFname: "test.scone", name: "at", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
+  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "self"
     * symbol: (inputFname: "test.scone", name: "self", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "idx"
     * symbol: (inputFname: "test.scone", name: "idx", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstBasicType kind basicTypeU32)), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
 
     named: "<result>"
     * symbol: (inputFname: "test.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: true, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "T")
-  genericImpl (AstGenericList mySeq [
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("T"), funcVar: true, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
   named: "sum"
   * symbol: (inputFname: "test.scone", name: "sum", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1], resultIdx: 2))
+  * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1], resultIdx: 2))
 
     named: "T"
     * symbol: (inputFname: "test.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0, ast: nil), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
     named: "toSum"
     * symbol: (inputFname: "test.scone", name: "toSum", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 24, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: 24), kind: tiToResolve, myToResolve: ())
 
     named: "<result>"
     * symbol: (inputFname: "test.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0, ast: (AstNamedType
-  ident (AstIdent "Vec2")
-  genericImpl (AstGenericList mySeq [
-    (AstType
-      kwVar false
-      ptrDim 0
-      child (AstNamedType
-        ident (AstIdent "T")
-        genericImpl (AstGenericList mySeq [
-        ])
-      )
-    )
-  ])
-)), kind: tiToResolve, myToResolve: ())
+    * typeInfo: (main: (inputFname: "test.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: 0), kind: tiToResolve, myToResolve: ())
 
 --------
 

@@ -3,7 +3,8 @@ import std/macros
 import std/strutils
 
 import dataStructuresMisc
-#import symType
+#import symTbl
+import typeInfo
 
 import reduceEtc
 
@@ -322,10 +323,11 @@ macro mkAstHier(): untyped =
       var bracketExpr = newNimNode(nnkBracketExpr)
       bracketExpr.add(
         ident("Option"),
-        ident("int"),
+        #ident("int"),
+        ident("TypeInfo"),
       )
       identDefs.add(
-        mkPubIdent("symTblId"),
+        mkPubIdent("typeInfo"),
         #ident("int"),
         bracketExpr,
         newNimNode(nnkEmpty),
@@ -855,6 +857,13 @@ proc toRepr*(
     result.add $ast.myU64Lit.u64Val
   of astStrLit:
     result.add "\"" & ast.myStrLit.strLitVal & "\""
+  of astOpenarrLit:
+    result.add "$(" 
+    for idx in 0 ..< ast.myOpenarrLit.openarrLitSeq.len():
+      result.add ast.myOpenarrLit.openarrLitSeq[idx].myToRepr()
+      if idx + 1 < ast.myOpenarrLit.openarrLitSeq.len():
+        result.add ", "
+    result.add ")"
   of astTrue:
     result.add "true"
   of astFalse:
@@ -911,6 +920,8 @@ proc toRepr*(
       )
     result.add "}"
   of astEnum:
+    discard
+  of astVariant:
     discard
   of astExtern:
     discard
@@ -994,6 +1005,15 @@ proc toRepr*(
     result.add ast.myArray.dim.myToRepr() & "; "
     result.add ast.myArray.elemType.myToRepr()
     result.add "]"
+  of astOpenarray:
+    result.add "openarray["
+    result.add ast.myOpenarray.elemType.myToRepr()
+    result.add "]"
+  of astBuiltinTypeCast:
+    result.add ast.myBuiltinTypeCast.type.myToRepr()
+    result.add "("
+    result.add ast.myBuiltinTypeCast.obj.myToRepr()
+    result.add ")"
   of astUnop:
     var inclParens: bool = false
     let myUnopExprOp = (

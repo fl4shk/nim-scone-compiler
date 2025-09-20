@@ -746,6 +746,30 @@ proc parseTypeArray(
   )
   self.lexAndExpect(tokRBracket)
   #discard unstack()
+proc parseTypeOpenarray(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard doChkTok(tokOpenarray)
+  result.ast = mkAst(kind=astOpenarray)
+  self.lexAndExpect(tokLBracket)
+  result.ast.myOpenarray.elemType = (
+    self.parseTypeWithoutOptPreKwVar(chk=false).ast
+  )
+  self.lexAndExpect(tokRBracket)
+
+proc parseTypeMainBuiltin(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result = doChkSelParse(
+    sppSeq @[
+      parseTypeBasicBuiltin,
+      parseTypeArray,
+      parseTypeOpenarray,
+    ],
+    none(HashSet[TokKind])
+  )
 
 proc parseTypeMain(
   self: var Scone,
@@ -777,9 +801,8 @@ proc parseTypeMain(
   #echo "debug: parseTypeMain(): start"
   result = doChkSelParse(
     sppSeq @[
-      parseTypeBasicBuiltin,
+      parseTypeMainBuiltin,
       parseTypeToResolve,
-      parseTypeArray,
     ],
     none(HashSet[TokKind])
   )
@@ -800,6 +823,53 @@ proc parseTypeMain(
 #  self: var Scone,
 #  chk: bool,
 #): bool =
+proc parseTypeBuiltinWithoutOptPreKwVar(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  result.foundTok = none(TokKind)
+
+  var ptrDim: uint = 0
+  var haveEither: bool = false
+
+  let myVpTokSet = toHashSet([
+    #tokVar, 
+    tokPtr
+  ])
+  #result.tokSet = result.tokSet.union(myVpTokSet)
+  let tempTokSet = result.tokSet.union(
+    self.parseTypeMain(chk=true).tokSet
+  )
+
+  var myTok = self.lexAndCheck(
+    chk=true,
+    tokSet=myVpTokSet,
+  )
+
+  if myTok.isSome:
+    haveEither = true
+    if chk:
+      result.foundTok = some(myTok.get)
+      return
+    else: # if not chk:
+      while myTok.isSome:
+        myTok = self.selParse(
+          selTokSet=toHashSet([tokPtr])
+        )
+        if myTok.isSome:
+          self.lex()
+          ptrDim += 1
+      result.tokSet = tempTokSet
+  if chk and not haveEither:
+    result = doChkSpp(parseTypeMain, some(tempTokSet))
+  
+  result.ast = mkAst(kind=astType)
+  if haveEither:
+    if ptrDim == 0:
+      discard
+    else:
+      result.ast.myType.ptrDim = ptrDim
+  result.ast.myType.child = self.parseTypeMainBuiltin(chk=false).ast
 
 proc parseTypeWithOptPreKwVar(
   self: var Scone,
@@ -1466,21 +1536,53 @@ proc parseExprFuncCallPostIdent(
     #  postTokSeq=(@[tokRParen]),
     #)
 
+proc parseExprOpenarrayLit(
+  self: var Scone,
+  chk: bool,
+): SppResult =
+  discard
+  
 proc parseExprIdentOrFuncCall(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  result = doChkSpp(parseIdent)
-  self.parentTempSeq.add mkAst(astFuncCall)
-  let temp = self.optParse(
-    chk=false,
-    selProc=spp parseExprFuncCallPostIdent,
+  proc subParseExprIdentOrFuncCall(
+    self: var Scone,
+    chk: bool,
+  ): SppResult =
+    result = doChkSpp(parseIdent)
+    self.parentTempSeq.add mkAst(astFuncCall)
+    let temp = self.optParse(
+      chk=false,
+      selProc=spp parseExprFuncCallPostIdent,
+    )
+    if temp.foundTok.isSome:
+      let myIdent = result.ast 
+      result.ast = self.parentTempSeq[^1]
+      result.ast.myFuncCall.ident = myIdent
+    discard self.parentTempSeq.pop()
+  proc subParseExprBuiltinTypeCast(
+    self: var Scone,
+    chk: bool,
+  ): SppResult =
+    result = doChkSpp(parseTypeBuiltinWithoutOptPreKwVar)
+    #self.parentTempSeq.add mkAst(
+    #self.parentTempSeq
+
+  #proc subParseExprMkOpenarrayCall(
+  #  self: var Scone,
+  #  chk: bool
+  #): SppResult =
+  #  discard
+
+  result = doChkSelParse(
+    sppSeq @[
+      subParseExprIdentOrFuncCall,
+      subParseExprBuiltinTypeCast,
+      parseExprOpenarrayLit,
+    ],
+    none(HashSet[TokKind])
   )
-  if temp.foundTok.isSome:
-    let myIdent = result.ast 
-    result.ast = self.parentTempSeq[^1]
-    result.ast.myFuncCall.ident = myIdent
-  discard self.parentTempSeq.pop()
 
 proc parseExprIdentOrFuncCallPostDot(
   self: var Scone,
@@ -2511,7 +2613,7 @@ proc parseSrcFile(
   self.lexAndExpect(tokEof)
   #self.astRoot = self.parseExpr(chk=false).ast
   #echo $self.astRoot.kind
-  #echo $self.astRoot
+  echo $self.astRoot
   #echo self.astRoot.toRepr()
   #echo self.astRoot.repr()
   #let temp = self.loopSelParse()

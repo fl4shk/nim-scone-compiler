@@ -116,7 +116,7 @@ type
   AstNode* = ref AstNodeObj
   AstNodeObj* = object
     lexMain*: LexMain
-    symTblId*: int
+    typeInfo*: Option[TypeInfo]
     case kind*: AstKind
     of astSrcFile:
       mySrcFile*: AstSrcFile

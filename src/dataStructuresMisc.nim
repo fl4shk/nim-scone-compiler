@@ -260,6 +260,12 @@ const `helperTokKindSeq`*: seq[(
       ("strLitVal", astValString)
     ]
   ),
+  (
+    "OpenarrLit", some("$("), true,
+    @[
+      ("openarrLitSeq", astValSeqAstNode),
+    ],
+  ),
   #--------
   ("True", some("true"), true, @[]),
   ("False", some("false"), true, @[]),
@@ -349,6 +355,15 @@ const `helperTokKindSeq`*: seq[(
     ]
   ),
   (
+    "Variant", some("variant"), true,
+    @[
+      # TODO: come back to this later
+      #("ident", astValAstNode),
+      #("genericDecl", astValOptAstNode),
+      #("fieldSeq", astValSeqAstNode)
+    ],
+  ),
+  (
     "Extern", some("extern"), true,
     @[
       # TODO: come back to this later
@@ -367,7 +382,7 @@ const `helperTokKindSeq`*: seq[(
     ]
   ),
   (
-    "CImport", some("cimport"), true,
+    "Cimport", some("cimport"), true,
     @[
       # TODO: come back to this later
     ]
@@ -467,6 +482,25 @@ const `helperTokKindSeq`*: seq[(
       ("elemType", astValAstNode),
     ]
   ),
+  (
+    "Openarray", some("openarray"), true,
+    @[
+      ("elemType", astValAstNode)
+    ],
+  ),
+  (
+    "BuiltinTypeCast", none(string), true,
+    @[
+      ("type", astValAstNode),
+      ("obj", astValAstNode),
+    ],
+  ),
+  #(
+  #  "LenCall", some("len"), true,
+  #  @[
+  #    ("arg", astValAstNode)
+  #  ],
+  #),
   ("Void", some("void"), false, @[]),
   ("Bool", some("bool"), false, @[]),
   ("U8", some("u8"), false, @[]),
