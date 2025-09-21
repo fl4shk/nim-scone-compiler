@@ -1289,8 +1289,18 @@ proc parseFuncUnnamedArgImplItem(
       result.foundTok1 = none(TokKind)
   else: # if not chk:
     result = self.parseExpr(chk=false)
-    var myFuncCall = self.parentTempSeq[^1]
-    myFuncCall.myFuncCall.argImplSeq.add result.ast
+    var tempAst = self.parentTempSeq[^1]
+    #var myFuncCall = self.parentTempSeq[^1]
+    case tempAst.kind:
+    of astOpenarrLit:
+      tempAst.myOpenarrLit.openarrLitSeq.add result.ast
+    of astFuncCall:
+      tempAst.myFuncCall.argImplSeq.add result.ast
+    else:
+      doAssert(
+        false,
+        "eek! " & $tempAst.kind & " " & $self.lexMain
+      )
 
 proc parseFuncUnnamedArgImplList(
   self: var Scone,
@@ -1540,7 +1550,11 @@ proc parseExprOpenarrayLit(
   self: var Scone,
   chk: bool,
 ): SppResult =
-  discard
+  discard doChkTok(tokOpenarrLit)
+  self.parentTempSeq.add mkAst(astOpenarrLit)
+  self.parseFuncUnnamedArgImplList()
+  result.ast = self.parentTempSeq.pop()
+  self.lexAndExpect(tokRParen)
   
 proc parseExprIdentOrFuncCall(
   self: var Scone,
@@ -1566,6 +1580,12 @@ proc parseExprIdentOrFuncCall(
     chk: bool,
   ): SppResult =
     result = doChkSpp(parseTypeBuiltinWithoutOptPreKwVar)
+    self.lexAndExpect(tokLParen)
+    var myType = result.ast
+    result.ast = mkAst(astBuiltinTypeCast)
+    result.ast.myBuiltinTypeCast.type = myType
+    result.ast.myBuiltinTypeCast.obj = self.parseExpr(chk=false).ast
+    self.lexAndExpect(tokRParen)
     #self.parentTempSeq.add mkAst(
     #self.parentTempSeq
 

@@ -324,8 +324,8 @@ exprIdentOrFuncCall:
 								// this indicates calling either 
 								// a function or method
 	) | (
-		typeBuiltinWithoutOptPreKwVar '(' funcUnnamedArgImplList? ')'
-		//exprFuncCallPostGeneric
+		typeBuiltinWithoutOptPreKwVar '(' expr ')'
+		// a cast to a built-in type
 	) | (
 		exprOpenarrayLit
 	)

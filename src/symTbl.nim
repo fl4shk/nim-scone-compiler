@@ -68,26 +68,6 @@ proc isNamed*(
 ): bool =
   result = (self.name.len() > 0)
 
-proc name*(
-  self: var TypeInfo
-): var Option[string] =
-  self.main.name
-
-proc funcVar*(
-  self: var TypeInfo
-): var bool =
-  self.main.funcVar
-
-proc ptrDim*(
-  self: var TypeInfo
-): var uint =
-  result = self.main.ptrDim
-
-proc arrDim*(
-  self: var TypeInfo
-): var uint64 =
-  result = self.main.arrDim
-
 #proc parentSymIdx*(
 #  self: var TypeInfo
 #): var uint64 =

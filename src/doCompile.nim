@@ -2,7 +2,7 @@
 #import std/sequtils
 #import std/tables
 #import std/sets
-import std/options
+#import std/options
 
 import dataStructuresMisc
 import ast

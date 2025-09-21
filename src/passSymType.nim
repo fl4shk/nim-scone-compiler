@@ -57,17 +57,17 @@ template subPass(
 template eek(): untyped =
   doAssert(
     false,
-    "eek! " & $args.subPass & " " & $args.ast
+    sconcat(@[
+      "eek! ", $args.subPass, " ", $args.ast
+    ])
   )
 template parentEek(): untyped =
   doAssert(
     false,
     sconcat(@[
       "eek! ",
-      $parentSym[].kind,
-      " ",
-      $parentSym[].typeInfo[],
-      ";  ",
+      $parentSym[].kind, " ",
+      $parentSym[].typeInfo[], ";  ",
       $args.parentAstSeq[][^1]
     ])
   )
@@ -391,7 +391,8 @@ proc doAstDef(
                             # at a later date.
         funcVar: false,
         ptrDim: 0,
-        arrDim: 0,
+        arrDim: none(uint64),
+        arrKind: tiarrNothing,
       ),
       kind: tiFunc,
     )
@@ -465,7 +466,9 @@ proc doAstStruct(
         name: some(myAst.myStruct.ident.myIdent.strVal),
         funcVar: false,
         ptrDim: 0,
-        arrDim: 0,
+        arrDim: none(uint64),
+        #isOpenarr: false,
+        arrKind: tiarrNothing
       ),
       kind: tiStruct,
     )
@@ -660,17 +663,16 @@ proc doAstArray(
     if tempArrDim <= 0i64:
       doAssert(
         false,
-        (
-          "Error: evaluated array dimension invalid "
-        ) & (
-          "(because " & $tempArrDim & " <= 0): ("
-        ) & (
-          myAst.lexMain.locMsg(self[].inputFname)
-        ) & (
+        sconcat(@[
+          "Error: evaluated array dimension invalid ",
+          "(because " & $tempArrDim & " <= 0): (",
+          myAst.lexMain.locMsg(self[].inputFname),
           ")"
-        )
+        ])
       )
-    result.myType.arrDim() = uint64(tempArrDim)
+    result.myType.arrDim() = some(uint64(tempArrDim))
+    #result.myType.isOpenarr() = false
+    result.myType.arrKind() = tiarrArr
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -690,7 +692,9 @@ proc doAstOpenarray(
   case args.subPass:
   of spstFindTopLevelDecls:
     #result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
-    discard
+    result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
+    result.myType.arrDim() = none(uint64)
+    result.myType.arrKind() = tiarrOpenarr
   of spstSubstGenerics:
     discard
   of spstHandleFuncOverloading:
@@ -764,7 +768,8 @@ proc doAstBasicType(
         name: none(string),
         funcVar: false,
         ptrDim: 0,
-        arrDim: 0,
+        arrDim: none(uint64),
+        arrKind: tiarrNothing
         #ast: myAst
       ),
       kind: tiBasicType,
@@ -805,7 +810,8 @@ proc doAstNamedType(
         name: some(ident),
         funcVar: false,
         ptrDim: 0,
-        arrDim: 0,
+        arrDim: none(uint64),
+        arrKind: tiarrNothing
         #ast: myAst,
       ),
       kind: tiToResolve,
@@ -917,7 +923,8 @@ proc doAstGenericList(
           name: none(string),
           funcVar: false,
           ptrDim: 0,
-          arrDim: 0,
+          arrDim: none(uint64),
+          arrKind: tiarrNothing
         ),
         kind: tiToResolve
       )

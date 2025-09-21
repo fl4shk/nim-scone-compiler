@@ -1,0 +1,53 @@
+module myModule;
+
+struct Vec2[T] {
+  x: T;
+  y: T;
+};
+struct Vec2Oarr[T] {
+  x: openarray[T];
+  y: openarray[T];
+};
+
+def size[T](self: var Vec2[T]) -> u32 {
+  return u32(2);
+};
+
+def at[T](self: var Vec2[T], idx: u32) -> var T {
+  if idx == 0 {
+    return self.x;
+  } else {
+    return self.y;
+  }
+};
+
+def plus(left: var u32, right: var u32) -> u32 {
+  const result: u32 = left + right;
+  return result;
+};
+
+def plus[T](left: var Vec2[T], right: var Vec2[T]) -> Vec2[T] {
+  var result: Vec2[T];
+  for idx in 0 until left.size() {
+    result.at(idx) = left.at(idx).plus(right.at(idx));
+  }
+  return result;
+};
+def getSomePi() -> openarray[u32] {
+  var result: openarray[u32] = $(
+    u32(3), u32(1), u32(4), u32(1), u32(5), u32(9)
+  );
+  return result;
+};
+##def sum[T](
+#def sum[T](toSum: openarray[T]) -> T {
+#  var result: T;
+#  for idx in 0 until toSum.len() {
+#    if idx == 0 {
+#      result = toSum(idx);
+#    } else {
+#      result = result.plus(toSum(idx));
+#    }
+#  }
+#  return result;
+#};

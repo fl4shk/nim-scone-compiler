@@ -67,6 +67,19 @@ def sum[T](toSum: var array[8 * 3; Vec2[T]]) -> Vec2[T] {
     } else {
       #result = plus(result, plus(result, toSum(jdx)));
       result = plus(a=result, b=toSum(jdx));
+      #result = result.plus(toSum(jdx));
+    }
+  }
+  return result;
+};
+def sum[T](toSum: var openarray[Vec2[T]]) -> Vec2[T] {
+  var result: Vec2[T];
+  for jdx in 0 until toSum.len() {
+    if jdx == 0 {
+      for idx in 0 until 2 {
+        result.at(idx) = toSum(0).at(idx);
+      }
+    } else {
       result = result.plus(toSum(jdx));
     }
   }
