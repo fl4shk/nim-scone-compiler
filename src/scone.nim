@@ -28,17 +28,18 @@ type
     #spstMkSymbolTables,
     #spstHandleImport,
     spstFindTopLevelDecls,
-    spstSubstGenerics,
-    spstHandleFuncOverloading,
-    spstTypeCheck,
+    spstPostFindTopLevelDecls,
+    #spstSubstGenerics,
+    #spstHandleFuncOverloading,
+    #spstTypeCheck,
     limSpSymType,
 
   SconeCurrSymTblInfo* = object
-    symTblId*: int
+    #symTblId*: int
     decls*: SymbolTable
     curr*: SymbolTable
     prev*: SymbolTable
-    astTbl*: OrderedTable[AstNode, int]
+    #astTbl*: OrderedTable[AstNode, int]
     #childIdxSeq*: seq[int]
   Scone* = object
     maxMacroExpansion*: uint #= 1024u
@@ -107,29 +108,9 @@ proc addChildSymTbl(
   if info[].prev != nil:
     info[].prev = info[].prev.childSeq[info[].curr.childSeq.len()]
 
-  #echo sconcat(@[
-  #  "addChildSymTbl: childSeq.len(): ", $info[].curr.childSeq.len()
-  #])
-  #echo sconcat(@[
-  #  "addChildSymTbl: child: ", $child[]
-  #])
-  #if info[].curr.childSeq.len() == 1:
-  #  doAssert(
-  #    false,
-  #    sconcat(@[
-  #      "addChildSymTbl: debug msg: ",
-  #      $(info[].curr.parent != nil),
-  #    ])
-  #  )
   info[].curr.childSeq.add child
   info[].curr.childSeq[^1].parent = info[].curr
-  #echo sconcat(@[
-  #  "addChildSymTbl: post set parent: ",
-  #  $(info[].curr.childSeq[^1].parent != nil), " ",
-  #  $(info[].curr.childSeq.len())
-  #])
   info[].curr = info[].curr.childSeq[^1]
-  #self.mySymTblInfo.childIdxSeq
 
 #proc mkSymbolTableMain(
 #  self: var Scone,
@@ -329,6 +310,8 @@ proc sameLexMainEtc*(
 #    discard
 #  of astStrLit:
 #    discard
+#  #of astOpenarrLit:
+#  #  discard
 #  of astTrue:
 #    discard
 #  of astFalse:
@@ -618,22 +601,7 @@ proc addSym*(
   self.addChildSymTbl(ast=ast)
   if sym.isSome:
     let parent = info[].curr.parent
-    #echo sconcat(@[
-    #  "addSym: parent: ", $parent[]
-    #])
-    #echo sconcat(@[
-    #  "addSym: curr: ", $info[].curr[], " ", $info[].curr.childSeq.len()
-    #])
-    #echo sconcat(@[
-    #  "addSym: sym: ", $sym.get()[]
-    #])
-    #echo sconcat(@[
-    #  "addSym: tinfo: ", $sym.get().typeInfo[]
-    #])
     if sym.get().name notin parent.nameTbl:
-      #echo sconcat(@[
-      #  "addsym: testificate: ", $(parent.childSeq.len() - 1)
-      #])
       parent.nameTbl[sym.get().name] = @[parent.childSeq.len() - 1]
     else:
       parent.nameTbl[sym.get().name].add parent.childSeq.len() - 1

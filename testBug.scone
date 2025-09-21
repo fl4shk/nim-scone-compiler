@@ -33,12 +33,24 @@ def plus[T](left: var Vec2[T], right: var Vec2[T]) -> Vec2[T] {
   }
   return result;
 };
-def getSomePi() -> openarray[u32] {
-  var result: openarray[u32] = $(
-    u32(3), u32(1), u32(4), u32(1), u32(5), u32(9)
-  );
-  return result;
+def sum(toSum: var array[8; Vec2[u32]]) -> Vec2[u32] {
+  var result: Vec2[u32];
+  for idx in 0 until toSum.size() {
+    switch idx {
+      case 0 {
+        result = toSum(idx);
+      }
+      default {
+        result = result.plus(toSum(idx));
+      }
+    }
+  }
 };
+
+#def getSomePi() -> openarray[u32] {
+#  const result: openarray[u32] = $(3, 1, 4, 1, 5, 9);
+#  return result;
+#};
 ##def sum[T](
 #def sum[T](toSum: openarray[T]) -> T {
 #  var result: T;

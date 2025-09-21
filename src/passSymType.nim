@@ -20,6 +20,7 @@ type
     parentSymSeq*: ptr seq[Symbol]
     #parentResultSeq*: ptr seq[SymTypeResult]
     moduleIdent*: ptr string
+    funcDeclNameTbl*: ptr OrderedTable[string, int]
     #chkSeq*: ptr seq[bool]
     #chk*: bool
 
@@ -32,22 +33,26 @@ type
     stResultExpr,
     stResultSym,
     stResultType,
-    stResultSeq,
+    #stResultSeq,
+    stResultOpenarrLit,
+
+  SymTypeResultNone = object
 
   SymTypeResult = ref SymTypeResultObj
   SymTypeResultObj = object
     #isScope*: bool
     ast*: AstNode
     case kind*: SymTypeResultKind
-    of stResultNone: myResultNone*: uint8
+    of stResultNone: myResultNone*: SymTypeResultNone
     of stResultIdent: myIdent*: string
     of stResultString: myString*: string
     of stResultU64: myU64*: uint64
     of stResultBool: myBool*: bool
-    of stResultExpr: myExpr*: AstNode
+    of stResultExpr: myExpr*: SymTypeResultNone
     of stResultSym: mySym*: Symbol
     of stResultType: myType*: TypeInfo
-    of stResultSeq: mySeq*: seq[SymTypeResult]
+    #of stResultSeq: mySeq*: seq[SymTypeResult]
+    of stResultOpenarrLit: myOpenarrLit*: seq[SymTypeResult]
 
 template subPass(
   args: untyped
@@ -73,7 +78,6 @@ template parentEek(): untyped =
   )
 #template getParentSym(): untyped =
 #  addr self[].symS2d[^1][args.parentSymIdxSeq[][^1]]
-  
 
 template myDoIt(
   childAst: AstNode,
@@ -89,7 +93,8 @@ template myDoIt(
     ast: childAst,
     parentAstSeq: args.parentAstSeq,
     parentSymSeq: args.parentSymSeq,
-    moduleIdent: args.moduleIdent
+    moduleIdent: args.moduleIdent,
+    funcDeclNameTbl: args.funcDeclNameTbl
   )
   var hiddenTempResult = hiddenTempArgs.doPassSymTypeMain()
   discard args.parentAstSeq[].pop()
@@ -138,44 +143,12 @@ template mkScopePost(
   #defer:
   let curr = args.self[].mySymTblInfo.curr#.parent
   if argSym.isSome:
-    if not args.self[].inFindAllDecls:
-      args.self[].checkDuplSym()
-    #if isGenericList:
-    #  #case argSym.get().kind:
-    #  #of symStructDecl:
-    #  #  argSym.get().typeInfo
-    #  #of symFuncDecl:
-    #  #  discard
-    #  #else:
-    #  #  discard
-    #if args.subPass == spstFindTopLevelDecls:
+    #if args.self[].inFindAllDecls:
+    args.self[].checkDuplSym()
     case args.subPass:
     of spstFindTopLevelDecls:
-      #if argSym.isSome:#curr.sym.isSome:
-      #echo sconcat(@[
-      #  "mkScopePost(): parent.sym.isSome: ",
-      #  $curr.parent.sym.isSome
-      #])
       if curr.parent.sym.isSome:
-        #echo sconcat(@[
-        #  "mkScopePost: parent.sym.get(): ",
-        #  $curr.parent.sym.get()[]
-        #])
-        #echo sconcat(@[
-        #  "mkScopePost: parent.sym.get().typeInfo: ",
-        #  $curr.parent.sym.get().typeInfo[]
-        #])
-        #if child.sym.get().kind == symGeneric:
-        #case argSym.get().kind:
         if curr.sym.isSome:
-          #echo sconcat(@[
-          #  "mkScopePost: sym.get(): ",
-          #  $curr.sym.get()[]
-          #])
-          #echo sconcat(@[
-          #  "mkScopePost: sym.get().typeInfo: ",
-          #  $curr.sym.get().typeInfo[]
-          #])
           case curr.sym.get().kind:
           #of symGenericImpl:
           #  #let tinfo = argSym.get().typeInfo
@@ -193,9 +166,22 @@ template mkScopePost(
               tinfo.myFunc.genericIdxSeq.add(
                 curr.parent.childSeq.len() - 1
               )
+            #of tiEnum:
+            #  discard
+            of tiVariant:
+              tinfo.myVariant.genericIdxSeq.add(
+                curr.parent.childSeq.len() - 1
+              )
             else:
               #eek()
-              discard
+              doAssert(
+                false,
+                sconcat(@[
+                  "eek! ",
+                  "sym:", $curr.sym.get()[], "; ", 
+                  "tinfo:", $tinfo[]
+                ])
+              )
           else:
             discard
         else:
@@ -216,7 +202,26 @@ template mkScopePost(
 #template handleGenerics(
 #  argSym: Symbol
 #): untyped =
-  
+
+#proc doSubstGenerics(
+#  args: var SymTypeArgs,
+#  ast: AstNode,
+#  stResult: SymTypeResult,
+#) =
+#  discard
+
+proc checkSymUse(
+  args: var SymTypeArgs,
+  myStResult: SymTypeResult,
+  expr: AstNode,
+) =
+  case args.subPass:
+  of spstFindTopLevelDecls:
+    discard
+  of spstPostFindTopLevelDecls:
+    discard
+  else:
+    eek()
 
 proc doAstSrcFile(
   args: var SymTypeArgs
@@ -269,7 +274,7 @@ proc doAstSrcFile(
   #  #--------
   #else:
   #  #--------
-  #  if args.subPass == spstSubstGenerics:
+  #  if args.subPass == spstPostFindTopLevelDecls:
   #    args.changed = false
   #  #--------
   #  for structDecl in myAst.mySrcFile.structDeclSeq:
@@ -306,15 +311,15 @@ proc doAstStrLit(
 proc doAstOpenarrLit(
   args: var SymTypeArgs,
 ): SymTypeResult =
-  #result = SymTypeResult(
-  #  ast: myAst,
-  #  kind: stResultString,
-  #  myString: myAst.myStrLit.strLitVal,
-  #)
   result = SymTypeResult(
     ast: myAst,
-    kind: stResultNone
+    kind: stResultOpenarrLit
   )
+  for idx in 0 ..< myAst.myOpenarrLit.openarrLitSeq.len():
+    result.myOpenarrLit.add SymTypeResult(
+      ast: myAst.myOpenarrLit.openarrLitSeq[idx],
+      kind: stResultExpr,
+    )
 
 proc doAstTrue(
   args: var SymTypeArgs,
@@ -354,6 +359,19 @@ proc doAstVar(
     ast: myAst,
     kind: stResultNone
   )
+  let self = args.self
+  let info = addr self[].mySymTblInfo
+
+  case args.subPass:
+  of spstFindTopLevelDecls:
+    result = myAst.myVar.child.myDoIt(none(Symbol))
+    result.mySym.kind = symVar
+    result.mySym.initValAst = myAst.myVar.optExpr
+  of spstPostFindTopLevelDecls:
+    discard
+  else:
+    eek()
+
 proc doAstConst(
   args: var SymTypeArgs,
 ): SymTypeResult =
@@ -405,7 +423,7 @@ proc doAstDef(
     block:
       for idx in 0 ..< myAst.myDef.argDeclSeq.len():
         var mySym = myAst.myDef.argDeclSeq[idx].myDoIt(some(sym))
-        var tempScope = mkScopePre(some(mySym.mySym), mySym.ast)
+        discard mkScopePre(some(mySym.mySym), mySym.ast)
         defer:
           mkScopePost(some(mySym.mySym), mySym.ast)
         sym.typeInfo.myFunc.argIdxSeq.add curr.childSeq.len() - 1
@@ -420,14 +438,26 @@ proc doAstDef(
       defer:
         mkScopePost(some(resultSym), myAst.myDef.returnType)
       sym.typeInfo.myFunc.resultIdx = curr.childSeq.len() - 1
-  of spstSubstGenerics:
-    discard
-  of spstHandleFuncOverloading:
-    discard
-  of spstTypeCheck:
-    discard
+    for idx in 0 ..< myAst.myDef.stmtSeq.len():
+      discard myAst.myDef.stmtSeq[idx].myDoIt(some(sym))
+  of spstPostFindTopLevelDecls:
+    #args.doSubstGenerics(
+    #  ast=myAst,
+    #  stResult
+    #)
+    let decls = self[].mySymTblInfo.decls
+    if ident notin args.funcDeclNameTbl[]:
+      args.funcDeclNameTbl[][ident] = 0
+    let myCnt = args.funcDeclNameTbl[][ident]
+    var sym = decls.childSeq[decls.nameTbl[ident][myCnt]].sym.get()
+    #var sym = decls.childSeq[decls.nameTbl[ident][someIdx]].sym.get()
+    for idx in 0 ..< myAst.myDef.stmtSeq.len():
+      discard myAst.myDef.stmtSeq[idx].myDoIt(some(sym))
+    args.funcDeclNameTbl[][ident] += 1
   else:
     eek()
+
+
 proc doAstModule(
   args: var SymTypeArgs,
 ): SymTypeResult =
@@ -673,11 +703,7 @@ proc doAstArray(
     result.myType.arrDim() = some(uint64(tempArrDim))
     #result.myType.isOpenarr() = false
     result.myType.arrKind() = tiarrArr
-  of spstSubstGenerics:
-    discard
-  of spstHandleFuncOverloading:
-    discard
-  of spstTypeCheck:
+  of spstPostFindTopLevelDecls:
     discard
   else:
     eek()
@@ -695,11 +721,7 @@ proc doAstOpenarray(
     result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
     result.myType.arrDim() = none(uint64)
     result.myType.arrKind() = tiarrOpenarr
-  of spstSubstGenerics:
-    discard
-  of spstHandleFuncOverloading:
-    discard
-  of spstTypeCheck:
+  of spstPostFindTopLevelDecls:
     discard
   else:
     eek()
@@ -715,11 +737,7 @@ proc doAstBuiltinTypeCast(
   of spstFindTopLevelDecls:
     #result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
     discard
-  of spstSubstGenerics:
-    discard
-  of spstHandleFuncOverloading:
-    discard
-  of spstTypeCheck:
+  of spstPostFindTopLevelDecls:
     discard
   else:
     eek()
@@ -774,11 +792,7 @@ proc doAstBasicType(
       ),
       kind: tiBasicType,
     )
-  of spstSubstGenerics:
-    discard
-  of spstHandleFuncOverloading:
-    discard
-  of spstTypeCheck:
+  of spstPostFindTopLevelDecls:
     discard
   else:
     eek()
@@ -817,11 +831,7 @@ proc doAstNamedType(
       kind: tiToResolve,
     )
     #result = myAst.myNamedType.child.myDoIt(none(Symbol))
-  of spstSubstGenerics:
-    discard
-  of spstHandleFuncOverloading:
-    discard
-  of spstTypeCheck:
+  of spstPostFindTopLevelDecls:
     discard
   else:
     eek()
@@ -848,11 +858,7 @@ proc doAstType(
       result.myType.funcVar() = true
     elif myAst.myType.ptrDim > 0:
       result.myType.ptrDim() = myAst.myType.ptrDim
-  of spstSubstGenerics:
-    discard
-  of spstHandleFuncOverloading:
-    discard
-  of spstTypeCheck:
+  of spstPostFindTopLevelDecls:
     discard
   else:
     eek()
@@ -973,14 +979,10 @@ proc doAstGenericList(
         #myAst #
       )
       #self[].addSym(some(sym))
-    of spstSubstGenerics:
+    of spstPostFindTopLevelDecls:
       #case parentSym[].kind:
       #else:
       #  discard
-      discard
-    of spstHandleFuncOverloading:
-      discard
-    of spstTypeCheck:
       discard
     else:
       #doAssert(
@@ -1029,11 +1031,7 @@ proc doAstVarEtcDeclMost(
     #  discard
     #else:
     #  parentEek()
-  of spstSubstGenerics:
-    discard
-  of spstHandleFuncOverloading:
-    discard
-  of spstTypeCheck:
+  of spstPostFindTopLevelDecls:
     discard
   else:
     eek()
@@ -1154,6 +1152,10 @@ proc doPassSymType*(
   var parentAstSeq: seq[AstNode]
   var parentSymSeq: seq[Symbol]
   var moduleIdent: string
+  var funcDeclNameTblSeq: seq[OrderedTable[string, int]]
+  block:
+    var toAdd: OrderedTable[string, int]
+    funcDeclNameTblSeq.add toAdd
 
   var myArgs = SymTypeArgs(
     self: addr self,
@@ -1162,7 +1164,8 @@ proc doPassSymType*(
     ast: self.astRoot,
     parentAstSeq: addr parentAstSeq,
     parentSymSeq: addr parentSymSeq,
-    moduleIdent: addr moduleIdent
+    moduleIdent: addr moduleIdent,
+    funcDeclNameTbl: addr funcDeclNameTblSeq[^1],
   )
   #myArgs.subPass = SconeSubPassSymType(0u)
 
@@ -1174,6 +1177,11 @@ proc doPassSymType*(
     myArgs.parentAstSeq[].setLen(0)
     myArgs.parentSymSeq[].setLen(0)
     #myArgs.parentResultSeq[].setLen(0)
+    block:
+      discard funcDeclNameTblSeq.pop()
+      var toAdd: OrderedTable[string, int]
+      funcDeclNameTblSeq.add toAdd
+    myArgs.funcDeclNameTbl = addr funcDeclNameTblSeq[^1]
 
     var tempSubPass = uint(subPass[])
     tempSubPass += 1
@@ -1181,4 +1189,4 @@ proc doPassSymType*(
     if subPass[] == limSpSymType:
       if myArgs.changed:
         #subPass[] = SconeSubPassSymType(2u)
-        subPass[] = spstSubstGenerics
+        subPass[] = spstPostFindTopLevelDecls

@@ -52,12 +52,21 @@ type
     argIdxSeq*: seq[int]     # function arguments
     resultIdx*: int
 
+  TypeInfoEnum* = object
+    valueIdxSeq*: seq[int]
+
+  TypeInfoVariant* = object
+    genericIdxSeq*: seq[int]    # generics
+    fieldIdxSeq*: seq[int]      # variant fields
+
   TypeInfoKind* = enum
     tiToResolve,      # this needs to be resolved in a later pass
                       # because it's a forward reference, generic, etc.
     tiBasicType,
     tiStruct,
     tiFunc,
+    tiEnum,
+    tiVariant,
     #tiVar,
   TypeInfo* = ref TypeInfoObj
   TypeInfoObj* = object
@@ -67,6 +76,8 @@ type
     of tiBasicType: myBasicType*: TypeInfoBasicType
     of tiStruct: myStruct*: TypeInfoStruct
     of tiFunc: myFunc*: TypeInfoFunc
+    of tiEnum: myEnum*: TypeInfoEnum
+    of tiVariant: myVariant*: TypeInfoVariant
 
 proc name*(
   self: var TypeInfo

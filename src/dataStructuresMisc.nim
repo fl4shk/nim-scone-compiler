@@ -322,7 +322,7 @@ const `helperTokKindSeq`*: seq[(
       ("genericDecl", astValOptAstNode),      # `Option[AstGenericList]`
       ("argDeclSeq", astValSeqAstNode),       # seq of `AstVarEtcDeclMost`
       ("returnType", astValAstNode),          # `AstType`
-      ("stmtSeq", astValSeqAstNode),
+      ("stmtSeq", astValSeqAstNode),          # `seq[AstNode]`
     ],
   ),
   ("FuncReturnTypePrefix", some("->"), false, @[]),
