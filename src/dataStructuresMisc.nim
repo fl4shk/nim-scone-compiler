@@ -214,118 +214,235 @@ proc `cmpPrioGt`*(
 ): bool =
   result = (a.cmpPrio b) > 0
 
+#dumpTree:
+#  type
+#    StatementKind* = enum
+#      stmtScope,
+#      #stmtIf,
+#      #stmtElif,
+#      #stmtElse,
+#      #stmtSwitch,
+#      #stmtCase,
+#      #stmtDefault,
+#      #stmtFor,
+#      #stmtWhile,
+#      #stmtContinue,
+#      #stmtBreak,
+#      #stmtReturn,
+#      #stmtAssign,
+#
+#    #StatementScope* = ref StatementScopeObj
+#    StatementScope* = object
+#      stmtSeq*: seq[Statement] # the list of statements
+#
+#    #StatementIf* = object
+#    #  #("expr", astValAstNode),          # (condition) expression
+#    #  #("stmtSeq", astValSeqAstNode),    # the list of statements
+#    #  #                                  # within the scope
+#    #  #("elifSeq", astValSeqAstNode),    # `AstElif` `seq`
+#    #  #("optElse", astValOptAstNode),    # optional `AstElse`
+#    #  expr*: AstNode
+#
+#    Statement* = ref StatementObj
+#    StatementObj* = object
+#      case kind*: StatementKind
+#      of stmtScope: myScope*: StatementScope
+#      #of stmtIf: myIf*: StatementIf
+#      #of stmtElif: myElif*: StatementElif
+#      #of stmtElse: myElse*: StatementElse
+#      #of stmtSwitch: mySwitch*: StatementSwitch
+#      #of stmtCase: myCase*: StatementCase
+#      #of stmtDefault: myDefault*: StatementDefault
+#      #of stmtFor: myFor*: StatementFor
+#      #of stmtWhile: myWhile*: StatementWhile
+#      #of stmtContinue: myContinue*: StatementContinue
+#      #of stmtBreak: myBreak*: StatementBreak
+#      #of stmtReturn: myReturn*: StatementReturn
+#      #of stmtAssign: myAssign*: StatementAssign
 
-const `helperTokKindSeq`*: seq[(
-  string, Option[string], bool,
-  seq[(string, AstValKind)]
-)] = @[
+
+#StmtList
+#  TypeSection
+#    TypeDef
+#      Postfix
+#        Ident "*"
+#        Ident "StatementKind"
+#      Empty
+#      EnumTy
+#        Empty
+#        Ident "stmtScope"
+#    TypeDef
+#      Postfix
+#        Ident "*"
+#        Ident "StatementScope"
+#      Empty
+#      ObjectTy
+#        Empty
+#        Empty
+#        RecList
+#          IdentDefs
+#            Postfix
+#              Ident "*"
+#              Ident "stmtSeq"
+#            BracketExpr
+#              Ident "seq"
+#              Ident "Statement"
+#            Empty
+#    TypeDef
+#      Postfix
+#        Ident "*"
+#        Ident "Statement"
+#      Empty
+#      RefTy
+#        Ident "StatementObj"
+#    TypeDef
+#      Postfix
+#        Ident "*"
+#        Ident "StatementObj"
+#      Empty
+#      ObjectTy
+#        Empty
+#        Empty
+#        RecList
+#          RecCase
+#            IdentDefs
+#              Postfix
+#                Ident "*"
+#                Ident "kind"
+#              Ident "StatementKind"
+#              Empty
+#            OfBranch
+#              Ident "stmtScope"
+#              IdentDefs
+#                Postfix
+#                  Ident "*"
+#                  Ident "myScope"
+#                Ident "StatementScope"
+#                Empty
+
+
+type
+  MetaAstKind* = enum
+    metaAstNone,
+    metaAstStmt,
+    metaAstExpr,
+    metaAstTypeSub,
+    #metaAstTypeMain,
+    #metaAstFuncArgImpl,
+    #metaAstGenericImpl,
+  HelperTokKind* = (
+    string, Option[string], bool, MetaAstKind,
+    seq[(string, AstValKind, string)]
+  )
+
+const helperTokKindSeq*: seq[HelperTokKind] = @[
   #--------
   (
     # fake token indicating the beginning of the AST
-    "SrcFile", none(string), true,
+    "SrcFile", none(string), true, metaAstNone,
     @[
-      ("module", astValAstNode),
-      ("funcDeclSeq", astValSeqAstNode),
-      ("structDeclSeq", astValSeqAstNode),
+      ("module", astValAstNode, "Module"),
+      ("funcDeclSeq", astValSeqAstNode, "Def"),
+      ("structDeclSeq", astValSeqAstNode, "Struct"),
     ]
   ),
   (
     # invalid input!
-    "Bad", none(string), false, @[]
+    "Bad", none(string), false, metaAstNone, @[]
   ),
   (
     # end of file
-    "Eof", none(string), false, @[]
+    "Eof", none(string), false, metaAstNone, @[]
   ),
   #("LineComent", none(string)),    # start of line comment
   #--------
   (
     # identifiers
-    "Ident", none(string), true,
+    "Ident", none(string), true, metaAstNone,
     @[
-      ("strVal", astValString)
+      ("strVal", astValString, "")
     ]
   ),
   (
     # 0-9, hex numbers, binary numbers, etc.
-    "U64Lit", none(string), true,
+    "U64Lit", none(string), true, metaAstNone,
     @[
-      ("u64Val", astValU64)
+      ("u64Val", astValU64, "")
     ]
   ),
   (
     # string literals
-    "StrLit", none(string), true,
+    "StrLit", none(string), true, metaAstNone,
     @[
-      ("strLitVal", astValString)
+      ("strLitVal", astValString, "")
     ]
   ),
   (
-    "OpenarrLit", some("$("), true,
+    "OpenarrLit", some("$("), true, metaAstNone,
     @[
-      ("openarrLitSeq", astValSeqAstNode),
+      ("openarrLitSeq", astValSeqAstNode, "Expr"),
     ],
   ),
   #--------
-  ("True", some("true"), true, @[]),
-  ("False", some("false"), true, @[]),
+  ("True", some("true"), true, metaAstNone, @[]),
+  ("False", some("false"), true, metaAstNone, @[]),
   #--------
-  ("LParen", some("("), false, @[]),
-  ("RParen", some(")"), false, @[]),
-  ("LBracket", some("["), false, @[]),
-  ("RBracket", some("]"), false, @[]),
-  ("LBrace", some("{"), false, @[]),
-  ("RBrace", some("}"), false, @[]),
-  ("Comma", some(","), false, @[]),
-  ("Semicolon", some(";"), false, @[]),
-  ("Colon", some(":"), false, @[]),
+  ("LParen", some("("), false, metaAstNone, @[]),
+  ("RParen", some(")"), false, metaAstNone, @[]),
+  ("LBracket", some("["), false, metaAstNone, @[]),
+  ("RBracket", some("]"), false, metaAstNone, @[]),
+  ("LBrace", some("{"), false, metaAstNone, @[]),
+  ("RBrace", some("}"), false, metaAstNone, @[]),
+  ("Comma", some(","), false, metaAstNone, @[]),
+  ("Semicolon", some(";"), false, metaAstNone, @[]),
+  ("Colon", some(":"), false, metaAstNone, @[]),
   #--------
-  ("Ptr", some("ptr"), false, @[]),
+  ("Ptr", some("ptr"), false, metaAstNone, @[]),
   (
-    "Addr", some("addr"), false, # address of an expression
+    "Addr", some("addr"), false, metaAstNone, # address of an expression
     @[
       #("obj", astValAstNode)
     ]
   ),
   (
-    "Deref", some("@"), true, # pointer dereference
+    "Deref", some("@"), true, metaAstNone, # pointer dereference
     @[
-      ("obj", astValAstNode)
+      ("obj", astValAstNode, "Expr")
     ]
   ),
   (
-    "Dot", some("."), true,
+    "Dot", some("."), true, metaAstNone,
     @[
-      ("left", astValAstNode),
-      ("right", astValAstNode),
+      ("left", astValAstNode, "Expr"),
+      ("right", astValAstNode, "Ident"),
     ]
   ),
   #--------
   (
-    "Var", some("var"), true,
+    "Var", some("var"), true, metaAstNone,
     @[
-      ("child", astValAstNode),           # `AstVarEtcDeclMost`
-      ("optExpr", astValOptAstNode),      # optional expression index
+      ("child", astValAstNode, "VarEtcDeclMost"),  # `AstVarEtcDeclMost`
+      ("optExpr", astValOptAstNode, "Expr"),  # optional expression
     ]
   ),
   (
-    "Const", some("const"), true,
+    "Const", some("const"), true, metaAstNone,
     @[
-      ("child", astValAstNode),         # `AstVarEtcDeclMost`
-      ("expr", astValAstNode),          # expression index
+      ("child", astValAstNode, "VarEtcDeclMost"),         # `AstVarEtcDeclMost`
+      ("expr", astValAstNode, "Expr"), # expression
     ]
   ),
   (
-    "Def", some("def"), true,
+    "Def", some("def"), true, metaAstNone,
     @[
-      ("ident", astValAstNode),               # `AstIdent`
-      ("genericDecl", astValOptAstNode),      # `Option[AstGenericList]`
-      ("argDeclSeq", astValSeqAstNode),       # seq of `AstVarEtcDeclMost`
-      ("returnType", astValAstNode),          # `AstType`
-      ("stmtSeq", astValSeqAstNode),          # `seq[AstNode]`
+      ("ident", astValAstNode, "Ident"),
+      ("genericDeclSeq", astValSeqAstNode, "Ident"),
+      ("argDeclSeq", astValSeqAstNode, "VarEtcDeclMost"),
+      ("returnType", astValAstNode, "Type"),
+      ("stmtSeq", astValSeqAstNode, "Stmt"),
     ],
   ),
-  ("FuncReturnTypePrefix", some("->"), false, @[]),
+  ("FuncReturnTypePrefix", some("->"), false, metaAstNone, @[]),
   #("FuncNamedArgListStart", some("$(")),
   #("GenericNamedArgListStart", some("$[")),
   #("GenericArgListStart", some("#[")),
@@ -335,164 +452,165 @@ const `helperTokKindSeq`*: seq[(
       # I'm not sure I outright need macros for this version of the
       # compiler
   (
-    "Module", some("module"), true,
+    "Module", some("module"), true, metaAstNone,
     @[
-      ("ident", astValAstNode),             # `AstIdent`
+      ("ident", astValAstNode, "Ident"),             # `AstIdent`
     ],
   ),
   (
-    "Struct", some("struct"), true,
+    "Struct", some("struct"), true, metaAstNone,
     @[
-      ("ident", astValAstNode),             # `AstIdent`
-      ("genericDecl", astValOptAstNode),    # `Option[AstGenericList]`
-      ("fieldSeq", astValSeqAstNode),       # `seq` of `AstVarEtcDeclMost`
+      ("ident", astValAstNode, "Ident"),
+      ("genericDeclSeq", astValSeqAstNode, "Ident"),
+      ("fieldSeq", astValSeqAstNode, "VarEtcDeclMost"),
     ],
   ),
   (
-    "Enum", some("enum"), true,
+    "Enum", some("enum"), true, metaAstNone,
     @[
       # TODO: come back to this later
     ]
   ),
   (
-    "Variant", some("variant"), true,
+    "Variant", some("variant"), true, metaAstNone,
     @[
       # TODO: come back to this later
-      #("ident", astValAstNode),
-      #("genericDecl", astValOptAstNode),
+      #("ident", astValAstNode, "Ident"),
+      #("genericDeclSeq", astValSeqAstNode, "Ident"),
       #("fieldSeq", astValSeqAstNode)
     ],
   ),
   (
-    "Extern", some("extern"), true,
+    "Extern", some("extern"), true, metaAstNone,
     @[
       # TODO: come back to this later
     ]
   ),
   (
-    "Cextern", some("cextern"), true,
+    "Cextern", some("cextern"), true, metaAstNone,
     @[
       # TODO: come back to this later
     ]
   ),
   (
-    "Import", some("import"), true,
+    "Import", some("import"), true, metaAstNone,
     @[
       # TODO: come back to this later
     ]
   ),
   (
-    "Cimport", some("cimport"), true,
+    "Cimport", some("cimport"), true, metaAstNone,
     @[
       # TODO: come back to this later
     ]
   ),
   #--------
   (
-    "Scope", some("scope"), true,
+    "Scope", some("scope"), true, metaAstStmt,
     @[
-      ("stmtSeq", astValSeqAstNode),    # the list of statements
+      ("stmtSeq", astValSeqAstNode, "Stmt"),    # the list of statements
     ]
   ),
   (
-    "If", some("if"), true,
+    "If", some("if"), true, metaAstStmt,
     @[
-      ("expr", astValAstNode),          # (condition) expression
-      ("stmtSeq", astValSeqAstNode),    # the list of statements
+      ("expr", astValAstNode, "Expr"),  # (condition) expression
+      ("stmtSeq", astValSeqAstNode, "Stmt"), # the list of statements
                                         # within the scope
-      ("elifSeq", astValSeqAstNode),    # `AstElif` `seq`
-      ("optElse", astValOptAstNode),    # optional `AstElse`
+      ("elifSeq", astValSeqAstNode, "Elif"),    # `AstElif` `seq`
+      ("optElse", astValOptAstNode, "Else"),    # optional `AstElse`
     ],
   ),
   (
-    "Elif", some("elif"), true,
+    "Elif", some("elif"), true, metaAstNone,
     @[
-      ("expr", astValAstNode),        # (condition) expression
-      ("stmtSeq", astValSeqAstNode),  # the list of statements 
+      ("expr", astValAstNode, "Expr"), # (condition) expression
+      ("stmtSeq", astValSeqAstNode, "Stmt"),# the list of statements 
                                       # within the scope
       #("optChild", astValOptAstNode), # optional `AstElif` or `AstElse`
     ],
   ),
   (
-    "Else", some("else"), true,
+    "Else", some("else"), true, metaAstNone,
     @[
-      ("stmtSeq", astValSeqAstNode),  # the list of statements
+      ("stmtSeq", astValSeqAstNode, "Stmt"),  # the list of statements
                                       # within the scope
     ]
   ),
   (
-    "Switch", some("switch"), true,
+    "Switch", some("switch"), true, metaAstStmt,
     @[
-      ("expr", astValAstNode),          # the condition
-      ("caseSeq", astValSeqAstNode),    # the list of `AstCase` 
-      ("optDefault", astValOptAstNode), # optional `AstDefault`
+      ("expr", astValAstNode, "Expr"),      # the condition
+      ("caseSeq", astValSeqAstNode, "Case"),  # the list of `AstCase` 
+      ("optDefault", astValOptAstNode, "Default"),
+        # optional `AstDefault`
     ]
   ),
   (
-    "Case", some("case"), true,
+    "Case", some("case"), true, metaAstNone,
     @[
-      ("expr", astValAstNode),        # the condition
-      ("stmtSeq", astValSeqAstNode),  # the list of statements
+      ("expr", astValAstNode, "Expr"),        # the condition
+      ("stmtSeq", astValSeqAstNode, "Stmt"),  # the list of statements
                                       # within the scope
     ],
   ),
   (
-    "Default", some("default"), true,
+    "Default", some("default"), true, metaAstNone,
     @[
-      ("stmtSeq", astValSeqAstNode),  # the list of statements
+      ("stmtSeq", astValSeqAstNode, "Stmt"),# the list of statements
                                       # within the scope
     ]
   ),
   (
-    "For", some("for"), true,
+    "For", some("for"), true, metaAstStmt,
     @[
-      ("ident", astValAstNode),     # name of the indexing variable
-      ("exprPre", astValAstNode),
-      ("exprPost", astValAstNode),
-      ("isUntil", astValBool),
-      ("stmtSeq", astValSeqAstNode),
+      ("ident", astValAstNode, "Ident"),# name of the indexing variable
+      ("exprPre", astValAstNode, "Expr"),
+      ("exprPost", astValAstNode, "Expr"),
+      ("isUntil", astValBool, ""),
+      ("stmtSeq", astValSeqAstNode, "Stmt"),
     ],
   ),
-  ("In", some("in"), false, @[]),
-  ("To", some("to"), false, @[]),
-  ("Until", some("until"), false, @[]),
+  ("In", some("in"), false, metaAstNone, @[]),
+  ("To", some("to"), false, metaAstNone, @[]),
+  ("Until", some("until"), false, metaAstNone, @[]),
   (
-    "While", some("while"), true,
+    "While", some("while"), true, metaAstStmt,
     @[
-      ("expr", astValAstNode),        # (conditional) expression
-      ("stmtSeq", astValSeqAstNode),  # the list of statements
+      ("expr", astValAstNode, "Expr"), # (condition) expression
+      ("stmtSeq", astValSeqAstNode, "Stmt"),  # the list of statements
                                       # within the scope
     ],
   ),
-  ("Continue", some("continue"), true, @[]),
-  ("Break", some("break"), true, @[]),
+  ("Continue", some("continue"), true, metaAstStmt, @[]),
+  ("Break", some("break"), true, metaAstStmt, @[]),
   #("Result", some("result"), true),
   (
-    "Return", some("return"), true,
+    "Return", some("return"), true, metaAstStmt,
     @[
-      ("optExpr", astValOptAstNode)
+      ("optExpr", astValOptAstNode, "Expr")
     ]
   ),
   #--------
   #("Type", some("type")),
   (
-    "Array", some("array"), true,
+    "Array", some("array"), true, metaAstNone,
     @[
-      ("dim", astValAstNode),
-      ("elemType", astValAstNode),
+      ("dim", astValAstNode, "Expr"),
+      ("elemType", astValAstNode, "Type"),
     ]
   ),
   (
-    "Openarray", some("openarray"), true,
+    "Openarray", some("openarray"), true, metaAstNone,
     @[
-      ("elemType", astValAstNode)
+      ("elemType", astValAstNode, "Type")
     ],
   ),
   (
-    "BuiltinTypeCast", none(string), true,
+    "BuiltinTypeCast", none(string), true, metaAstExpr,
     @[
-      ("type", astValAstNode),
-      ("obj", astValAstNode),
+      ("type", astValAstNode, "Type"),
+      ("obj", astValAstNode, "Expr"),
     ],
   ),
   #(
@@ -501,117 +619,142 @@ const `helperTokKindSeq`*: seq[(
   #    ("arg", astValAstNode)
   #  ],
   #),
-  ("Void", some("void"), false, @[]),
-  ("Bool", some("bool"), false, @[]),
-  ("U8", some("u8"), false, @[]),
-  ("I8", some("i8"), false, @[]),
-  ("U16", some("u16"), false, @[]),
-  ("I16", some("i16"), false, @[]),
-  ("U32", some("u32"), false, @[]),
-  ("I32", some("i32"), false, @[]),
-  ("U64", some("u64"), false, @[]),
-  ("I64", some("i64"), false, @[]),
-  ("F32", some("f32"), false, @[]),
-  ("F64", some("f64"), false, @[]),
-  ("Char", some("char"), false, @[]),
-  ("String", some("string"), false, @[]),
+  ("Void", some("void"), false, metaAstNone, @[]),
+  ("Bool", some("bool"), false, metaAstNone, @[]),
+  ("U8", some("u8"), false, metaAstNone, @[]),
+  ("I8", some("i8"), false, metaAstNone, @[]),
+  ("U16", some("u16"), false, metaAstNone, @[]),
+  ("I16", some("i16"), false, metaAstNone, @[]),
+  ("U32", some("u32"), false, metaAstNone, @[]),
+  ("I32", some("i32"), false, metaAstNone, @[]),
+  ("U64", some("u64"), false, metaAstNone, @[]),
+  ("I64", some("i64"), false, metaAstNone, @[]),
+  ("F32", some("f32"), false, metaAstNone, @[]),
+  ("F64", some("f64"), false, metaAstNone, @[]),
+  ("Char", some("char"), false, metaAstNone, @[]),
+  ("String", some("string"), false, metaAstNone, @[]),
   #--------
-  ("CmpEq", some("=="), false, @[]),
-  ("CmpNe", some("!="), false, @[]),
-  ("CmpLt", some("<"), false, @[]),
-  ("CmpGt", some(">"), false, @[]),
-  ("CmpLe", some("<="), false, @[]),
-  ("CmpGe", some(">="), false, @[]),
+  ("CmpEq", some("=="), false, metaAstNone, @[]),
+  ("CmpNe", some("!="), false, metaAstNone, @[]),
+  ("CmpLt", some("<"), false, metaAstNone, @[]),
+  ("CmpGt", some(">"), false, metaAstNone, @[]),
+  ("CmpLe", some("<="), false, metaAstNone, @[]),
+  ("CmpGe", some(">="), false, metaAstNone, @[]),
   #--------
-  ("Plus", some("+"), false, @[]),
-  ("Minus", some("-"), false, @[]),
-  ("Mul", some("*"), false, @[]),
-  ("Div", some("/"), false, @[]),
-  ("Mod", some("%"), false, @[]),
-  ("BitAnd", some("&"), false, @[]),
-  ("BitOr", some("|"), false, @[]),
-  ("BitXor", some("^"), false, @[]),
-  ("BitInvert", some("~"), false, @[]),
-  ("LogicAnd", some("&&"), false, @[]),
-  ("LogicOr", some("||"), false, @[]),
-  ("LogicNot", some("!"), false, @[]),
-  ("BitShl", some("<<"), false, @[]),
-  ("BitShr", some(">>"), false, @[]),
+  ("Plus", some("+"), false, metaAstNone, @[]),
+  ("Minus", some("-"), false, metaAstNone, @[]),
+  ("Mul", some("*"), false, metaAstNone, @[]),
+  ("Div", some("/"), false, metaAstNone, @[]),
+  ("Mod", some("%"), false, metaAstNone, @[]),
+  ("BitAnd", some("&"), false, metaAstNone, @[]),
+  ("BitOr", some("|"), false, metaAstNone, @[]),
+  ("BitXor", some("^"), false, metaAstNone, @[]),
+  ("BitInvert", some("~"), false, metaAstNone, @[]),
+  ("LogicAnd", some("&&"), false, metaAstNone, @[]),
+  ("LogicOr", some("||"), false, metaAstNone, @[]),
+  ("LogicNot", some("!"), false, metaAstNone, @[]),
+  ("BitShl", some("<<"), false, metaAstNone, @[]),
+  ("BitShr", some(">>"), false, metaAstNone, @[]),
   #--------
-  ("Assign", some("="), false, @[]),
-  ("AssignPlus", some("+="), false, @[]),
-  ("AssignMinus", some("-="), false, @[]),
-  ("AssignMul", some("*="), false, @[]),
-  ("AssignDiv", some("/="), false, @[]),
-  ("AssignMod", some("%="), false, @[]),
-  ("AssignBitAnd", some("&="), false, @[]),
-  ("AssignBitOr", some("|="), false, @[]),
-  ("AssignBitXor", some("^="), false, @[]),
-  ("AssignBitShl", some("<<="), false, @[]),
-  ("AssignBitShr", some(">>="), false, @[]),
+  ("Assign", some("="), false, metaAstNone, @[]),
+  ("AssignPlus", some("+="), false, metaAstNone, @[]),
+  ("AssignMinus", some("-="), false, metaAstNone, @[]),
+  ("AssignMul", some("*="), false, metaAstNone, @[]),
+  ("AssignDiv", some("/="), false, metaAstNone, @[]),
+  ("AssignMod", some("%="), false, metaAstNone, @[]),
+  ("AssignBitAnd", some("&="), false, metaAstNone, @[]),
+  ("AssignBitOr", some("|="), false, metaAstNone, @[]),
+  ("AssignBitXor", some("^="), false, metaAstNone, @[]),
+  ("AssignBitShl", some("<<="), false, metaAstNone, @[]),
+  ("AssignBitShr", some(">>="), false, metaAstNone, @[]),
   #--------
   #--------
   # AST-only elements from here on
   (
-    "Unop", none(string), true,
+    "ExprIdent", none(string), true, metaAstExpr,
     @[
-      ("kind", astValUnopKind),
-      ("obj", astValAstNode),
+      ("ident", astValAstNode, "Ident"),
     ]
   ),
   (
-    "Binop", none(string), true,
+    "Unop", none(string), true, metaAstExpr,
     @[
-      ("kind", astValBinopKind),
-      ("left", astValAstNode),
-      ("right", astValAstNode),
+      ("kind", astValUnopKind, ""),
+      ("obj", astValAstNode, "Expr"),
     ]
   ),
   (
-    "AssignEtc", none(string), true,
+    "Binop", none(string), true, metaAstExpr,
     @[
-      ("kind", astValAssignEtcKind),
-      ("left", astValAstNode),
-      ("right", astValAstNode),
+      ("kind", astValBinopKind, ""),
+      ("left", astValAstNode, "Expr"),
+      ("right", astValAstNode, "Expr"),
     ]
   ),
   (
-    "BasicType", none(string), true,
+    "AssignEtc", none(string), true, metaAstStmt,
     @[
-      ("kind", astValBasicTypeKind),
+      ("kind", astValAssignEtcKind, ""),
+      ("left", astValAstNode, "Expr"),
+      ("right", astValAstNode, "Expr"),
+    ]
+  ),
+  (
+    "BasicType", none(string), true, metaAstTypeSub,
+    @[
+      ("kind", astValBasicTypeKind, ""),
     ],
   ),
   (
-    "NamedType", none(string), true,
+    "NamedType", none(string), true, metaAstTypeSub,
     @[
-      ("ident", astValAstNode),
+      ("ident", astValAstNode, "Ident"),
       #("genericImplSeq", astValSeqAstNode),
-      ("genericImpl", astValAstNode),
+      ("genericImplSeq", astValSeqAstNode, "GenericArgImpl"),
     ]
   ),
   (
-    "Type", none(string), true,
+    "Type", none(string), true, metaAstNone,
     @[
       #("childSeq", astValSeqAstNode),
       #("varPtr", astValAstNode),
-      ("kwVar", astValBool),
-      ("ptrDim", astValU64),
-      ("child", astValAstNode),
+      ("kwVar", astValBool, ""),
+      ("ptrDim", astValU64, ""),
+      (
+        "child", astValAstNode, #@["BasicType", "NamedType"]
+        "TypeSub"
+      ),
     ]
   ),
   (
-    "FuncCall", none(string), true,
+    "FuncCall", none(string), true, metaAstExpr,
     @[
-      ("ident", astValAstNode),
+      ("ident", astValAstNode, "Ident"),
       #("genericImplSeq", astValSeqAstNode),
-      ("genericImpl", astValAstNode),
-      ("argImplSeq", astValSeqAstNode),
+      #("genericImpl", astValAstNode, "GenericListImpl"),
+      ("genericImplSeq", astValSeqAstNode, "GenericArgImpl"),
+      ("argImplSeq", astValSeqAstNode, "FuncArgImpl"),
     ]
   ),
   (
-    "StmtExprLhs", none(string), true,
+    "FuncArgImpl", none(string), true,
+      metaAstNone, # maybe change to `metaAstExpr`?
     @[
-      ("expr", astValAstNode),
+      ("ident", astValOptAstNode, "Ident"),
+      ("expr", astValAstNode, "Expr"),
+    ]
+  ),
+  (
+    "GenericArgImpl", none(string), true, metaAstNone,
+    @[
+      ("ident", astValOptAstNode, "Ident"),
+      ("type", astValAstNode, "Type"),
+    ],
+  ),
+  (
+    "StmtExprLhs", none(string), true, metaAstStmt,
+    @[
+      ("expr", astValAstNode, "Expr"),
     ],
   ),
   #(
@@ -620,26 +763,26 @@ const `helperTokKindSeq`*: seq[(
   #    ("funcCall", astValAstNode),
   #  ],
   #),
-  (
-    "FuncNamedArgImpl", none(string), true,
-    @[
-      ("ident", astValAstNode),
-      ("expr", astValAstNode),
-    ],
-  ),
-  (
-    "GenericNamedArgImpl", none(string), true,
-    @[
-      ("ident", astValAstNode),
-      ("type", astValAstNode),
-    ],
-  ),
-  (
-    "GenericList", none(string), true,
-    @[
-      ("mySeq", astValSeqAstNode)
-    ]
-  ),
+  #(
+  #  "FuncNamedArgImpl", none(string), true, metaAstNone,
+  #  @[
+  #    ("ident", astValAstNode, "Ident"),
+  #    ("expr", astValAstNode, "Expr"),
+  #  ],
+  #),
+  #(
+  #  "GenericNamedArgImpl", none(string), true, metaAstNone,
+  #  @[
+  #    ("ident", astValAstNode, "Ident"),
+  #    ("type", astValAstNode, "Type"),
+  #  ],
+  #),
+  #(
+  #  "GenericDeclList", none(string), true, metaAstNone,
+  #  @[
+  #    ("mySeq", astValSeqAstNode, "Ident")
+  #  ]
+  #),
   #(
   #  "FuncArgList", none(string), true,
   #  @[
@@ -647,10 +790,10 @@ const `helperTokKindSeq`*: seq[(
   #  ],
   #),
   (
-    "VarEtcDeclMost", none(string), true,
+    "VarEtcDeclMost", none(string), true, metaAstNone,
     @[
-      ("ident", astValAstNode),           # `AstIdent` index
-      ("type", astValAstNode),          # `AstType` index
+      ("ident", astValAstNode, "Ident"), # `AstIdent` index
+      ("type", astValAstNode, "Type"),   # `AstType` index
     ]
   ),
   #(

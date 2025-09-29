@@ -34,7 +34,7 @@ def plus[T](left: var Vec2[T], right: var Vec2[T]) -> Vec2[T] {
   return result;
 };
 def sum(toSum: var array[8; Vec2[u32]]) -> Vec2[u32] {
-  var result: Vec2[u32];
+  var result: Vec2[U, T=u32];
   for idx in 0 until toSum.size() {
     switch idx {
       case 0 {

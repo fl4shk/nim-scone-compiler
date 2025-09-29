@@ -8,7 +8,7 @@ import dataStructuresMisc
 import ast
 import scone
 import passParse
-import passSymType
+#import passSymType
 import passEmitC
 
 
@@ -41,27 +41,30 @@ proc doCompileModeOneFile(
     of scoPassParse:
       self.doPassParse()
       #echo $self.astRoot
-    of scoPassSymType:
-      self.doPassSymType()
-      #echo $self.symS2d
-      #echo ""
-      #echo ""
-      #for idx in 0 ..< self.symS2d.len():
-      #  let tempSeq = addr self.symS2d[idx]
-      #  if tempSeq[].len() > 0:
-      #    echo "seq " & $idx & ":"
-      #    echo "  #----"
-      #  for jdx in 0 ..< tempSeq[].len():
-      #    
-      #    #echo $self.symS2d[idx]
-      #    let sym = addr tempSeq[][jdx]
-      #    let typeInfo = addr self.typeInfoS2d[idx][sym[].typeInfoIdx]
-      #    #echo $(sym[], typeInfo[])
-      #    echo "  sym " & $jdx & ": " & $sym[]
-      #    echo "  typeInfo: " & $typeInfo[]
-      #    echo "  #----"
-      #  if tempSeq[].len() > 0:
-      #    echo "#--------"
+    #of scoPassSymType:
+    #  discard
+    #  #self.doPassSymType()
+    #  #echo $self.symS2d
+    #  #echo ""
+    #  #echo ""
+    #  #for idx in 0 ..< self.symS2d.len():
+    #  #  let tempSeq = addr self.symS2d[idx]
+    #  #  if tempSeq[].len() > 0:
+    #  #    echo "seq " & $idx & ":"
+    #  #    echo "  #----"
+    #  #  for jdx in 0 ..< tempSeq[].len():
+    #  #    
+    #  #    #echo $self.symS2d[idx]
+    #  #    let sym = addr tempSeq[][jdx]
+    #  #    let typeInfo = addr self.typeInfoS2d[idx][sym[].typeInfoIdx]
+    #  #    #echo $(sym[], typeInfo[])
+    #  #    echo "  sym " & $jdx & ": " & $sym[]
+    #  #    echo "  typeInfo: " & $typeInfo[]
+    #  #    echo "  #----"
+    #  #  if tempSeq[].len() > 0:
+    #  #    echo "#--------"
+    of scoPassSemanticMacro:
+      discard
     of scoPassEmitC:
       self.doPassEmitC()
     else:

@@ -362,7 +362,19 @@
                   (AstType
                     kwVar false
                     ptrDim 0
-                    child (AstBasicType kind basicTypeU32)
+                    child (AstNamedType
+                      ident (AstIdent "U")
+                      genericImpl (AstGenericList mySeq [
+                      ])
+                    )
+                  )
+                  (AstGenericNamedArgImpl
+                    ident (AstIdent "T")
+                    type (AstType
+                      kwVar false
+                      ptrDim 0
+                      child (AstBasicType kind basicTypeU32)
+                    )
                   )
                 ])
               )

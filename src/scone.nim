@@ -20,19 +20,37 @@ type
   #  sconeParserPassFwdRef,
   SconePass* = enum
     scoPassParse,
-    scoPassSymType,
+    #scoPassSymType,
+    scoPassSemanticMacro,
     #scoPassMacroExpansion,
     scoPassEmitC,
     limScoPass,
-  SconeSubPassSymType* = enum
-    #spstMkSymbolTables,
-    #spstHandleImport,
-    spstFindTopLevelDecls,
-    spstPostFindTopLevelDecls,
-    #spstSubstGenerics,
-    #spstHandleFuncOverloading,
-    #spstTypeCheck,
-    limSpSymType,
+  SconeSemanticPass* = enum
+    scoSemPassCheckDuplNames, # check whether there are any user-defined
+                              # types with the same names as user-defined
+                              # functions.
+                              # This is to be an error!
+    limScoSemPass,
+  SconeMacroPass* = enum
+    scoMacroPassSemFirst,     # First semantic analysis
+    scoMacroPassExec,         # execute the macro body (which may call
+                              # other functions)
+    scoMacroPassReplaceAst,   # Replace the AST of the macro invocation
+                              # with the AST returned by the Macro
+    scoMacroPassSemSecond,    # Second semantic analysis
+    scoMacroPassMaybeRepeat,  # If the AST returned by the macro contains
+                              # other macro invocations, th is process
+                              # iterates.
+    limScoMacroPass,
+  #SconeSubPassSymType* = enum
+  #  #spstMkSymbolTables,
+  #  #spstHandleImport,
+  #  spstFirst,
+  #  spstRepeat,
+  #  #spstSubstGenerics,
+  #  #spstHandleFuncOverloading,
+  #  #spstTypeCheck,
+  #  limSpSymType,
 
   SconeCurrSymTblInfo* = object
     #symTblId*: int
@@ -45,7 +63,7 @@ type
     maxMacroExpansion*: uint #= 1024u
     mode*: Mode
     pass*: SconePass
-    symTypeSubPass*: SconeSubPassSymType
+    #symTypeSubPass*: SconeSubPassSymType
     inFindAllDecls*: bool
     inFindTypeDecls*: bool
     astRoot*: AstNode

@@ -140,13 +140,12 @@ template mkScopePost(
   argSym: Option[Symbol],
   argAst: AstNode,
 ): untyped =
-  #defer:
   let curr = args.self[].mySymTblInfo.curr#.parent
   if argSym.isSome:
     #if args.self[].inFindAllDecls:
     args.self[].checkDuplSym()
     case args.subPass:
-    of spstFindTopLevelDecls:
+    of spstFirst:
       if curr.parent.sym.isSome:
         if curr.sym.isSome:
           case curr.sym.get().kind:
@@ -210,18 +209,115 @@ template mkScopePost(
 #) =
 #  discard
 
-proc checkSymUse(
+# `checkAndTagExpr()` is intended to do the following:
+#   * check whether a `Symbol` within an expression is used before it's
+#     defined
+#   * tag an expression and its children with their types
+proc checkAndTagExpr(
   args: var SymTypeArgs,
-  myStResult: SymTypeResult,
   expr: AstNode,
 ) =
-  case args.subPass:
-  of spstFindTopLevelDecls:
-    discard
-  of spstPostFindTopLevelDecls:
-    discard
-  else:
-    eek()
+  if orR(@[
+    args.subPass != spstFirst,
+    #myStResult.kind != stResultSym,
+  ]):
+    return
+
+  proc innerProc(
+    args: var SymTypeArgs,
+    ast: AstNode,
+    parent: AstNode,
+  ) =
+    proc eek() =
+      doAssert(
+        false,
+        sconcat(@[
+          "eek! ",
+          "args:", $args, "; ",
+          "ast.kind:", $ast.kind, "; ",
+          "parent.kind:", $parent.kind, "; ",
+        ])
+      )
+    proc myDoIt(
+      argAst: AstNode
+    ) =
+      args.innerProc(ast=argAst, parent=ast)
+
+    case ast.kind:
+    of astU64Lit:
+      discard
+    of astStrLit:
+      discard
+    of astIdent:
+      #if parent != nil:
+      #  #case parent.kind:
+      #  discard
+      #else:
+      #  discard
+      discard
+    of astOpenarrLit:
+      #for item in ast.myOpenarrLit.openarrLitSeq:
+      #  item.myDoIt()
+      discard
+    of astTrue, astFalse:
+      discard
+    of astDeref:
+      #ast.myDeref.obj.myDoIt()
+      discard
+    of astBuiltinTypeCast:
+      #ast.myBuiltinTypeCast.type.myDoIt()
+      ast.myBuiltinTypeCast.obj.myDoIt()
+    of astUnop:
+      case ast.myUnop.kind:
+      of unopPlus, unopMinus, unopBitInvert:
+        discard
+      of unopLogicNot:
+        discard
+      of unopAddr:
+        discard
+      #else:
+      #  eek()
+    of astBinop:
+      case ast.myBinop.kind:
+      of binopCmpEq, binopCmpNe,
+        binopCmpLt, binopCmpGt,
+        binopCmpLe, binopCmpGe:
+        discard
+      #--------
+      of binopPlus, binopMinus, binopMul, binopDiv, binopMod:
+        discard
+      of binopBitAnd, binopBitOr, binopBitXor:
+        discard
+      of binopLogicAnd, binopLogicOr:
+        discard
+      of binopBitShl:
+        discard
+      of binopBitShr:
+        discard
+    of astFuncCall:
+      let ident = ast.myFuncCall.ident
+      let genericImpl = ast.myFuncCall.genericImpl
+      let argImplSeq = ast.myFuncCall.argImplSeq
+      let myGenericSeq = genericImpl.myGenericList.mySeq
+
+      for idx in 0 ..< myGenericSeq.len():
+        let impl = myGenericSeq[idx]
+
+      for idx in 0 ..< argImplSeq.len():
+        let arg = argImplSeq[idx]
+
+    else:
+      eek()
+  args.innerProc(ast=expr, parent=nil)
+
+  #case args.subPass:
+  #of spstFirst:
+  #  discard
+  #of spstRepeat:
+  #  discard
+  #else:
+  #  eek()
+  #discard
 
 proc doAstSrcFile(
   args: var SymTypeArgs
@@ -233,7 +329,7 @@ proc doAstSrcFile(
   #mkSymbolTable()
   let self = args.self
   self[].inFindAllDecls = (
-    args.subPass == spstFindTopLevelDecls
+    args.subPass == spstFirst
   )
 
   #discard mkScopePre(none(Symbol), myAst)
@@ -258,7 +354,7 @@ proc doAstSrcFile(
       discard funcDecl.myDoIt(none(Symbol))
   #--------
   #case args.subPass:
-  #of spstFindTopLevelDecls:
+  #of spstFirst:
   #  #--------
   #  args.topLevelChanged = true
   #  while args.topLevelChanged:
@@ -274,7 +370,7 @@ proc doAstSrcFile(
   #  #--------
   #else:
   #  #--------
-  #  if args.subPass == spstPostFindTopLevelDecls:
+  #  if args.subPass == spstRepeat:
   #    args.changed = false
   #  #--------
   #  for structDecl in myAst.mySrcFile.structDeclSeq:
@@ -363,11 +459,11 @@ proc doAstVar(
   let info = addr self[].mySymTblInfo
 
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     result = myAst.myVar.child.myDoIt(none(Symbol))
     result.mySym.kind = symVar
     result.mySym.initValAst = myAst.myVar.optExpr
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     discard
   else:
     eek()
@@ -389,7 +485,7 @@ proc doAstDef(
   case args.subPass:
   #of spstMkSymbolTables:
   #  discard
-  of spstFindTopLevelDecls:
+  of spstFirst:
     var sym = Symbol(
       #moduleName: args.moduleIdent[],
       inputFname: self[].inputFname,
@@ -415,8 +511,7 @@ proc doAstDef(
       kind: tiFunc,
     )
     let curr = mkScopePre(some(sym), myAst)
-    defer:
-      mkScopePost(some(sym), myAst)
+    defer: mkScopePost(some(sym), myAst)
     block:
       if myAst.myDef.genericDecl.isSome:
         discard myAst.myDef.genericDecl.get().myDoIt(some(sym))
@@ -424,8 +519,7 @@ proc doAstDef(
       for idx in 0 ..< myAst.myDef.argDeclSeq.len():
         var mySym = myAst.myDef.argDeclSeq[idx].myDoIt(some(sym))
         discard mkScopePre(some(mySym.mySym), mySym.ast)
-        defer:
-          mkScopePost(some(mySym.mySym), mySym.ast)
+        defer: mkScopePost(some(mySym.mySym), mySym.ast)
         sym.typeInfo.myFunc.argIdxSeq.add curr.childSeq.len() - 1
     block:
       var resultSym = Symbol(
@@ -435,12 +529,11 @@ proc doAstDef(
       )
       resultSym.typeInfo = myAst.myDef.returnType.myDoIt(some(sym)).myType
       discard mkScopePre(some(resultSym), myAst.myDef.returnType)
-      defer:
-        mkScopePost(some(resultSym), myAst.myDef.returnType)
+      defer: mkScopePost(some(resultSym), myAst.myDef.returnType)
       sym.typeInfo.myFunc.resultIdx = curr.childSeq.len() - 1
     for idx in 0 ..< myAst.myDef.stmtSeq.len():
       discard myAst.myDef.stmtSeq[idx].myDoIt(some(sym))
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     #args.doSubstGenerics(
     #  ast=myAst,
     #  stResult
@@ -484,7 +577,7 @@ proc doAstStruct(
   let info = addr self[].mySymTblInfo
 
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     var sym = Symbol(
       inputFname: self[].inputFname,
       name: myAst.myStruct.ident.myIdent.strVal,
@@ -503,8 +596,7 @@ proc doAstStruct(
       kind: tiStruct,
     )
     let curr = mkScopePre(some(sym), myAst)
-    defer:
-      mkScopePost(some(sym), myAst)
+    defer: mkScopePost(some(sym), myAst)
     block:
       if myAst.myStruct.genericDecl.isSome:
         discard myAst.myStruct.genericDecl.get().myDoIt(some(sym))
@@ -514,8 +606,7 @@ proc doAstStruct(
       for idx in 0 ..< myAst.myStruct.fieldSeq.len():
         var mySym = myAst.myStruct.fieldSeq[idx].myDoIt(some(sym))
         discard mkScopePre(some(mySym.mySym), mySym.ast)
-        defer:
-          mkScopePost(some(mySym.mySym), mySym.ast)
+        defer: mkScopePost(some(mySym.mySym), mySym.ast)
         sym.typeInfo.myStruct.fieldIdxSeq.add curr.childSeq.len() - 1
   else:
     discard
@@ -574,7 +665,7 @@ proc doAstImport(
     kind: stResultNone
   )
   #let self = args.self
-proc doAstCImport(
+proc doAstCimport(
   args: var SymTypeArgs,
 ): SymTypeResult =
   result = SymTypeResult(
@@ -687,7 +778,7 @@ proc doAstArray(
   )
   let self = args.self
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     result = myAst.myArray.elemType.myDoIt(none(Symbol))
     let tempArrDim = myAst.myArray.dim.constEval(self[].inputFname)
     if tempArrDim <= 0i64:
@@ -703,7 +794,7 @@ proc doAstArray(
     result.myType.arrDim() = some(uint64(tempArrDim))
     #result.myType.isOpenarr() = false
     result.myType.arrKind() = tiarrArr
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     discard
   else:
     eek()
@@ -716,12 +807,12 @@ proc doAstOpenarray(
   )
   let self = args.self
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     #result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
     result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
     result.myType.arrDim() = none(uint64)
     result.myType.arrKind() = tiarrOpenarr
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     discard
   else:
     eek()
@@ -734,10 +825,10 @@ proc doAstBuiltinTypeCast(
   )
   let self = args.self
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     #result = myAst.myOpenarray.elemType.myDoIt(none(Symbol))
     discard
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     discard
   else:
     eek()
@@ -774,7 +865,7 @@ proc doAstBasicType(
   )
   let self = args.self
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     result = SymTypeResult(
       ast: myAst,
       kind: stResultType
@@ -792,7 +883,7 @@ proc doAstBasicType(
       ),
       kind: tiBasicType,
     )
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     discard
   else:
     eek()
@@ -806,7 +897,7 @@ proc doAstNamedType(
   )
   let self = args.self
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     #result = SymTypeResult(
     #  kind: stResultType,
     #  myType: myAst.myType.child.myDoIt(none(Symbol)),
@@ -831,7 +922,7 @@ proc doAstNamedType(
       kind: tiToResolve,
     )
     #result = myAst.myNamedType.child.myDoIt(none(Symbol))
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     discard
   else:
     eek()
@@ -845,7 +936,7 @@ proc doAstType(
     kind: stResultNone
   )
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     #result = SymTypeResult(
     #  kind: stResultType,
     #  myType: myAst.myType.child.myDoIt(none(Symbol)),
@@ -858,7 +949,7 @@ proc doAstType(
       result.myType.funcVar() = true
     elif myAst.myType.ptrDim > 0:
       result.myType.ptrDim() = myAst.myType.ptrDim
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     discard
   else:
     eek()
@@ -910,7 +1001,7 @@ proc doAstGenericList(
     let parentSym = args.parentSymSeq[][^1]
     #--------
     case args.subPass:
-    of spstFindTopLevelDecls:
+    of spstFirst:
       # We don't support anything but basic generics for the Nim
       # implementation of the Scone language.
       let identResult = genericItem[].myDoIt(none(Symbol))#.myIdent
@@ -979,7 +1070,7 @@ proc doAstGenericList(
         #myAst #
       )
       #self[].addSym(some(sym))
-    of spstPostFindTopLevelDecls:
+    of spstRepeat:
       #case parentSym[].kind:
       #else:
       #  discard
@@ -1001,7 +1092,7 @@ proc doAstVarEtcDeclMost(
   )
   let self = args.self
   case args.subPass:
-  of spstFindTopLevelDecls:
+  of spstFirst:
     #--------
     #let parentSym = args.parentSymSeq[][^1]
     #--------
@@ -1031,7 +1122,7 @@ proc doAstVarEtcDeclMost(
     #  discard
     #else:
     #  parentEek()
-  of spstPostFindTopLevelDecls:
+  of spstRepeat:
     discard
   else:
     eek()
@@ -1086,8 +1177,8 @@ proc doPassSymTypeMain(
     result = args.doAstCextern()
   of astImport:
     result = args.doAstImport()
-  of astCImport:
-    result = args.doAstCImport()
+  of astCimport:
+    result = args.doAstCimport()
   of astScope:
     result = args.doAstScope()
   of astIf:
@@ -1189,4 +1280,4 @@ proc doPassSymType*(
     if subPass[] == limSpSymType:
       if myArgs.changed:
         #subPass[] = SconeSubPassSymType(2u)
-        subPass[] = spstPostFindTopLevelDecls
+        subPass[] = spstRepeat

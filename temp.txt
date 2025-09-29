@@ -1,19 +1,123 @@
-module test;
-
-  def dot(, ) ->  {
-      const  = ;
-  ;
-}
-;
-
-  def testFunc(, ) ->  {
-      const  = ;
-  ;
-  ;
-  ;
-}
-;
-
-;
-
-
+type
+  AstSrcFile* = object
+    module*: AstModule
+    funcDeclSeq*: seq[AstDef]
+    structDeclSeq*: seq[AstStruct]
+  AstIdent* = object
+    strVal*: string
+  AstU64Lit* = object
+    u64Val*: uint64
+  AstStrLit* = object
+    strLitVal*: string
+  AstOpenarrLit* = object
+    openarrLitSeq*: seq[AstExpr]
+  AstTrue* = object
+  AstFalse* = object
+  AstDeref* = object
+    obj*: AstExpr
+  AstDot* = object
+    left*: AstExpr
+    right*: AstIdent
+  AstVar* = object
+    child*: AstVarEtcDeclMost
+    optExpr*: Option[AstExpr]
+  AstConst* = object
+    child*: AstVarEtcDeclMost
+    expr*: AstExpr
+  AstDef* = object
+    ident*: AstIdent
+    genericDeclSeq*: seq[AstIdent]
+    argDeclSeq*: seq[AstVarEtcDeclMost]
+    returnType*: AstType
+    stmtSeq*: seq[AstStmt]
+  AstModule* = object
+    ident*: AstIdent
+  AstStruct* = object
+    ident*: AstIdent
+    genericDeclSeq*: seq[AstIdent]
+    fieldSeq*: seq[AstVarEtcDeclMost]
+  AstEnum* = object
+  AstVariant* = object
+  AstExtern* = object
+  AstCextern* = object
+  AstImport* = object
+  AstCimport* = object
+  SubAstScope* = object
+    stmtSeq*: seq[AstStmt]
+  SubAstIf* = object
+    expr*: AstExpr
+    stmtSeq*: seq[AstStmt]
+    elifSeq*: seq[AstElif]
+    optElse*: Option[AstElse]
+  SubAstElif* = object
+    expr*: AstExpr
+    stmtSeq*: seq[AstStmt]
+  SubAstElse* = object
+    stmtSeq*: seq[AstStmt]
+  SubAstSwitch* = object
+    expr*: AstExpr
+    caseSeq*: seq[AstCase]
+    optDefault*: Option[AstDefault]
+  SubAstCase* = object
+    expr*: AstExpr
+    stmtSeq*: seq[AstStmt]
+  SubAstDefault* = object
+    stmtSeq*: seq[AstStmt]
+  SubAstFor* = object
+    ident*: AstIdent
+    exprPre*: AstExpr
+    exprPost*: AstExpr
+    isUntil*: bool
+    stmtSeq*: seq[AstStmt]
+  SubAstWhile* = object
+    expr*: AstExpr
+    stmtSeq*: seq[AstStmt]
+  SubAstContinue* = object
+  SubAstBreak* = object
+  SubAstReturn* = object
+    optExpr*: Option[AstExpr]
+  AstArray* = object
+    dim*: AstExpr
+    elemType*: AstType
+  AstOpenarray* = object
+    elemType*: AstType
+  SubAstBuiltinTypeCast* = object
+    type*: AstType
+    obj*: AstExpr
+  SubAstExprIdent* = object
+    ident*: AstIdent
+  SubAstUnop* = object
+    kind*: AstUnopKind
+    obj*: AstExpr
+  SubAstBinop* = object
+    kind*: AstBinopKind
+    left*: AstExpr
+    right*: AstExpr
+  SubAstAssignEtc* = object
+    kind*: AstAssignEtcKind
+    left*: AstExpr
+    right*: AstExpr
+  SubAstBasicType* = object
+    kind*: AstBasicTypeKind
+  SubAstNamedType* = object
+    ident*: AstIdent
+    genericImpl*: AstGenericList
+  AstType* = object
+    kwVar*: bool
+    ptrDim*: uint64
+    child*: AstTypeSub
+  SubAstFuncCall* = object
+    ident*: AstIdent
+    genericImplSeq*: seq[AstGenericArgImpl]
+    argImplSeq*: seq[AstFuncArgImpl]
+  AstFuncArgImpl* = object
+    ident*: Option[AstIdent]
+    expr*: AstExpr
+  AstGenericArgImpl* = object
+    ident*: Option[AstIdent]
+    type*: AstType
+  SubAstStmtExprLhs* = object
+    expr*: AstExpr
+  AstVarEtcDeclMost* = object
+    ident*: AstIdent
+    type*: AstType
