@@ -37,7 +37,7 @@ type
     inputFname*: string
     name*: string
     kind*: SymKind
-    initValAst*: Option[AstNode]  # the `AstNode` indicating the initial
+    initValAst*: Option[AstExpr]  # the `AstNode` indicating the initial
                                   # value/`const` value
     typeInfo*: TypeInfo
     #parent*: SymbolTable

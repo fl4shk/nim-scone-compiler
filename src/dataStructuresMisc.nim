@@ -875,8 +875,12 @@ mkEnumTokKind()
 macro mkEnumAstKind(): untyped =
   var tempSeq: seq[NimNode]
   for idx in 0 ..< helperTokKindSeq.len():
-    if helperTokKindSeq[idx][2]:
+    let h = helperTokKindSeq[idx]
+    if h[2] and h[3] == metaAstNone:
       tempSeq.add ident("ast" & helperTokKindSeq[idx][0])
+  tempSeq.add ident("astStmt")
+  tempSeq.add ident("astExpr")
+  tempSeq.add ident("astTypeSub")
 
   result = newEnum(
     name=ident("AstKind"),

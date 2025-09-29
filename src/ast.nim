@@ -507,6 +507,120 @@ macro mkAstHierMost(): untyped =
     typeDef.add objTy
     result.add typeDef
 
+  block:
+    var typeDef = newNimNode(nnkTypeDef)
+    typeDef.add mkPubIdent("AstNode")
+    typeDef.add newNimNode(nnkEmpty)
+    typeDef.add(
+      add(newNimNode(nnkRefTy), ident("AstNodeObj"))
+    )
+    result.add typeDef
+    #echo result.repr()
+
+  block:
+    var typeDef = newNimNode(nnkTypeDef)
+    typeDef.add mkPubIdent("AstNodeObj")
+    typeDef.add newNimNode(nnkEmpty)
+    var objTy = newNimNode(nnkObjectTy)
+    template recList(): untyped = objTy[2]
+    objTy.add(
+      newNimNode(nnkEmpty), newNimNode(nnkEmpty), newNimNode(nnkRecList)
+    )
+    block:
+      var identDefs = newNimNode(nnkIdentDefs)
+      identDefs.add(
+        mkPubIdent("lexMain"),
+        ident("LexMain"),
+        newNimNode(nnkEmpty),
+      )
+      recList.add identDefs
+    block:
+      #IdentDefs
+      #  Postfix
+      #    Ident "*"
+      #    Ident "symTblId"
+      #  BracketExpr
+      #    Ident "Option"
+      #    Ident "int"
+      #  Empty
+
+      var identDefs = newNimNode(nnkIdentDefs)
+      var bracketExpr = newNimNode(nnkBracketExpr)
+      bracketExpr.add(
+        ident("Option"),
+        #ident("int"),
+        ident("TypeInfo"),
+      )
+      identDefs.add(
+        mkPubIdent("typeInfo"),
+        #ident("int"),
+        bracketExpr,
+        newNimNode(nnkEmpty),
+      )
+      recList.add identDefs
+      #echo recList.repr()
+      #dumpTree:
+      #  type 
+      #    Aaaa = object
+      #      symTblId*: Option[int]
+      #let tempNode = quote do:
+      #  symTblId*: Option[int]
+      #  
+      #recList.add tempNode
+    #block:
+    #  var identDefs = newNimNode(nnkIdentDefs)
+    #  identDefs.add(
+    #    mkPubIdent("parentExpr"),
+    #    ident("AstNode"),
+    #    newNimNode(nnkEmpty),
+    #  )
+    #  recList.add identDefs
+    block:
+      var recCase = newNimNode(nnkRecCase)
+      var identDefs = newNimNode(nnkIdentDefs)
+      identDefs.add(
+        mkPubIdent("kind"),
+        ident("AstKind"),
+        newNimNode(nnkEmpty),
+      )
+      recCase.add identDefs
+
+      proc innerProc(
+        name: string
+      ) =
+        var ofBranch = newNimNode(nnkOfBranch)
+        ofBranch.add(
+          ident("ast" & name)
+        )
+        var obIdentDefs = newNimNode(nnkIdentDefs)
+        obIdentDefs.add(
+          mkPubIdent("my" & name),
+          ident("Ast" & name),
+          newNimNode(nnkEmpty)
+        )
+
+        ofBranch.add obIdentDefs
+        recCase.add ofBranch
+      for idx in 0 ..< helperTokKindSeq.len():
+        let h = helperTokKindSeq[idx]
+        if not h[2]:
+          continue
+        if h[3] != metaAstNone:
+          continue
+        innerProc(h[0])
+      innerProc("Stmt")
+      innerProc("Expr")
+      innerProc("TypeSub")
+
+      recList.add recCase
+
+    #objTy.add 
+
+    typeDef.add objTy
+    result.add typeDef
+
+    #echo result.repr()
+
 
   #block:
   #  for idx in exprIdxSeq:

@@ -221,3 +221,74 @@ type
       myBasicType*: SubAstBasicType
     of typeSubNamedType:
       myNamedType*: SubAstNamedType
+  AstNode* = ref AstNodeObj
+  AstNodeObj* = object
+    lexMain*: LexMain
+    typeInfo*: Option[TypeInfo]
+    case kind*: AstKind
+    of astSrcFile:
+      mySrcFile*: AstSrcFile
+    of astIdent:
+      myIdent*: AstIdent
+    of astU64Lit:
+      myU64Lit*: AstU64Lit
+    of astStrLit:
+      myStrLit*: AstStrLit
+    of astOpenarrLit:
+      myOpenarrLit*: AstOpenarrLit
+    of astTrue:
+      myTrue*: AstTrue
+    of astFalse:
+      myFalse*: AstFalse
+    of astDeref:
+      myDeref*: AstDeref
+    of astDot:
+      myDot*: AstDot
+    of astVar:
+      myVar*: AstVar
+    of astConst:
+      myConst*: AstConst
+    of astDef:
+      myDef*: AstDef
+    of astModule:
+      myModule*: AstModule
+    of astStruct:
+      myStruct*: AstStruct
+    of astEnum:
+      myEnum*: AstEnum
+    of astVariant:
+      myVariant*: AstVariant
+    of astExtern:
+      myExtern*: AstExtern
+    of astCextern:
+      myCextern*: AstCextern
+    of astImport:
+      myImport*: AstImport
+    of astCimport:
+      myCimport*: AstCimport
+    of astElif:
+      myElif*: AstElif
+    of astElse:
+      myElse*: AstElse
+    of astCase:
+      myCase*: AstCase
+    of astDefault:
+      myDefault*: AstDefault
+    of astArray:
+      myArray*: AstArray
+    of astOpenarray:
+      myOpenarray*: AstOpenarray
+    of astType:
+      myType*: AstType
+    of astFuncArgImpl:
+      myFuncArgImpl*: AstFuncArgImpl
+    of astGenericArgImpl:
+      myGenericArgImpl*: AstGenericArgImpl
+    of astVarEtcDeclMost:
+      myVarEtcDeclMost*: AstVarEtcDeclMost
+    of astStmt:
+      myStmt*: AstStmt
+    of astExpr:
+      myExpr*: AstExpr
+    of astTypeSub:
+      myTypeSub*: AstTypeSub
