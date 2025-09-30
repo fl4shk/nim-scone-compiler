@@ -952,24 +952,33 @@ proc toStr*(
   var tempSeq: seq[AstNode]
   proc innerProc(
     idx: int,
-    postFirstLoop: bool,
+    #postFirstLoop: bool,
   ): NimNode =
     let h = helperTokKindSeq[idx]
     let info = metaAstInfoArr[int(h[3])]
 
-    if not h[2] or info.kind.isSome:
-      if not postFirstLoop:
-        #if info.kind.isSome:
-        #  myIdxSeqArr[int(h[3])].add idx
-        #continue
-        return
+    #if not h[2] or info.kind.isSome:
+    #  if not postFirstLoop:
+    #    #if info.kind.isSome:
+    #    #  myIdxSeqArr[int(h[3])].add idx
+    #    #continue
+    #    return
+    if not h[2]:
+      return
 
     var ofBranch = newNimNode(nnkOfBranch)
-    ofBranch.add ident("ast" & h[0])
+    if not info.kind.isSome:
+      ofBranch.add ident("ast" & h[0])
+    else:
+      ofBranch.add ident(info.nameLower & h[0])
     var stmtList = newNimNode(nnkStmtList)
 
     var myCmd0 = newNimNode(nnkCommand)
-    let tempAstName = "(Ast" & h[0]
+    var tempAstName: string
+    if not info.kind.isSome:
+      tempAstName = "(Ast" & h[0]
+    else:
+      tempAstName = "(SubAst" & h[0]
     let tempNimNode = quote do:
       `tempAstName`
       
@@ -1003,12 +1012,21 @@ proc toStr*(
       var toAdd: NimNode = nil
 
       let myAstIdent = ident("ast")
-      let myMbrIdent = ident("my" & h[0])
       let mbrStr = newLit(field[0])
       let myInnerMbrIdent = ident(field[0])
       #let myToStrIdent = ident("toStr")
-      let myDualDotExpr = quote do:
-        `myAstIdent`.`myMbrIdent`.`myInnerMbrIdent`
+      var myDualDotExpr: NimNode
+      if not info.kind.isSome:
+        let myMbrIdent = ident("my" & h[0])
+        myDualDotExpr = quote do:
+          `myAstIdent`.`myMbrIdent`.`myInnerMbrIdent`
+      else:
+        #myDualDotExpr = quote do:
+        let myMbrIdent = ident("my" & info.nameUpper)
+        let mySubMbrIdent = ident("my" & h[0])
+        myDualDotExpr = quote do:
+          `myAstIdent`.`myMbrIdent`.`mySubMbrIdent`.`myInnerMbrIdent`
+          
       let myTempSeqIdent = ident("tempSeq")
       let myKdxIdent = ident("kdx")
 
@@ -1162,7 +1180,7 @@ proc toStr*(
         if info.kind.isSome:
           myIdxSeqArr[int(h[3])].add idx
         continue
-      result.add innerProc(idx=idx, postFirstLoop=false)
+      result.add innerProc(idx=idx)
     #dumpTree result
     #echo "<-- -->"
     for infoIdx in 0 ..< metaAstInfoArr.len():
@@ -1191,21 +1209,22 @@ proc toStr*(
       for idx in myIdxSeqArr[infoIdx]:
         let h = helperTokKindSeq[idx]
 
-        var subOfBranch = newNimNode(nnkOfBranch)
-        subOfBranch.add ident(info.nameLower & h[0])
-        var subStmtList = newNimNode(nnkStmtList)
+        #var subOfBranch = newNimNode(nnkOfBranch)
+        #subOfBranch.add ident(info.nameLower & h[0])
+        #var subStmtList = newNimNode(nnkStmtList)
 
-        let mySubAstSubObj = ident("my" & h[0])
-        let tempNimNode = quote do:
-          `myAst`.`mySubAstObj`.`mySubAstSubObj`.toAstNode().toStr(x)
+        ##let mySubAstSubObj = ident("my" & h[0])
+        ##let tempNimNode = quote do:
+        ##  `myAst`.`mySubAstObj`.`mySubAstSubObj`.toAstNode().toStr(x)
 
-        var myCmd0 = newNimNode(nnkCommand)
-        myCmd0.add(
-          add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
-          tempNimNode
-        )
-        subStmtList.add myCmd0
-        subOfBranch.add subStmtList
+        ##var myCmd0 = newNimNode(nnkCommand)
+        ##myCmd0.add(
+        ##  add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
+        ##  tempNimNode
+        ##)
+        #subStmtList.add myCmd0
+        #subOfBranch.add subStmtList
+        var subOfBranch = innerProc(idx=idx)
         caseStmt.add subOfBranch
 
       stmtList.add caseStmt

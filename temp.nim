@@ -696,40 +696,198 @@ of astVarEtcDeclMost:
 of astStmt:
   case ast.myStmt.kind
   of stmtScope:
-    result.add ast.myStmt.myScope.toAstNode().toStr(x)
+    result.add "(SubAstScope"
+    x = indent
+    result.add((" " & "stmtSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myStmt.myScope.stmtSeq.len():
+      tempSeq.add(ast.myStmt.myScope.stmtSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("")
+    result.add(")")
   of stmtIf:
-    result.add ast.myStmt.myIf.toAstNode().toStr(x)
+    result.add "(SubAstIf"
+    result.add "\n"
+    result.add((i & "expr" & " ") & (ast.myStmt.myIf.expr.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "stmtSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myStmt.myIf.stmtSeq.len():
+      tempSeq.add(ast.myStmt.myIf.stmtSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("\n")
+    result.add((i & "elifSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myStmt.myIf.elifSeq.len():
+      tempSeq.add(ast.myStmt.myIf.elifSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("\n")
+    if ast.myStmt.myIf.optElse.isSome:
+      result.add((i & "optElse" & " ") &
+          (ast.myStmt.myIf.optElse.get.toAstNode().toStr(x)) &
+          ("\n"))
+    else:
+      result.add((i & "optElse" & " " & "!isSome") & ("\n"))
+    result.add(iFinish & ")")
   of stmtSwitch:
-    result.add ast.myStmt.mySwitch.toAstNode().toStr(x)
+    result.add "(SubAstSwitch"
+    result.add "\n"
+    result.add((i & "expr" & " ") &
+        (ast.myStmt.mySwitch.expr.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "caseSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myStmt.mySwitch.caseSeq.len():
+      tempSeq.add(ast.myStmt.mySwitch.caseSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("\n")
+    if ast.myStmt.mySwitch.optDefault.isSome:
+      result.add((i & "optDefault" & " ") &
+          (ast.myStmt.mySwitch.optDefault.get.toAstNode().toStr(x)) &
+          ("\n"))
+    else:
+      result.add((i & "optDefault" & " " & "!isSome") & ("\n"))
+    result.add(iFinish & ")")
   of stmtFor:
-    result.add ast.myStmt.myFor.toAstNode().toStr(x)
+    result.add "(SubAstFor"
+    result.add "\n"
+    result.add((i & "ident" & " ") &
+        (ast.myStmt.myFor.ident.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "exprPre" & " ") &
+        (ast.myStmt.myFor.exprPre.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "exprPost" & " ") &
+        (ast.myStmt.myFor.exprPost.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add(i & "isUntil" & " " & $ast.myStmt.myFor.isUntil & "\n")
+    result.add((i & "stmtSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myStmt.myFor.stmtSeq.len():
+      tempSeq.add(ast.myStmt.myFor.stmtSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("\n")
+    result.add(iFinish & ")")
   of stmtWhile:
-    result.add ast.myStmt.myWhile.toAstNode().toStr(x)
+    result.add "(SubAstWhile"
+    result.add "\n"
+    result.add((i & "expr" & " ") &
+        (ast.myStmt.myWhile.expr.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "stmtSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myStmt.myWhile.stmtSeq.len():
+      tempSeq.add(ast.myStmt.myWhile.stmtSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("\n")
+    result.add(iFinish & ")")
   of stmtContinue:
-    result.add ast.myStmt.myContinue.toAstNode().toStr(x)
+    result.add "(SubAstContinue"
+    result.add(")")
   of stmtBreak:
-    result.add ast.myStmt.myBreak.toAstNode().toStr(x)
+    result.add "(SubAstBreak"
+    result.add(")")
   of stmtReturn:
-    result.add ast.myStmt.myReturn.toAstNode().toStr(x)
+    result.add "(SubAstReturn"
+    x = indent
+    if ast.myStmt.myReturn.optExpr.isSome:
+      result.add((" " & "optExpr" & " ") &
+          (ast.myStmt.myReturn.optExpr.get.toAstNode().toStr(x)) &
+          (""))
+    else:
+      result.add((" " & "optExpr" & " " & "!isSome") & (""))
+    result.add(")")
   of stmtAssignEtc:
-    result.add ast.myStmt.myAssignEtc.toAstNode().toStr(x)
+    result.add "(SubAstAssignEtc"
+    result.add "\n"
+    result.add(i & "kind" & " " & $ast.myStmt.myAssignEtc.kind & "\n")
+    result.add((i & "left" & " ") &
+        (ast.myStmt.myAssignEtc.left.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "right" & " ") &
+        (ast.myStmt.myAssignEtc.right.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add(iFinish & ")")
   of stmtStmtExprLhs:
-    result.add ast.myStmt.myStmtExprLhs.toAstNode().toStr(x)
+    result.add "(SubAstStmtExprLhs"
+    x = indent
+    result.add((" " & "expr" & " ") &
+        (ast.myStmt.myStmtExprLhs.expr.toAstNode().toStr(x)) &
+        (""))
+    result.add(")")
 of astExpr:
   case ast.myExpr.kind
   of exprBuiltinTypeCast:
-    result.add ast.myExpr.myBuiltinTypeCast.toAstNode().toStr(x)
+    result.add "(SubAstBuiltinTypeCast"
+    result.add "\n"
+    result.add((i & "type" & " ") &
+        (ast.myExpr.myBuiltinTypeCast.type.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "obj" & " ") &
+        (ast.myExpr.myBuiltinTypeCast.obj.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add(iFinish & ")")
   of exprExprIdent:
-    result.add ast.myExpr.myExprIdent.toAstNode().toStr(x)
+    result.add "(SubAstExprIdent"
+    x = indent
+    result.add((" " & "ident" & " ") &
+        (ast.myExpr.myExprIdent.ident.toAstNode().toStr(x)) &
+        (""))
+    result.add(")")
   of exprUnop:
-    result.add ast.myExpr.myUnop.toAstNode().toStr(x)
+    result.add "(SubAstUnop"
+    result.add "\n"
+    result.add(i & "kind" & " " & $ast.myExpr.myUnop.kind & "\n")
+    result.add((i & "obj" & " ") & (ast.myExpr.myUnop.obj.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add(iFinish & ")")
   of exprBinop:
-    result.add ast.myExpr.myBinop.toAstNode().toStr(x)
+    result.add "(SubAstBinop"
+    result.add "\n"
+    result.add(i & "kind" & " " & $ast.myExpr.myBinop.kind & "\n")
+    result.add((i & "left" & " ") &
+        (ast.myExpr.myBinop.left.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "right" & " ") &
+        (ast.myExpr.myBinop.right.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add(iFinish & ")")
   of exprFuncCall:
-    result.add ast.myExpr.myFuncCall.toAstNode().toStr(x)
+    result.add "(SubAstFuncCall"
+    result.add "\n"
+    result.add((i & "ident" & " ") &
+        (ast.myExpr.myFuncCall.ident.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "genericImplSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myExpr.myFuncCall.genericImplSeq.len():
+      tempSeq.add(ast.myExpr.myFuncCall.genericImplSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("\n")
+    result.add((i & "argImplSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myExpr.myFuncCall.argImplSeq.len():
+      tempSeq.add(ast.myExpr.myFuncCall.argImplSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("\n")
+    result.add(iFinish & ")")
 of astTypeSub:
   case ast.myTypeSub.kind
   of typeSubBasicType:
-    result.add ast.myTypeSub.myBasicType.toAstNode().toStr(x)
+    result.add "(SubAstBasicType"
+    x = indent
+    result.add(" " & "kind" & " " & $ast.myTypeSub.myBasicType.kind & "")
+    result.add(")")
   of typeSubNamedType:
-    result.add ast.myTypeSub.myNamedType.toAstNode().toStr(x)
+    result.add "(SubAstNamedType"
+    result.add "\n"
+    result.add((i & "ident" & " ") &
+        (ast.myTypeSub.myNamedType.ident.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "genericImplSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myTypeSub.myNamedType.genericImplSeq.len():
+      tempSeq.add(ast.myTypeSub.myNamedType.genericImplSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("\n")
+    result.add(iFinish & ")")
