@@ -335,6 +335,7 @@ type
     seq[(string, AstValKind, string)]
   )
 
+
 const helperTokKindSeq*: seq[HelperTokKind] = @[
   #--------
   (
@@ -891,6 +892,39 @@ macro mkEnumAstKind(): untyped =
 
 mkEnumAstKind()
 
+type
+  MetaAstInfo* = object
+    nameUpper*: string
+    nameLower*: string
+    kind*: Option[AstKind]
+
+const metaAstInfoArr* = [
+  MetaAstInfo(
+    # metaAstNone
+    nameUpper: "None",
+    nameLower: "none",
+    kind: none(AstKind),
+  ),
+  MetaAstInfo(
+    # metaAstStmt
+    nameUpper: "Stmt",
+    nameLower: "stmt",
+    kind: some(astStmt),
+  ),
+  MetaAstInfo(
+    # metaAstExpr
+    nameUpper: "Expr",
+    nameLower: "expr",
+    kind: some(astExpr)
+  ),
+  MetaAstInfo(
+    # metaAstTypeSub
+    nameUpper: "TypeSub",
+    nameLower: "typeSub",
+    kind: some(astTypeSub)
+  )
+]
+    
 type
   CurrTok* = object
     tok*: TokKind

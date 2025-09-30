@@ -270,26 +270,40 @@ mkEnumAstTypeSubKind()
 macro mkAstHierMost(): untyped =
   result = newNimNode(nnkTypeSection)
   #var otherSeq: seq[HelperTokKind]
-  var stmtIdxSeq: seq[int] = @[]
-  var exprIdxSeq: seq[int] = @[]
-  var typeSubIdxSeq: seq[int] = @[]
+  #var stmtIdxSeq: seq[int] = @[]
+  #var exprIdxSeq: seq[int] = @[]
+  #var typeSubIdxSeq: seq[int] = @[]
+  #var idxPtrSeq: seq[seq[int]] = @[]
+  var myIdxSeqArr: array[metaAstInfoArr.len(), seq[int]]
+
   template recList(): untyped = objTy[2]
-  template recCase(): untyped = recList[0]
+  template recCase(): untyped = recList[1]
+  template addFieldLexMain(): untyped =
+    var identDefs = newNimNode(nnkIdentDefs)
+    identDefs.add(
+      mkPubIdent("lexMain"),
+      ident("LexMain"),
+      newNimNode(nnkEmpty),
+    )
+    recList.add identDefs
   for idx in 0 ..< helperTokKindSeq.len():
     let h = helperTokKindSeq[idx]
     if not h[2]:
       continue
 
-    case h[3]:
-    of metaAstNone:
-      #otherSeq.add h
-      discard
-    of metaAstStmt:
-      stmtIdxSeq.add idx
-    of metaAstExpr:
-      exprIdxSeq.add idx
-    of metaAstTypeSub:
-      typeSubIdxSeq.add idx
+    #case h[3]:
+    #of metaAstNone:
+    #  #otherSeq.add h
+    #  discard
+    #of metaAstStmt:
+    #  stmtIdxSeq.add idx
+    #of metaAstExpr:
+    #  exprIdxSeq.add idx
+    #of metaAstTypeSub:
+    #  typeSubIdxSeq.add idx
+    let info = metaAstInfoArr[int(h[3])]
+    if info.kind.isSome:
+      myIdxSeqArr[int(h[3])].add idx
 
     var tempStr: string = ""
     case h[3]:
@@ -317,11 +331,14 @@ macro mkAstHierMost(): untyped =
       ],
     )
     #template recList(): untyped = objTy[2]
-    var didAddRecList: bool = false
+    #var didAddRecList: bool = false
+    objTy.add(newNimNode(nnkRecList))
+    addFieldLexMain()
     for jdx in 0 ..< h[4].len():
-      if jdx == 0:
-        didAddRecList = true
-        objTy.add(newNimNode(nnkRecList))
+      #if jdx == 0:
+      #  didAddRecList = true
+      #  objTy.add(newNimNode(nnkRecList))
+      #  addFieldLexMain()
       let field = h[4][jdx]
       var identDefs = newNimNode(nnkIdentDefs)
       identDefs.add mkPubIdent(field[0])
@@ -367,145 +384,168 @@ macro mkAstHierMost(): untyped =
 
       identDefs.add newNimNode(nnkEmpty)
       recList.add identDefs
-    if not didAddRecList:
-      objTy.add newNimNode(nnkEmpty)
+    #if not didAddRecList:
+    #  #objTy.add newNimNode(nnkEmpty)
+    #  addFieldLexMain()
     typeDef.add objTy
     result.add typeDef
 
-  block:
-    var typeDefRef = newNimNode(nnkTypeDef)
-    typeDefRef.add mkPubIdent("AstStmt")
-    typeDefRef.add newNimNode(nnkEmpty)
-    typeDefRef.add newNimNode(nnkRefTy)
-    typeDefRef[2].add ident("AstStmtObj")
-    result.add typeDefRef
-
-  block:
-    var typeDef = newNimNode(nnkTypeDef)
-    typeDef.add mkPubIdent("AstStmtObj")
-    typeDef.add newNimNode(nnkEmpty)
-
-    var objTy = add(
-      newNimNode(nnkObjectTy),
-      [
-        newNimNode(nnkEmpty),
-        newNimNode(nnkEmpty),
-        newNimNode(nnkRecList),
-      ]
-    )
-    recList.add newNimNode(nnkRecCase)
+  for infoIdx in 0 ..< metaAstInfoArr.len():
+    let info = metaAstInfoArr[infoIdx]
+    if not info.kind.isSome:
+      continue
 
     block:
-      var identDefs = newNimNode(nnkIdentDefs)
-      identDefs.add mkPubIdent("kind")
-      identDefs.add ident("AstStmtKind")
-      identDefs.add newNimNode(nnkEmpty)
-      recCase.add identDefs
-
-    for idx in stmtIdxSeq:
-      let h = helperTokKindSeq[idx]
-      let tempStr = "SubAst" & h[0]
-
-      var ofBranch = newNimNode(nnkOfBranch)
-      ofBranch.add ident("stmt" & h[0])
-      var identDefs = newNimNode(nnkIdentDefs)
-      identDefs.add mkPubIdent("my" & h[0])
-      identDefs.add ident(tempStr)
-      identDefs.add newNimNode(nnkEmpty)
-      ofBranch.add identDefs
-      recCase.add ofBranch
-    typeDef.add objTy
-    result.add typeDef
-
-  block:
-    var typeDefRef = newNimNode(nnkTypeDef)
-    typeDefRef.add mkPubIdent("AstExpr")
-    typeDefRef.add newNimNode(nnkEmpty)
-    typeDefRef.add newNimNode(nnkRefTy)
-    typeDefRef[2].add ident("AstExprObj")
-    result.add typeDefRef
-
-  block:
-    var typeDef = newNimNode(nnkTypeDef)
-    typeDef.add mkPubIdent("AstExprObj")
-    typeDef.add newNimNode(nnkEmpty)
-
-    var objTy = add(
-      newNimNode(nnkObjectTy),
-      [
-        newNimNode(nnkEmpty),
-        newNimNode(nnkEmpty),
-        newNimNode(nnkRecList),
-      ]
-    )
-    recList.add newNimNode(nnkRecCase)
+      var typeDefRef = newNimNode(nnkTypeDef)
+      typeDefRef.add mkPubIdent("Ast" & info.nameUpper)
+      typeDefRef.add newNimNode(nnkEmpty)
+      typeDefRef.add newNimNode(nnkRefTy)
+      typeDefRef[2].add ident("Ast" & info.nameUpper & "Obj")
+      result.add typeDefRef
 
     block:
-      var identDefs = newNimNode(nnkIdentDefs)
-      identDefs.add mkPubIdent("kind")
-      identDefs.add ident("AstExprKind")
-      identDefs.add newNimNode(nnkEmpty)
-      recCase.add identDefs
+      var typeDef = newNimNode(nnkTypeDef)
+      typeDef.add mkPubIdent("Ast" & info.nameUpper & "Obj")
+      typeDef.add newNimNode(nnkEmpty)
 
-    for idx in exprIdxSeq:
-      let h = helperTokKindSeq[idx]
-      let tempStr = "SubAst" & h[0]
+      var objTy = add(
+        newNimNode(nnkObjectTy),
+        [
+          newNimNode(nnkEmpty),
+          newNimNode(nnkEmpty),
+          newNimNode(nnkRecList),
+        ]
+      )
+      addFieldLexMain()
+      recList.add newNimNode(nnkRecCase)
 
-      var ofBranch = newNimNode(nnkOfBranch)
-      ofBranch.add ident("expr" & h[0])
-      var identDefs = newNimNode(nnkIdentDefs)
-      identDefs.add mkPubIdent("my" & h[0])
-      identDefs.add ident(tempStr)
-      identDefs.add newNimNode(nnkEmpty)
-      ofBranch.add identDefs
-      recCase.add ofBranch
-    typeDef.add objTy
-    result.add typeDef
+      block:
+        var identDefs = newNimNode(nnkIdentDefs)
+        identDefs.add mkPubIdent("kind")
+        identDefs.add ident("Ast" & info.nameUpper & "Kind")
+        identDefs.add newNimNode(nnkEmpty)
+        recCase.add identDefs
 
-  block:
-    var typeDefRef = newNimNode(nnkTypeDef)
-    typeDefRef.add mkPubIdent("AstTypeSub")
-    typeDefRef.add newNimNode(nnkEmpty)
-    typeDefRef.add newNimNode(nnkRefTy)
-    typeDefRef[2].add ident("AstTypeSubObj")
-    result.add typeDefRef
+      for idx in myIdxSeqArr[infoIdx]:
+        let h = helperTokKindSeq[idx]
+        let tempStr = "SubAst" & h[0]
 
-  block:
-    var typeDef = newNimNode(nnkTypeDef)
-    typeDef.add mkPubIdent("AstTypeSubObj")
-    typeDef.add newNimNode(nnkEmpty)
+        var ofBranch = newNimNode(nnkOfBranch)
+        ofBranch.add ident(info.nameLower & h[0])
+        var identDefs = newNimNode(nnkIdentDefs)
+        identDefs.add mkPubIdent("my" & h[0])
+        identDefs.add ident(tempStr)
+        identDefs.add newNimNode(nnkEmpty)
+        ofBranch.add identDefs
+        recCase.add ofBranch
+      typeDef.add objTy
+      result.add typeDef
 
-    var objTy = add(
-      newNimNode(nnkObjectTy),
-      [
-        newNimNode(nnkEmpty),
-        newNimNode(nnkEmpty),
-        newNimNode(nnkRecList),
-      ]
-    )
-    recList.add newNimNode(nnkRecCase)
+  #block:
+  #  var typeDefRef = newNimNode(nnkTypeDef)
+  #  typeDefRef.add mkPubIdent("AstExpr")
+  #  typeDefRef.add newNimNode(nnkEmpty)
+  #  typeDefRef.add newNimNode(nnkRefTy)
+  #  typeDefRef[2].add ident("AstExprObj")
+  #  result.add typeDefRef
 
-    block:
-      var identDefs = newNimNode(nnkIdentDefs)
-      identDefs.add mkPubIdent("kind")
-      identDefs.add ident("AstTypeSubKind")
-      identDefs.add newNimNode(nnkEmpty)
-      recCase.add identDefs
+  #block:
+  #  var typeDef = newNimNode(nnkTypeDef)
+  #  typeDef.add mkPubIdent("AstExprObj")
+  #  typeDef.add newNimNode(nnkEmpty)
 
-    for idx in typeSubIdxSeq:
-      let h = helperTokKindSeq[idx]
-      let tempStr = "SubAst" & h[0]
+  #  var objTy = add(
+  #    newNimNode(nnkObjectTy),
+  #    [
+  #      newNimNode(nnkEmpty),
+  #      newNimNode(nnkEmpty),
+  #      newNimNode(nnkRecList),
+  #    ]
+  #  )
+  #  addFieldLexMain()
+  #  recList.add newNimNode(nnkRecCase)
 
-      var ofBranch = newNimNode(nnkOfBranch)
-      ofBranch.add ident("typeSub" & h[0])
-      var identDefs = newNimNode(nnkIdentDefs)
-      identDefs.add mkPubIdent("my" & h[0])
-      identDefs.add ident(tempStr)
-      identDefs.add newNimNode(nnkEmpty)
-      ofBranch.add identDefs
-      recCase.add ofBranch
-    typeDef.add objTy
-    result.add typeDef
+  #  block:
+  #    var identDefs = newNimNode(nnkIdentDefs)
+  #    var bracketExpr = newNimNode(nnkBracketExpr)
+  #    bracketExpr.add(
+  #      ident("Option"),
+  #      ident("TypeInfo"),
+  #    )
+  #    identDefs.add(
+  #      mkPubIdent("typeInfo"),
+  #      bracketExpr,
+  #      newNimNode(nnkEmpty),
+  #    )
+  #    recList.add identDefs
+
+  #  block:
+  #    var identDefs = newNimNode(nnkIdentDefs)
+  #    identDefs.add mkPubIdent("kind")
+  #    identDefs.add ident("AstExprKind")
+  #    identDefs.add newNimNode(nnkEmpty)
+  #    recCase.add identDefs
+
+  #  for idx in exprIdxSeq:
+  #    let h = helperTokKindSeq[idx]
+  #    let tempStr = "SubAst" & h[0]
+
+  #    var ofBranch = newNimNode(nnkOfBranch)
+  #    ofBranch.add ident("expr" & h[0])
+  #    var identDefs = newNimNode(nnkIdentDefs)
+  #    identDefs.add mkPubIdent("my" & h[0])
+  #    identDefs.add ident(tempStr)
+  #    identDefs.add newNimNode(nnkEmpty)
+  #    ofBranch.add identDefs
+  #    recCase.add ofBranch
+  #  typeDef.add objTy
+  #  result.add typeDef
+
+  #block:
+  #  var typeDefRef = newNimNode(nnkTypeDef)
+  #  typeDefRef.add mkPubIdent("AstTypeSub")
+  #  typeDefRef.add newNimNode(nnkEmpty)
+  #  typeDefRef.add newNimNode(nnkRefTy)
+  #  typeDefRef[2].add ident("AstTypeSubObj")
+  #  result.add typeDefRef
+
+  #block:
+  #  var typeDef = newNimNode(nnkTypeDef)
+  #  typeDef.add mkPubIdent("AstTypeSubObj")
+  #  typeDef.add newNimNode(nnkEmpty)
+
+  #  var objTy = add(
+  #    newNimNode(nnkObjectTy),
+  #    [
+  #      newNimNode(nnkEmpty),
+  #      newNimNode(nnkEmpty),
+  #      newNimNode(nnkRecList),
+  #    ]
+  #  )
+  #  addFieldLexMain()
+  #  recList.add newNimNode(nnkRecCase)
+
+  #  block:
+  #    var identDefs = newNimNode(nnkIdentDefs)
+  #    identDefs.add mkPubIdent("kind")
+  #    identDefs.add ident("AstTypeSubKind")
+  #    identDefs.add newNimNode(nnkEmpty)
+  #    recCase.add identDefs
+
+  #  for idx in typeSubIdxSeq:
+  #    let h = helperTokKindSeq[idx]
+  #    let tempStr = "SubAst" & h[0]
+
+  #    var ofBranch = newNimNode(nnkOfBranch)
+  #    ofBranch.add ident("typeSub" & h[0])
+  #    var identDefs = newNimNode(nnkIdentDefs)
+  #    identDefs.add mkPubIdent("my" & h[0])
+  #    identDefs.add ident(tempStr)
+  #    identDefs.add newNimNode(nnkEmpty)
+  #    ofBranch.add identDefs
+  #    recCase.add ofBranch
+  #  typeDef.add objTy
+  #  result.add typeDef
 
   block:
     var typeDef = newNimNode(nnkTypeDef)
@@ -526,52 +566,25 @@ macro mkAstHierMost(): untyped =
     objTy.add(
       newNimNode(nnkEmpty), newNimNode(nnkEmpty), newNimNode(nnkRecList)
     )
-    block:
-      var identDefs = newNimNode(nnkIdentDefs)
-      identDefs.add(
-        mkPubIdent("lexMain"),
-        ident("LexMain"),
-        newNimNode(nnkEmpty),
-      )
-      recList.add identDefs
-    block:
-      #IdentDefs
-      #  Postfix
-      #    Ident "*"
-      #    Ident "symTblId"
-      #  BracketExpr
-      #    Ident "Option"
-      #    Ident "int"
-      #  Empty
-
-      var identDefs = newNimNode(nnkIdentDefs)
-      var bracketExpr = newNimNode(nnkBracketExpr)
-      bracketExpr.add(
-        ident("Option"),
-        #ident("int"),
-        ident("TypeInfo"),
-      )
-      identDefs.add(
-        mkPubIdent("typeInfo"),
-        #ident("int"),
-        bracketExpr,
-        newNimNode(nnkEmpty),
-      )
-      recList.add identDefs
-      #echo recList.repr()
-      #dumpTree:
-      #  type 
-      #    Aaaa = object
-      #      symTblId*: Option[int]
-      #let tempNode = quote do:
-      #  symTblId*: Option[int]
-      #  
-      #recList.add tempNode
     #block:
     #  var identDefs = newNimNode(nnkIdentDefs)
     #  identDefs.add(
-    #    mkPubIdent("parentExpr"),
-    #    ident("AstNode"),
+    #    mkPubIdent("lexMain"),
+    #    ident("LexMain"),
+    #    newNimNode(nnkEmpty),
+    #  )
+    #  recList.add identDefs
+    #block:
+    #  var identDefs = newNimNode(nnkIdentDefs)
+    #  var bracketExpr = newNimNode(nnkBracketExpr)
+    #  bracketExpr.add(
+    #    ident("Option"),
+    #    ident("TypeInfo"),
+    #  )
+    #  identDefs.add(
+    #    mkPubIdent("typeInfo"),
+    #    #ident("int"),
+    #    bracketExpr,
     #    newNimNode(nnkEmpty),
     #  )
     #  recList.add identDefs
@@ -608,9 +621,13 @@ macro mkAstHierMost(): untyped =
         if h[3] != metaAstNone:
           continue
         innerProc(h[0])
-      innerProc("Stmt")
-      innerProc("Expr")
-      innerProc("TypeSub")
+      for infoIdx in 0 ..< metaAstInfoArr.len():
+        let info = metaAstInfoArr[infoIdx]
+        if info.kind.isSome:
+          innerProc(info.nameUpper)
+      #innerProc("Stmt")
+      #innerProc("Expr")
+      #innerProc("TypeSub")
 
       recList.add recCase
 
@@ -628,6 +645,74 @@ macro mkAstHierMost(): untyped =
   echo result.repr()
 
 mkAstHierMost()
+
+#StmtList
+#  ProcDef
+#    Postfix
+#      Ident "*"
+#      Ident "toAstNode"
+#    Empty
+#    Empty
+#    FormalParams
+#      Ident "AstNode"
+#      IdentDefs
+#        Ident "obj"
+#        Ident "AstModule"
+#        Empty
+#    Empty
+#    Empty
+#    StmtList
+#      Asgn
+#        Ident "result"
+#        ObjConstr
+#          Ident "AstNode"
+#          ExprColonExpr
+#            Ident "kind"
+#            Ident "astModule"
+#          ExprColonExpr
+#            Ident "myModule"
+#            Ident "obj"
+#dumpTree:
+#  proc toAstNode*(
+#    obj: AstModule,
+#  ): AstNode =
+#    result = AstNode(
+#      kind: astModule,
+#      myModule: obj,
+#    )
+
+macro mkToAstNodeProcs(): untyped =
+  var tempSeq: seq[string]
+  for idx in 0 ..< helperTokKindSeq.len():
+    let h = helperTokKindSeq[idx]
+    if h[2] and h[3] == metaAstNone:
+      tempSeq.add helperTokKindSeq[idx][0]
+  for infoIdx in 0 ..< metaAstInfoArr.len():
+    let info = metaAstInfoArr[infoIdx]
+    if info.kind.isSome:
+      tempSeq.add info.nameUpper
+  #tempSeq.add "Stmt"
+  #tempSeq.add "Expr"
+  #tempSeq.add "TypeSub"
+
+  result = newNimNode(nnkStmtList)
+  for idx in 0 ..< tempSeq.len():
+    let identKind = ident("ast" & tempSeq[idx])
+    let identObjType = ident("Ast" & tempSeq[idx])
+    let identArgName = ident("my" & tempSeq[idx])
+    let identObj = ident("obj")
+
+    result.add quote do:
+      proc toAstNode*(
+        `identObj`: `identObjType`
+      ): AstNode =
+        result = AstNode(
+          kind: `identKind`,
+          `identArgName`: `identObj`,
+        )
+  echo result.repr()
+
+mkToAstNodeProcs()
 
 #macro mkAstHier(): untyped =
 #  #result = newTypeSection(
@@ -841,259 +926,313 @@ proc doIndent*(
 ##  of 
 ##  discard
 #
-#proc toStr*(
-#  astSeq: seq[AstNode],
-#  indent: uint,
-#): string
-#
-#proc toStr*(
-#  ast: AstNode,
-#  indent: uint,
-#): string
-#
-#proc toStr*(
-#  ast: AstNode,
-#  indent: uint,
-#): string =
-#  if ast == nil:
-#    return "nil"
-#  var x = indent + 2
-#  #result.add doIndent(indent=indent)
-#  template i(): untyped =
-#    doIndent(indent=x)
-#  #let iFinish = i & ")\n"
-#  var iFinish = doIndent(indent=indent)
-#
-#  macro doCaseStmt(): untyped =
-#    result = newNimNode(nnkCaseStmt)
-#    result.add(
-#      add(newNimNode(nnkDotExpr), ident("ast"), ident("kind"))
-#    )
-#    #echo result.repr()
-#    for idx in 0 ..< helperTokKindSeq.len():
-#      let h = helperTokKindSeq[idx]
-#      if not h[2]:
-#        continue
-#
-#      var ofBranch = newNimNode(nnkOfBranch)
-#      ofBranch.add ident("ast" & h[0])
-#      var stmtList = newNimNode(nnkStmtList)
-#
-#      var myCmd0 = newNimNode(nnkCommand)
-#      let tempAstName = "(Ast" & h[0]
-#      let tempNimNode = quote do:
-#        #i & 
-#        `tempAstName`
-#        
-#      myCmd0.add(
-#        add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
-#        #newLit(
-#        #  "(Ast" & h[0] #& "\n" #& i
-#        #),
-#        tempNimNode
-#      )
-#      stmtList.add myCmd0
-#      #stmtList.add quote do:
-#      #  result.add i
-#
-#      var tempNl: NimNode
-#      var tempI: NimNode
-#        
-#
-#      for jdx in 0 ..< h[3].len():
-#        let field = h[3][jdx]
-#        if jdx == 0 and h[3].len > 1:
-#          stmtList.add quote do:
-#            result.add "\n" #`tempNl`
-#        #else:
-#        if h[3].len <= 1:
-#          stmtList.add quote do:
-#            x = indent
-#        if h[3].len() > 1:
-#          #tempNl = "\n"
-#          tempNl = quote do:
-#            "\n" #& i
-#          tempI = quote do:
-#            i
-#        else:
-#          tempNl = quote do:
-#            #i
-#            ""
-#          tempI = quote do:
-#            " "
-#        #var myCmdInner = newNimNode(nnkCommand)
-#
-#        #proc myAddIndent(myCmdInner: var NimNode) =
-#        #  myCmdInner.add(
-#        #    add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
-#        #    ident("i")
-#        #  )
-#        #myCmdInner.myAddIndent()
-#
-#        #var myDotExpr = (
-#        #  add(newNimNode(nnkDotExpr), ident("result"), ident("add"))
-#        #)
-#        var toAdd: NimNode = nil
-#
-#        #let myResultIdent = ident("result")
-#        #let myAddIdent = ident("add")
-#        #let myIIdent = ident("i")
-#        #let myXIdent = ident("x")
-#        let myAstIdent = ident("ast")
-#        let myMbrIdent = ident("my" & h[0])
-#        let mbrStr = newLit(field[0])
-#        let myInnerMbrIdent = ident(field[0])
-#        #let myToStrIdent = ident("toStr")
-#        let myDualDotExpr = quote do:
-#          `myAstIdent`.`myMbrIdent`.`myInnerMbrIdent`
-#
-#        case field[1]:
-#        of astValAstNode:
-#          toAdd = quote do:
-#            result.add(
-#              (
-#                #"\n" & i & 
-#                #`tempNl` & 
-#                `tempI` & `mbrStr` & " "
-#              ) & (
-#                `myDualDotExpr`.toStr(x) #& i & ")\n"
-#              ) & (
-#                `tempNl`
-#              )
-#            )
-#        of astValSeqAstNode:
-#          toAdd = quote do:
-#            result.add(
-#              (
-#                #"\n" & i & 
-#                #`tempNl` & 
-#                `tempI` & `mbrStr` & " "
-#              ) & (
-#                `myDualDotExpr`.toStr(x) #& "\n"
-#              ) & (
-#                `tempNl`
-#              )
-#            )
-#        of astValOptAstNode:
-#          toAdd = quote do:
-#            if `myDualDotExpr`.isSome:
-#              result.add(
-#                (
-#                  #"\n" & i & 
-#                  #`tempNl` & 
-#                  `tempI` & `mbrStr` & " "
-#                ) & (
-#                  `myDualDotExpr`.get.toStr(x)
-#                ) & (
-#                  `tempNl`
-#                )
-#              )
-#            else:
-#              result.add(
-#                #"\n" & i & 
-#                (
-#                  `tempI` & `mbrStr` & " " & "!isSome" #& ")\n"
-#                ) & (
-#                  `tempNl`
-#                )
-#              )
-#        of astValString:
-#          toAdd = quote do:
-#            result.add(
-#              #`tempNl` & 
-#              `tempI` & "\"" & `myDualDotExpr` & "\"" & `tempNl`
-#            )
-#        of astValU64:
-#          toAdd = quote do:
-#            result.add(
-#              #`tempNl` & 
-#              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
-#            )
-#        of astValBool:
-#          toAdd = quote do:
-#            result.add(
-#              #`tempNl` & 
-#              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
-#            )
-#        of astValUnopKind:
-#          toAdd = quote do:
-#            result.add(
-#              #`tempNl` & 
-#              #" " & 
-#              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
-#            )
-#        of astValBinopKind:
-#          toAdd = quote do:
-#            result.add(
-#              #`tempNl` & 
-#              #" " & 
-#              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
-#            )
-#        of astValAssignEtcKind:
-#          toAdd = quote do:
-#            result.add(
-#              #`tempNl` & 
-#              #" " & 
-#              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
-#            )
-#        of astValBasicTypeKind:
-#          toAdd = quote do:
-#            result.add(
-#              `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
-#            )
-#
-#        #myCmdInner.add myDotExpr
-#        #myCmdInner.add toAdd
-#
-#        stmtList.add toAdd
-#      #if h[3].len() == 0:
-#      block:
-#        var toAdd: NimNode = nil
-#        if orR(@[
-#          h[3].len() == 0,
-#          h[3].len() == 1,
-#        ]):
-#          toAdd = quote do:
-#            result.add(")")
-#        else:
-#          toAdd = quote do:
-#            result.add(iFinish & ")")
-#        stmtList.add toAdd
-#
-#      #var myCmd1 = newNimNode(nnkCommand)
-#      #myCmd1.add(
-#      #  add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
-#      #  #newLit(")\n"),
-#      #  ident("iFinish"),
-#      #)
-#      #stmtList.add myCmd1
-#
-#      ofBranch.add stmtList
-#      result.add ofBranch
-#    #dumpTree result
-#    #echo "<-- -->"
-#
-#    #echo result.repr()
-#  doCaseStmt()
-#
-#proc toStr*(
-#  astSeq: seq[AstNode],
-#  indent: uint,
-#): string =
-#  let x = indent + 2
-#  let tempIndent = doIndent(indent=indent)
-#  let tempIndent1 = doIndent(indent=x)
-#  #result.add tempIndent
-#  #let i = doIndent(ident=x)
-#
-#  result.add "[\n"
-#  for idx in 0 ..< astSeq.len():
-#    result.add tempIndent1 & astSeq[idx].toStr(x) & "\n"
-#  #if int(indent - 2) > 0:
-#  #  result.add doIndent(indent - 2)
-#  result.add tempIndent
-#  result.add "]"
-#
+
+proc toStr*(
+  astSeq: seq[AstNode],
+  indent: uint,
+): string
+
+proc toStr*(
+  ast: AstNode,
+  indent: uint,
+): string
+
+proc toStr*(
+  ast: AstNode,
+  indent: uint,
+): string =
+  if ast == nil:
+    return "nil"
+  var x = indent + 2
+  #result.add doIndent(indent=indent)
+  template i(): untyped =
+    doIndent(indent=x)
+  #let iFinish = i & ")\n"
+  var iFinish = doIndent(indent=indent)
+  var tempSeq: seq[AstNode]
+  proc innerProc(
+    idx: int,
+    postFirstLoop: bool,
+  ): NimNode =
+    let h = helperTokKindSeq[idx]
+    let info = metaAstInfoArr[int(h[3])]
+
+    if not h[2] or info.kind.isSome:
+      if not postFirstLoop:
+        #if info.kind.isSome:
+        #  myIdxSeqArr[int(h[3])].add idx
+        #continue
+        return
+
+    var ofBranch = newNimNode(nnkOfBranch)
+    ofBranch.add ident("ast" & h[0])
+    var stmtList = newNimNode(nnkStmtList)
+
+    var myCmd0 = newNimNode(nnkCommand)
+    let tempAstName = "(Ast" & h[0]
+    let tempNimNode = quote do:
+      `tempAstName`
+      
+    myCmd0.add(
+      add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
+      tempNimNode
+    )
+    stmtList.add myCmd0
+
+    var tempNl: NimNode
+    var tempI: NimNode
+
+    for jdx in 0 ..< h[4].len():
+      let field = h[4][jdx]
+      if jdx == 0 and h[4].len > 1:
+        stmtList.add quote do:
+          result.add "\n"
+      if h[4].len <= 1:
+        stmtList.add quote do:
+          x = indent
+      if h[4].len() > 1:
+        tempNl = quote do:
+          "\n"
+        tempI = quote do:
+          i
+      else:
+        tempNl = quote do:
+          ""
+        tempI = quote do:
+          " "
+      var toAdd: NimNode = nil
+
+      let myAstIdent = ident("ast")
+      let myMbrIdent = ident("my" & h[0])
+      let mbrStr = newLit(field[0])
+      let myInnerMbrIdent = ident(field[0])
+      #let myToStrIdent = ident("toStr")
+      let myDualDotExpr = quote do:
+        `myAstIdent`.`myMbrIdent`.`myInnerMbrIdent`
+      let myTempSeqIdent = ident("tempSeq")
+      let myKdxIdent = ident("kdx")
+
+      case field[1]:
+      of astValAstNode:
+        toAdd = quote do:
+          result.add(
+            (
+              #"\n" & i & 
+              #`tempNl` & 
+              `tempI` & `mbrStr` & " "
+            ) & (
+              `myDualDotExpr`.toAstNode().toStr(x) #& i & ")\n"
+            ) & (
+              `tempNl`
+            )
+          )
+      of astValSeqAstNode:
+        toAdd = quote do:
+          result.add(
+            (
+              #"\n" & i & 
+              #`tempNl` & 
+              `tempI` & `mbrStr` & " "
+            )
+          )
+          `myTempSeqIdent`.setLen(0)
+          for `myKdxIdent` in 0 ..< `myDualDotExpr`.len():
+            `myTempSeqIdent`.add(
+              `myDualDotExpr`[`myKdxIdent`].toAstNode()
+            )
+            #& (
+            #  #`myDualDotExpr`.toAstNode().toStr(x) #& "\n"
+            #)
+          result.add `myTempSeqIdent`.toStr(x)
+          result.add(
+            `tempNl`
+          )
+      of astValOptAstNode:
+        toAdd = quote do:
+          if `myDualDotExpr`.isSome:
+            result.add(
+              (
+                #"\n" & i & 
+                #`tempNl` & 
+                `tempI` & `mbrStr` & " "
+              ) & (
+                `myDualDotExpr`.get.toAstNode().toStr(x)
+              ) & (
+                `tempNl`
+              )
+            )
+          else:
+            result.add(
+              #"\n" & i & 
+              (
+                `tempI` & `mbrStr` & " " & "!isSome" #& ")\n"
+              ) & (
+                `tempNl`
+              )
+            )
+      of astValString:
+        toAdd = quote do:
+          result.add(
+            #`tempNl` & 
+            `tempI` & "\"" & `myDualDotExpr` & "\"" & `tempNl`
+          )
+      of astValU64:
+        toAdd = quote do:
+          result.add(
+            #`tempNl` & 
+            `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
+          )
+      of astValBool:
+        toAdd = quote do:
+          result.add(
+            #`tempNl` & 
+            `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
+          )
+      of astValUnopKind:
+        toAdd = quote do:
+          result.add(
+            #`tempNl` & 
+            #" " & 
+            `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
+          )
+      of astValBinopKind:
+        toAdd = quote do:
+          result.add(
+            #`tempNl` & 
+            #" " & 
+            `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
+          )
+      of astValAssignEtcKind:
+        toAdd = quote do:
+          result.add(
+            #`tempNl` & 
+            #" " & 
+            `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
+          )
+      of astValBasicTypeKind:
+        toAdd = quote do:
+          result.add(
+            `tempI` & `mbrStr` & " " & $`myDualDotExpr` & `tempNl`
+          )
+
+      #myCmdInner.add myDotExpr
+      #myCmdInner.add toAdd
+
+      stmtList.add toAdd
+    #if h[3].len() == 0:
+    block:
+      var toAdd: NimNode = nil
+      if orR(@[
+        h[4].len() == 0,
+        h[4].len() == 1,
+      ]):
+        toAdd = quote do:
+          result.add(")")
+      else:
+        toAdd = quote do:
+          result.add(iFinish & ")")
+      stmtList.add toAdd
+
+    #var myCmd1 = newNimNode(nnkCommand)
+    #myCmd1.add(
+    #  add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
+    #  #newLit(")\n"),
+    #  ident("iFinish"),
+    #)
+    #stmtList.add myCmd1
+
+    ofBranch.add stmtList
+    #result.add ofBranch
+    result = ofBranch
+
+  macro doCaseStmt(): untyped =
+    result = newNimNode(nnkCaseStmt)
+    result.add(
+      add(newNimNode(nnkDotExpr), ident("ast"), ident("kind"))
+    )
+    #echo result.repr()
+    var myIdxSeqArr: array[metaAstInfoArr.len(), seq[int]]
+
+    for idx in 0 ..< helperTokKindSeq.len():
+      let h = helperTokKindSeq[idx]
+      let info = metaAstInfoArr[int(h[3])]
+
+      if not h[2] or info.kind.isSome:
+        #if not postFirstLoop:
+        if info.kind.isSome:
+          myIdxSeqArr[int(h[3])].add idx
+        continue
+      result.add innerProc(idx=idx, postFirstLoop=false)
+    #dumpTree result
+    #echo "<-- -->"
+    for infoIdx in 0 ..< metaAstInfoArr.len():
+      let info = metaAstInfoArr[infoIdx]
+      if not info.kind.isSome:
+        continue
+      var ofBranch = newNimNode(nnkOfBranch)
+      ofBranch.add ident("ast" & info.nameUpper)
+      var stmtList = newNimNode(nnkStmtList)
+      var caseStmt = newNimNode(nnkCaseStmt)
+      let myAst = ident("ast")
+      let mySubAstObj = ident("my" & info.nameUpper)
+      let mySubAstKind = ident("kind")
+      let mySubAst: NimNode = quote do:
+        `myAst`.`mySubAstObj`.`mySubAstKind`
+      caseStmt.add(
+        #add(
+        #  newNimNode(nnkDotExpr),
+        #  ident("ast")
+        #)
+        mySubAst
+      )
+      #var subElseBranch = newNimNode(nnkElse)
+      #subStmtList.dumpTree
+
+      for idx in myIdxSeqArr[infoIdx]:
+        let h = helperTokKindSeq[idx]
+
+        var subOfBranch = newNimNode(nnkOfBranch)
+        subOfBranch.add ident(info.nameLower & h[0])
+        var subStmtList = newNimNode(nnkStmtList)
+
+        let mySubAstSubObj = ident("my" & h[0])
+        let tempNimNode = quote do:
+          `myAst`.`mySubAstObj`.`mySubAstSubObj`.toAstNode().toStr(x)
+
+        var myCmd0 = newNimNode(nnkCommand)
+        myCmd0.add(
+          add(newNimNode(nnkDotExpr), ident("result"), ident("add")),
+          tempNimNode
+        )
+        subStmtList.add myCmd0
+        subOfBranch.add subStmtList
+        caseStmt.add subOfBranch
+
+      stmtList.add caseStmt
+      ofBranch.add stmtList
+      result.add ofBranch
+
+    echo result.repr()
+  doCaseStmt()
+
+proc toStr*(
+  astSeq: seq[AstNode],
+  indent: uint,
+): string =
+  let x = indent + 2
+  let tempIndent = doIndent(indent=indent)
+  let tempIndent1 = doIndent(indent=x)
+  #result.add tempIndent
+  #let i = doIndent(ident=x)
+
+  result.add "[\n"
+  for idx in 0 ..< astSeq.len():
+    result.add tempIndent1 & astSeq[idx].toStr(x) & "\n"
+  #if int(indent - 2) > 0:
+  #  result.add doIndent(indent - 2)
+  result.add tempIndent
+  result.add "]"
+
 ##proc repr*(
 ##  ast: AstNode,
 ##  indent: uint,
