@@ -430,12 +430,12 @@ proc isBetterMatch(
 proc gatherFuncDecls*(
   self: var Scone,
   #name: string
-  funcCallAst: AstNode,
+  funcCallExpr: AstExpr,
 ): seq[SymbolTable] =
   doAssert(
-    funcCallAst.kind == astFuncCall,
+    funcCallExpr.kind == exprFuncCall,
     sconcat(@[
-      "eek! ", $funcCallAst[],
+      "eek! ", $funcCallExpr[],
     ])
   )
   doAssert(
@@ -444,13 +444,13 @@ proc gatherFuncDecls*(
   )
   let info = addr self.mySymTblInfo
   let decls = info[].decls
-  let name = funcCallAst.myFuncCall.ident.myIdent.strVal
+  let name = funcCallExpr.myFuncCall.ident.strVal
   doAssert(
     name in decls.nameTbl,
     sconcat(@[
       "Unknown called function of name ",
       "\"", name, "\" ",
-      funcCallAst.lexMain.locMsg(self.inputFname)
+      funcCallExpr.lexMain.locMsg(self.inputFname)
     ])
   )
   #var scoreTree = ScoreTree(
@@ -465,17 +465,17 @@ proc gatherFuncDecls*(
 
 proc resolveFuncCallOverload*(
   self: var Scone,
-  funcCallAst: AstNode,
+  funcCallExpr: AstExpr,
 ): Option[SymbolTable] =
   result = none(SymbolTable)
-  let mySeq = self.gatherFuncDecls(funcCallAst)
-  let name = funcCallAst.myFuncCall.ident.myIdent.strVal
+  let mySeq = self.gatherFuncDecls(funcCallExpr)
+  let name = funcCallExpr.myFuncCall.ident.strVal
   doAssert(
     mySeq.len() == 1,
     sconcat(@[
       "Unable to automatically resolve overload of function of name ",
       "\"", name, "\"",
-      "(", funcCallAst.lexMain.locMsg(inputFname=self.inputFname), ")"
+      "(", funcCallExpr.lexMain.locMsg(inputFname=self.inputFname), ")"
     ]),
   )
   result = some(mySeq[0])

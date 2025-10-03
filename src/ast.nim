@@ -566,14 +566,14 @@ macro mkAstHierMost(): untyped =
     objTy.add(
       newNimNode(nnkEmpty), newNimNode(nnkEmpty), newNimNode(nnkRecList)
     )
-    #block:
-    #  var identDefs = newNimNode(nnkIdentDefs)
-    #  identDefs.add(
-    #    mkPubIdent("lexMain"),
-    #    ident("LexMain"),
-    #    newNimNode(nnkEmpty),
-    #  )
-    #  recList.add identDefs
+    block:
+      var identDefs = newNimNode(nnkIdentDefs)
+      identDefs.add(
+        mkPubIdent("lexMain"),
+        ident("LexMain"),
+        newNimNode(nnkEmpty),
+      )
+      recList.add identDefs
     #block:
     #  var identDefs = newNimNode(nnkIdentDefs)
     #  var bracketExpr = newNimNode(nnkBracketExpr)
@@ -707,12 +707,28 @@ macro mkToAstNodeProcs(): untyped =
         `identObj`: `identObjType`
       ): AstNode =
         result = AstNode(
+          lexMain: `identObj`.lexMain,
           kind: `identKind`,
           `identArgName`: `identObj`,
         )
   echo result.repr()
 
 mkToAstNodeProcs()
+
+#macro mkAstNodeLexMainProc(): untyped =
+#  var tempSeq: seq[string]
+#  for idx in 0 ..< helperTokKindSeq.len():
+#    let h = helperTokKindSeq[idx]
+#    if h[2] and h[3] == metaAstNone:
+#      tempSeq.add helperTokKindSeq[idx][0]
+#  for infoIdx in 0 ..< metaAstInfoArr.len():
+#    let info = metaAstInfoArr[infoIdx]
+#    if info.kind.isSome:
+#      tempSeq.add info.nameUpper
+#  result = newNimNode(nnkProcDef)
+#  echo "testificate:"
+#  echo result.repr()
+#mkAstNodeLexMainProc()
 
 #macro mkAstHier(): untyped =
 #  #result = newTypeSection(
@@ -1258,11 +1274,11 @@ proc toStr*(
 ##): string =
 ##  discard
 #  
-#proc `$`*(
-#  ast: AstNode
-#): string =
-#  result = ast.toStr(0)
-#
+proc `$`*(
+  ast: AstNode
+): string =
+  result = ast.toStr(0)
+
 #proc toRepr*(
 #  ast: AstNode,
 #  parent: AstNode=nil,

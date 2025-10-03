@@ -98,7 +98,7 @@ proc lexInternal*(
   var prevLongestSize: (int, Option[int]) = (0, none(int))
 
   var kwTempStr: array[2, string]
-  for idx, (tok, opt, dontCare0, dontCare1) in helperTokKindSeq:
+  for idx, (tok, opt, _, _, _) in helperTokKindSeq:
     if opt.isSome:
       #echo "opt.isSome: " & opt.get()
       if self.inpIdx + opt.get.len() < self.inp.len():

@@ -273,6 +273,7 @@ type
       myNamedType*: SubAstNamedType
   AstNode* = ref AstNodeObj
   AstNodeObj* = object
+    lexMain*: LexMain
     case kind*: AstKind
     of astSrcFile:
       mySrcFile*: AstSrcFile
@@ -342,103 +343,106 @@ type
       myTypeSub*: AstTypeSub
 
 proc toAstNode*(obj: AstSrcFile): AstNode =
-  result = AstNode(kind: astSrcFile, mySrcFile: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astSrcFile, mySrcFile: obj)
 
 proc toAstNode*(obj: AstIdent): AstNode =
-  result = AstNode(kind: astIdent, myIdent: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astIdent, myIdent: obj)
 
 proc toAstNode*(obj: AstU64Lit): AstNode =
-  result = AstNode(kind: astU64Lit, myU64Lit: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astU64Lit, myU64Lit: obj)
 
 proc toAstNode*(obj: AstStrLit): AstNode =
-  result = AstNode(kind: astStrLit, myStrLit: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astStrLit, myStrLit: obj)
 
 proc toAstNode*(obj: AstOpenarrLit): AstNode =
-  result = AstNode(kind: astOpenarrLit, myOpenarrLit: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astOpenarrLit, myOpenarrLit: obj)
 
 proc toAstNode*(obj: AstTrue): AstNode =
-  result = AstNode(kind: astTrue, myTrue: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astTrue, myTrue: obj)
 
 proc toAstNode*(obj: AstFalse): AstNode =
-  result = AstNode(kind: astFalse, myFalse: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astFalse, myFalse: obj)
 
 proc toAstNode*(obj: AstDeref): AstNode =
-  result = AstNode(kind: astDeref, myDeref: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astDeref, myDeref: obj)
 
 proc toAstNode*(obj: AstDot): AstNode =
-  result = AstNode(kind: astDot, myDot: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astDot, myDot: obj)
 
 proc toAstNode*(obj: AstVar): AstNode =
-  result = AstNode(kind: astVar, myVar: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astVar, myVar: obj)
 
 proc toAstNode*(obj: AstConst): AstNode =
-  result = AstNode(kind: astConst, myConst: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astConst, myConst: obj)
 
 proc toAstNode*(obj: AstDef): AstNode =
-  result = AstNode(kind: astDef, myDef: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astDef, myDef: obj)
 
 proc toAstNode*(obj: AstModule): AstNode =
-  result = AstNode(kind: astModule, myModule: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astModule, myModule: obj)
 
 proc toAstNode*(obj: AstStruct): AstNode =
-  result = AstNode(kind: astStruct, myStruct: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astStruct, myStruct: obj)
 
 proc toAstNode*(obj: AstEnum): AstNode =
-  result = AstNode(kind: astEnum, myEnum: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astEnum, myEnum: obj)
 
 proc toAstNode*(obj: AstVariant): AstNode =
-  result = AstNode(kind: astVariant, myVariant: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astVariant, myVariant: obj)
 
 proc toAstNode*(obj: AstExtern): AstNode =
-  result = AstNode(kind: astExtern, myExtern: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astExtern, myExtern: obj)
 
 proc toAstNode*(obj: AstCextern): AstNode =
-  result = AstNode(kind: astCextern, myCextern: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astCextern, myCextern: obj)
 
 proc toAstNode*(obj: AstImport): AstNode =
-  result = AstNode(kind: astImport, myImport: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astImport, myImport: obj)
 
 proc toAstNode*(obj: AstCimport): AstNode =
-  result = AstNode(kind: astCimport, myCimport: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astCimport, myCimport: obj)
 
 proc toAstNode*(obj: AstElif): AstNode =
-  result = AstNode(kind: astElif, myElif: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astElif, myElif: obj)
 
 proc toAstNode*(obj: AstElse): AstNode =
-  result = AstNode(kind: astElse, myElse: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astElse, myElse: obj)
 
 proc toAstNode*(obj: AstCase): AstNode =
-  result = AstNode(kind: astCase, myCase: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astCase, myCase: obj)
 
 proc toAstNode*(obj: AstDefault): AstNode =
-  result = AstNode(kind: astDefault, myDefault: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astDefault, myDefault: obj)
 
 proc toAstNode*(obj: AstArray): AstNode =
-  result = AstNode(kind: astArray, myArray: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astArray, myArray: obj)
 
 proc toAstNode*(obj: AstOpenarray): AstNode =
-  result = AstNode(kind: astOpenarray, myOpenarray: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astOpenarray, myOpenarray: obj)
 
 proc toAstNode*(obj: AstType): AstNode =
-  result = AstNode(kind: astType, myType: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astType, myType: obj)
 
 proc toAstNode*(obj: AstFuncArgImpl): AstNode =
-  result = AstNode(kind: astFuncArgImpl, myFuncArgImpl: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astFuncArgImpl,
+                   myFuncArgImpl: obj)
 
 proc toAstNode*(obj: AstGenericArgImpl): AstNode =
-  result = AstNode(kind: astGenericArgImpl, myGenericArgImpl: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astGenericArgImpl,
+                   myGenericArgImpl: obj)
 
 proc toAstNode*(obj: AstVarEtcDeclMost): AstNode =
-  result = AstNode(kind: astVarEtcDeclMost, myVarEtcDeclMost: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astVarEtcDeclMost,
+                   myVarEtcDeclMost: obj)
 
 proc toAstNode*(obj: AstStmt): AstNode =
-  result = AstNode(kind: astStmt, myStmt: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astStmt, myStmt: obj)
 
 proc toAstNode*(obj: AstExpr): AstNode =
-  result = AstNode(kind: astExpr, myExpr: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astExpr, myExpr: obj)
 
 proc toAstNode*(obj: AstTypeSub): AstNode =
-  result = AstNode(kind: astTypeSub, myTypeSub: obj)
+  result = AstNode(lexMain: obj.lexMain, kind: astTypeSub, myTypeSub: obj)
 
 case ast.kind
 of astSrcFile:
