@@ -1279,369 +1279,440 @@ proc `$`*(
 ): string =
   result = ast.toStr(0)
 
-#proc toRepr*(
-#  ast: AstNode,
-#  parent: AstNode=nil,
-#  indent: int=(-2),
-#  #level: int=0,
-#): string =
-#  proc myToRepr(
-#    otherAst: AstNode,
-#    indent: int=(-2)
-#  ): string =
-#    result = otherAst.toRepr(parent=ast, indent=indent)
-#
-#  if ast == nil:
-#    return "(eek! `nil`)"
-#  var x = indent + 2
-#  template i(): untyped =
-#    doIndent(indent=uint(x))
-#  var iPrev: Option[string] = none(string)
-#  if indent >= 0:
-#    iPrev = some(doIndent(indent=uint(indent)))
-#
-#  proc helperStmtSeq(
-#    stmtSeq: seq[AstNode],
-#    toSub: int=0,
-#    #includeSemicolon: bool=true,
-#  ): string =
-#    for idx in 0 ..< stmtSeq.len():
-#      result.add stmtSeq[idx].myToRepr(x - toSub) & "\n"
-#      #if includeSemicolon:
-#      #  result.add ";"
-#      #result.add "\n"
-#    
-#
-#  case ast.kind:
-#  of astSrcFile:
-#    result.add ast.mySrcFile.module.myToRepr() & ";\n\n"
-#    for idx in 0 ..< ast.mySrcFile.funcDeclSeq.len():
-#      result.add ast.mySrcFile.funcDeclSeq[idx].myToRepr() & ";\n\n"
-#    for idx in 0 ..< ast.mySrcFile.structDeclSeq.len():
-#      result.add ast.mySrcFile.structDeclSeq[idx].myToRepr() & ";\n\n"
-#  of astIdent:
-#    result.add ast.myIdent.strVal
-#  of astU64Lit:
-#    result.add $ast.myU64Lit.u64Val
-#  of astStrLit:
-#    result.add "\"" & ast.myStrLit.strLitVal & "\""
-#  of astOpenarrLit:
-#    result.add "$(" 
-#    for idx in 0 ..< ast.myOpenarrLit.openarrLitSeq.len():
-#      result.add ast.myOpenarrLit.openarrLitSeq[idx].myToRepr()
-#      if idx + 1 < ast.myOpenarrLit.openarrLitSeq.len():
-#        result.add ", "
-#    result.add ")"
-#  of astTrue:
-#    result.add "true"
-#  of astFalse:
-#    result.add "false"
-#  #of astPtr:
-#  #  result.add "ptr"
-#  #of astAddr:
-#  #  result.add "(" & "addr " & ast.myAddr.obj.myToRepr(x) & ")"
-#  of astDeref:
-#    #result.add "(" & ast.myDeref.obj.myToRepr(x) & "@)"
-#    result.add ast.myDeref.obj.myToRepr(x) & "@"
-#  of astDot:
-#    #result.add "("
-#    result.add ast.myDot.left.myToRepr(x) & "."
-#    result.add ast.myDot.right.myToRepr(x)
-#    #result.add ")"
-#  of astVar:
-#    result.add i & "var " & ast.myVar.child.myToRepr()
-#    if ast.myVar.optExpr.isSome:
-#      result.add " = " & ast.myVar.optExpr.get().myToRepr()
-#    result.add ";"
-#  of astConst:
-#    result.add i & "const " & ast.myConst.child.myToRepr()
-#    result.add " = " & ast.myConst.expr.myToRepr()
-#    result.add ";"
-#  of astDef:
-#    result.add "def " & ast.myDef.ident.myToRepr()
-#    if ast.myDef.genericDecl.isSome:
-#      result.add ast.myDef.genericDecl.get().myToRepr()
-#    result.add "("
-#    #result.add ast.myDef.argDeclSeq
-#    for idx in 0 ..< ast.myDef.argDeclSeq.len():
-#      result.add ast.myDef.argDeclSeq[idx].myToRepr()
-#      if idx + 1 < ast.myDef.argDeclSeq.len():
-#        result.add ", "
-#    result.add ") -> " & ast.myDef.returnType.myToRepr() & " {\n"
-#    #for idx in 0 ..< ast.myDef.stmtSeq.len():
-#    #  result.add i & ast.myDef.stmtSeq[idx].myToRepr(x) & ";\n"
-#    result.add helperStmtSeq(ast.myDef.stmtSeq)
-#    result.add "}"
-#  of astModule:
-#    result.add "module " & ast.myModule.ident.myToRepr()
-#  of astStruct:
-#    result.add "struct " & ast.myStruct.ident.myToRepr()
-#    if ast.myStruct.genericDecl.isSome:
-#      result.add ast.myStruct.genericDecl.get().myToRepr() & " {\n"
-#    for idx in 0 ..< ast.myStruct.fieldSeq.len():
-#      result.add(
-#        (
-#          doIndent(uint(x + 2))
-#        ) & (
-#          ast.myStruct.fieldSeq[idx].myToRepr() & ";\n"
-#        )
-#      )
-#    result.add "}"
-#  of astEnum:
-#    discard
-#  of astVariant:
-#    discard
-#  of astExtern:
-#    discard
-#  of astCextern:
-#    discard
-#  of astImport:
-#    discard
-#  of astCImport:
-#    discard
-#  of astScope:
-#    result.add iPrev.get() & "scope {\n"
-#    result.add helperStmtSeq(ast.myScope.stmtSeq)
-#    result.add iPrev.get() & "}"
-#  of astIf:
-#    result.add (
-#      i & "if " & ast.myIf.expr.myToRepr() & " {\n"
-#    )
-#    result.add helperStmtSeq(ast.myIf.stmtSeq)
-#    result.add i & "}"
-#    #if ast.myIf.elifSeq.len() > 0:
-#    #  result.add ast.myIf.elifSeq[0].myToRepr(x)
-#    #  #if ast.myIf.optElse.isSome:
-#    #  #  result.add " " & ast.myIf.optElse.get().myToRepr(x)
-#    #for myElif in ast.myIf.elifSeq:
-#    for idx in 0 ..< ast.myIf.elifSeq.len():
-#      result.add " " & ast.myIf.elifSeq[idx].myToRepr(x - 2)
-#
-#    if ast.myIf.optElse.isSome:
-#      result.add " " & ast.myIf.optElse.get().myToRepr(x - 2)
-#  of astElif:
-#    result.add "elif " & ast.myElif.expr.myToRepr() & " {\n"
-#    result.add helperStmtSeq(ast.myElif.stmtSeq)
-#    result.add i & "}"
-#    discard
-#  of astElse:
-#    result.add "else {\n"
-#    result.add helperStmtSeq(ast.myElse.stmtSeq)
-#    result.add i & "}"
-#  of astSwitch:
-#    result.add i & "switch " & ast.mySwitch.expr.myToRepr() & " {\n"
-#    result.add helperStmtSeq(ast.mySwitch.caseSeq)
-#    if ast.mySwitch.optDefault.isSome:
-#      result.add i & ast.mySwitch.optDefault.get().myToRepr(x - 2)
-#      result.add "\n"
-#    result.add i & "}"
-#  of astCase:
-#    result.add iPrev.get() & "case " & ast.myCase.expr.myToRepr() & " {\n"
-#    result.add helperStmtSeq(ast.myCase.stmtSeq)
-#    result.add iPrev.get() & "}"
-#  of astDefault:
-#    result.add "default {\n"
-#    result.add helperStmtSeq(ast.myDefault.stmtSeq)
-#    result.add i & "}"
-#  of astFor:
-#    result.add i & "for "
-#    result.add ast.myFor.ident.myToRepr() & " in "
-#    result.add ast.myFor.exprPre.myToRepr()
-#    if ast.myFor.isUntil:
-#      result.add " until "
-#    else:
-#      result.add " to "
-#    result.add ast.myFor.exprPost.myToRepr() & " {\n"
-#    result.add helperStmtSeq(ast.myFor.stmtSeq)
-#    result.add i & "}"
-#  of astWhile:
-#    result.add i & "while "
-#    result.add ast.myWhile.expr.myToRepr() & " {\n"
-#    result.add helperStmtSeq(ast.myWhile.stmtSeq)
-#    result.add i & "}"
-#  of astContinue:
-#    result.add i & "continue" & ";"
-#  of astBreak:
-#    result.add i & "break" & ";"
-#  of astReturn:
-#    result.add i & "return"
-#    if ast.myReturn.optExpr.isSome:
-#      result.add " " & ast.myReturn.optExpr.get().myToRepr(x)
-#    result.add ";"
-#  of astArray:
-#    result.add "array["
-#    result.add ast.myArray.dim.myToRepr() & "; "
-#    result.add ast.myArray.elemType.myToRepr()
-#    result.add "]"
-#  of astOpenarray:
-#    result.add "openarray["
-#    result.add ast.myOpenarray.elemType.myToRepr()
-#    result.add "]"
-#  of astBuiltinTypeCast:
-#    result.add ast.myBuiltinTypeCast.type.myToRepr()
-#    result.add "("
-#    result.add ast.myBuiltinTypeCast.obj.myToRepr()
-#    result.add ")"
-#  of astUnop:
-#    var inclParens: bool = false
-#    let myUnopExprOp = (
-#      AstExprOp(
-#        kind: exprOpUnop,
-#        myUnop: ast.myUnop.kind,
-#      )
-#    )
-#    if parent != nil:
-#      var myObjExprOp: AstExprOp
-#      case parent.kind:
-#      of astUnop:
-#        #inclParens = false
-#        #myObjExprOp.kind = exprOpUnop
-#        #myObjExprOp.myUnop = parent.myUnop.kind
-#        #inclParens = myUnopExprOp.cmpPrioLt(myObjExprOp)
-#        inclParens = true
-#      of astBinop:
-#        #inclParens = false
-#        myObjExprOp.kind = exprOpBinop
-#        myObjExprOp.myBinop = parent.myBinop.kind
-#        inclParens = myUnopExprOp.cmpPrioLt(myObjExprOp)
-#      else:
-#        inclParens = false
-#        discard
-#
-#    if inclParens:
-#      result.add "("
-#    result.add(
-#      helperTokKindSeq[uint(ast.myUnop.kind.unopToTok())][1].get()
-#    )
-#    if ast.myUnop.kind == unopAddr:
-#      result.add " "
-#    result.add ast.myUnop.obj.myToRepr()
-#    if inclParens:
-#      result.add ")"
-#  of astBinop:
-#    var inclParens: bool = false
-#    let myBinopExprOp = (
-#      AstExprOp(
-#        kind: exprOpBinop,
-#        myBinop: ast.myBinop.kind,
-#      )
-#    )
-#    if parent != nil:
-#      var myObjExprOp: AstExprOp
-#      case parent.kind:
-#      of astUnop:
-#        #inclParens = false
-#        myObjExprOp.kind = exprOpUnop
-#        myObjExprOp.myUnop = parent.myUnop.kind
-#        inclParens = myBinopExprOp.cmpPrioLt(myObjExprOp)
-#      of astBinop:
-#        #inclParens = false
-#        myObjExprOp.kind = exprOpBinop
-#        myObjExprOp.myBinop = parent.myBinop.kind
-#        inclParens = myBinopExprOp.cmpPrioLt(myObjExprOp)
-#      else:
-#        inclParens = false
-#        discard
-#
-#    if inclParens:
-#      result.add "("
-#    result.add ast.myBinop.left.myToRepr() & " "
-#    result.add(
-#      helperTokKindSeq[uint(ast.myBinop.kind.binopToTok())][1].get()
-#    )
-#    result.add " " & ast.myBinop.right.myToRepr()
-#    if inclParens:
-#      result.add ")"
-#  of astAssignEtc:
-#    #result.add "("
-#    result.add i & ast.myAssignEtc.left.myToRepr() & " "
-#    result.add(
-#      helperTokKindSeq[
-#        uint(ast.myAssignEtc.kind.assignEtcToTok())
-#      ][1].get()
-#    )
-#    result.add " " & ast.myAssignEtc.right.myToRepr()
-#    #result.add ")"
-#    result.add ";"
-#  of astBasicType:
-#    case ast.myBasicType.kind:
-#    of basicTypeVoid:
-#      result.add "void"
-#    of basicTypeBool:
-#      result.add "bool"
-#    of basicTypeU8:
-#      result.add "u8"
-#    of basicTypeI8:
-#      result.add "i8"
-#    of basicTypeU16:
-#      result.add "u16"
-#    of basicTypeI16:
-#      result.add "i16"
-#    of basicTypeU32:
-#      result.add "u32"
-#    of basicTypeI32:
-#      result.add "i32"
-#    of basicTypeU64:
-#      result.add "u64"
-#    of basicTypeI64:
-#      result.add "i64"
-#    of basicTypeF32:
-#      result.add "f32"
-#    of basicTypeF64:
-#      result.add "f64"
-#    of basicTypeChar:
-#      result.add "char"
-#    of basicTypeString:
-#      result.add "string"
-#  of astNamedType:
-#    result.add ast.myNamedType.ident.myToRepr()
-#    result.add ast.myNamedType.genericImpl.myToRepr()
-#  of astType:
-#    if ast.myType.kwVar:
-#      doAssert(
-#        ast.myType.ptrDim == 0,
-#        "eek! " & $ast
-#      )
-#      result.add "var "
-#    if ast.myType.ptrDim > 0:
-#      doAssert(
-#        not ast.myType.kwVar,
-#        "eek! " & $ast
-#      )
-#      for idx in 0 ..< ast.myType.ptrDim:
-#        result.add "ptr "
-#    result.add ast.myType.child.myToRepr()
-#  of astFuncCall:
-#    result.add ast.myFuncCall.ident.myToRepr()
-#    result.add ast.myFuncCall.genericImpl.myToRepr()
-#    result.add "("
-#    for idx in 0 ..< ast.myFuncCall.argImplSeq.len():
-#      result.add ast.myFuncCall.argImplSeq[idx].myToRepr()
-#      if idx + 1 < ast.myFuncCall.argImplSeq.len():
-#        result.add ", "
-#    result.add ")"
-#  of astStmtExprLhs:
-#    result.add i & ast.myStmtExprLhs.expr.myToRepr() & ";"
-#  #of astStmtFuncCall:
-#  #  result.add i & ast.myStmtFuncCall.funcCall.myToRepr() & ";"
-#  of astFuncNamedArgImpl:
-#    result.add ast.myFuncNamedArgImpl.ident.myToRepr() & "="
-#    result.add ast.myFuncNamedArgImpl.expr.myToRepr()
-#  of astGenericNamedArgImpl:
-#    result.add ast.myGenericNamedArgImpl.ident.myToRepr() & "="
-#    result.add ast.myGenericNamedArgImpl.type.myToRepr()
-#  of astGenericList:
-#    if ast.myGenericList.mySeq.len() > 0:
-#      result.add "["
-#      for idx in 0 ..< ast.myGenericList.mySeq.len():
-#        result.add ast.myGenericList.mySeq[idx].myToRepr()
-#        if idx + 1 < ast.myGenericList.mySeq.len():
-#          result.add ", "
-#      result.add "]"
-#  of astVarEtcDeclMost:
-#    result.add ast.myVarEtcDeclMost.ident.myToRepr() & ": "
-#    result.add ast.myVarEtcDeclMost.type.myToRepr()
-#
+proc toRepr*(
+  ast: AstNode,
+  parent: AstNode=nil,
+  indent: int=(-2),
+  #level: int=0,
+): string =
+  proc myToRepr(
+    otherAst: AstNode,
+    indent: int=(-2),
+  ): string =
+    result = otherAst.toRepr(parent=ast, indent=indent)
+  type
+    MyToReprGeneric = concept
+      proc toAstNode(
+        obj: Self,
+      ): AstNode
+  proc myToRepr[T: MyToReprGeneric](
+    otherAst: T,
+    indent: int=(-2)
+  ): string =
+    result = otherAst.toAstNode().myToRepr(indent=indent)
+
+  if ast == nil:
+    return "(eek! `nil`)"
+  var x = indent + 2
+  template i(): untyped =
+    doIndent(indent=uint(x))
+  var iPrev: Option[string] = none(string)
+  if indent >= 0:
+    iPrev = some(doIndent(indent=uint(indent)))
+
+  proc helperStmtSeq[T](
+    stmtSeq: seq[T],
+    toSub: int=0,
+    #includeSemicolon: bool=true,
+  ): string =
+    for idx in 0 ..< stmtSeq.len():
+      result.add stmtSeq[idx].myToRepr(x - toSub) & "\n"
+      #if includeSemicolon:
+      #  result.add ";"
+      #result.add "\n"
+  proc helperGenericSeq[T](
+    genericSeq: seq[T]
+  ): string =
+    for idx in 0 ..< genericSeq.len():
+      if idx == 0:
+        result.add "["
+      result.add genericSeq[idx].myToRepr()
+      if idx + 1 < genericSeq.len():
+        result.add ", "
+      else:
+        result.add "]"
+    
+
+  case ast.kind:
+  of astSrcFile:
+    result.add ast.mySrcFile.module.myToRepr() & ";\n\n"
+    for idx in 0 ..< ast.mySrcFile.funcDeclSeq.len():
+      result.add ast.mySrcFile.funcDeclSeq[idx].myToRepr() & ";\n\n"
+    for idx in 0 ..< ast.mySrcFile.structDeclSeq.len():
+      result.add ast.mySrcFile.structDeclSeq[idx].myToRepr() & ";\n\n"
+  of astIdent:
+    result.add ast.myIdent.strVal
+  of astU64Lit:
+    result.add $ast.myU64Lit.u64Val
+  of astStrLit:
+    result.add "\"" & ast.myStrLit.strLitVal & "\""
+  of astOpenarrLit:
+    result.add "$(" 
+    for idx in 0 ..< ast.myOpenarrLit.openarrLitSeq.len():
+      result.add ast.myOpenarrLit.openarrLitSeq[idx].myToRepr()
+      if idx + 1 < ast.myOpenarrLit.openarrLitSeq.len():
+        result.add ", "
+    result.add ")"
+  of astTrue:
+    result.add "true"
+  of astFalse:
+    result.add "false"
+  #of astPtr:
+  #  result.add "ptr"
+  #of astAddr:
+  #  result.add "(" & "addr " & ast.myAddr.obj.myToRepr(x) & ")"
+  of astDeref:
+    #result.add "(" & ast.myDeref.obj.myToRepr(x) & "@)"
+    result.add ast.myDeref.obj.myToRepr(x) & "@"
+  of astDot:
+    #result.add "("
+    result.add ast.myDot.left.myToRepr(x) & "."
+    result.add ast.myDot.right.myToRepr(x)
+    #result.add ")"
+  of astVar:
+    result.add i & "var " & ast.myVar.child.myToRepr()
+    if ast.myVar.optExpr.isSome:
+      result.add " = " & ast.myVar.optExpr.get().myToRepr()
+    result.add ";"
+  of astConst:
+    result.add i & "const " & ast.myConst.child.myToRepr()
+    result.add " = " & ast.myConst.expr.myToRepr()
+    result.add ";"
+  of astDef:
+    result.add "def " & ast.myDef.ident.myToRepr()
+    #if ast.myDef.genericDecl.isSome:
+    #  result.add ast.myDef.genericDecl.get().myToRepr()
+    #for idx in 0 ..< ast.myDef.genericDeclSeq.len():
+    #  if idx == 0:
+    #    result.add "["
+    #  result.add ast.myDef.genericDeclSeq[idx].myToRepr()
+    #  if idx + 1 < ast.myDef.genericDeclSeq.len():
+    #    result.add ", "
+    #  else:
+    #    result.add "]"
+    result.add helperGenericSeq(ast.myDef.genericDeclSeq)
+    result.add "("
+    #result.add ast.myDef.argDeclSeq
+    for idx in 0 ..< ast.myDef.argDeclSeq.len():
+      result.add ast.myDef.argDeclSeq[idx].myToRepr()
+      if idx + 1 < ast.myDef.argDeclSeq.len():
+        result.add ", "
+    result.add ") -> " & ast.myDef.returnType.myToRepr() & " {\n"
+    #for idx in 0 ..< ast.myDef.stmtSeq.len():
+    #  result.add i & ast.myDef.stmtSeq[idx].myToRepr(x) & ";\n"
+    result.add helperStmtSeq(ast.myDef.stmtSeq)
+    result.add "}"
+  of astModule:
+    result.add "module " & ast.myModule.ident.myToRepr()
+  of astStruct:
+    result.add "struct " & ast.myStruct.ident.myToRepr()
+    #if ast.myStruct.genericDecl.isSome:
+    #  result.add ast.myStruct.genericDecl.get().myToRepr() & " {\n"
+    #for idx in 0 ..< ast.myStruct.genericDeclSeq.len():
+    #  if idx == 0:
+    #    result.add "["
+    #  result.add ast.myStruct.genericDeclSeq[idx].myToRepr()
+    #  if idx + 1 < ast.myStruct.genericDeclSeq.len():
+    #    result.add ", "
+    #  else:
+    #    result.add "]"
+    result.add helperGenericSeq(ast.myStruct.genericDeclSeq)
+    for idx in 0 ..< ast.myStruct.fieldSeq.len():
+      result.add(
+        (
+          doIndent(uint(x + 2))
+        ) & (
+          ast.myStruct.fieldSeq[idx].myToRepr() & ";\n"
+        )
+      )
+    result.add "}"
+  of astEnum:
+    discard
+  of astVariant:
+    discard
+  of astExtern:
+    discard
+  of astCextern:
+    discard
+  of astImport:
+    discard
+  of astCImport:
+    discard
+  of astStmt:
+    let stmt = ast.myStmt
+    case ast.myStmt.kind:
+    of stmtScope:
+      result.add iPrev.get() & "scope {\n"
+      result.add helperStmtSeq(stmt.myScope.stmtSeq)
+      result.add iPrev.get() & "}"
+    of stmtIf:
+      result.add (
+        i & "if " & stmt.myIf.expr.myToRepr() & " {\n"
+      )
+      result.add helperStmtSeq(stmt.myIf.stmtSeq)
+      result.add i & "}"
+      #if stmt.myIf.elifSeq.len() > 0:
+      #  result.add stmt.myIf.elifSeq[0].myToRepr(x)
+      #  #if stmt.myIf.optElse.isSome:
+      #  #  result.add " " & stmt.myIf.optElse.get().myToRepr(x)
+      #for myElif in stmt.myIf.elifSeq:
+      for idx in 0 ..< stmt.myIf.elifSeq.len():
+        result.add " " & stmt.myIf.elifSeq[idx].myToRepr(x - 2)
+
+      if stmt.myIf.optElse.isSome:
+        result.add " " & stmt.myIf.optElse.get().myToRepr(x - 2)
+    of stmtSwitch:
+      result.add i & "switch " & stmt.mySwitch.expr.myToRepr() & " {\n"
+      result.add helperStmtSeq(stmt.mySwitch.caseSeq)
+      if stmt.mySwitch.optDefault.isSome:
+        result.add i & stmt.mySwitch.optDefault.get().myToRepr(x - 2)
+        result.add "\n"
+      result.add i & "}"
+    of stmtFor:
+      result.add i & "for "
+      result.add stmt.myFor.ident.myToRepr() & " in "
+      result.add stmt.myFor.exprPre.myToRepr()
+      if stmt.myFor.isUntil:
+        result.add " until "
+      else:
+        result.add " to "
+      result.add stmt.myFor.exprPost.myToRepr() & " {\n"
+      result.add helperStmtSeq(stmt.myFor.stmtSeq)
+      result.add i & "}"
+    of stmtWhile:
+      result.add i & "while "
+      result.add stmt.myWhile.expr.myToRepr() & " {\n"
+      result.add helperStmtSeq(stmt.myWhile.stmtSeq)
+      result.add i & "}"
+    of stmtContinue:
+      result.add i & "continue" & ";"
+    of stmtBreak:
+      result.add i & "break" & ";"
+    of stmtReturn:
+      result.add i & "return"
+      if stmt.myReturn.optExpr.isSome:
+        result.add " " & stmt.myReturn.optExpr.get().myToRepr(x)
+      result.add ";"
+    of stmtAssignEtc:
+      #result.add "("
+      result.add i & stmt.myAssignEtc.left.myToRepr() & " "
+      result.add(
+        helperTokKindSeq[
+          uint(stmt.myAssignEtc.kind.assignEtcToTok())
+        ][1].get()
+      )
+      result.add " " & stmt.myAssignEtc.right.myToRepr()
+      #result.add ")"
+      result.add ";"
+    of stmtStmtExprLhs:
+      result.add i & stmt.myStmtExprLhs.expr.myToRepr() & ";"
+  of astElif:
+    result.add "elif " & ast.myElif.expr.myToRepr() & " {\n"
+    result.add helperStmtSeq(ast.myElif.stmtSeq)
+    result.add i & "}"
+    discard
+  of astElse:
+    result.add "else {\n"
+    result.add helperStmtSeq(ast.myElse.stmtSeq)
+    result.add i & "}"
+  of astCase:
+    result.add iPrev.get() & "case " & ast.myCase.expr.myToRepr() & " {\n"
+    result.add helperStmtSeq(ast.myCase.stmtSeq)
+    result.add iPrev.get() & "}"
+  of astDefault:
+    result.add "default {\n"
+    result.add helperStmtSeq(ast.myDefault.stmtSeq)
+    result.add i & "}"
+  of astArray:
+    result.add "array["
+    result.add ast.myArray.dim.myToRepr() & "; "
+    result.add ast.myArray.elemType.myToRepr()
+    result.add "]"
+  of astOpenarray:
+    result.add "openarray["
+    result.add ast.myOpenarray.elemType.myToRepr()
+    result.add "]"
+  of astExpr:
+    let expr = ast.myExpr
+    case expr.kind:
+    of exprExprIdent:
+      result.add expr.myExprIdent.ident.myToRepr()
+    of exprBuiltinTypeCast:
+      result.add expr.myBuiltinTypeCast.type.myToRepr()
+      result.add "("
+      result.add expr.myBuiltinTypeCast.obj.myToRepr()
+      result.add ")"
+    of exprUnop:
+      var inclParens: bool = false
+      let myUnopExprOp = (
+        AstExprOp(
+          kind: exprOpUnop,
+          myUnop: expr.myUnop.kind,
+        )
+      )
+      if parent != nil:
+        var myObjExprOp: AstExprOp
+        if parent.kind == astExpr:
+          case parent.myExpr.kind:
+          of exprUnop:
+            inclParens = true
+          of exprBinop:
+            myObjExprOp.kind = exprOpBinop
+            myObjExprOp.myBinop = parent.myExpr.myBinop.kind
+            inclParens = myUnopExprOp.cmpPrioLt(myObjExprOp)
+          else:
+            inclParens = false
+            discard
+        else:
+          inclParens = false
+          discard
+
+      if inclParens:
+        result.add "("
+      result.add(
+        helperTokKindSeq[uint(expr.myUnop.kind.unopToTok())][1].get()
+      )
+      if expr.myUnop.kind == unopAddr:
+        result.add " "
+      result.add expr.myUnop.obj.myToRepr()
+      if inclParens:
+        result.add ")"
+    of exprBinop:
+      var inclParens: bool = false
+      let myBinopExprOp = (
+        AstExprOp(
+          kind: exprOpBinop,
+          myBinop: expr.myBinop.kind,
+        )
+      )
+      if parent != nil:
+        var myObjExprOp: AstExprOp
+        if parent.kind == astExpr:
+          case parent.myExpr.kind:
+          of exprUnop:
+            #inclParens = false
+            myObjExprOp.kind = exprOpUnop
+            myObjExprOp.myUnop = parent.myExpr.myUnop.kind
+            inclParens = myBinopExprOp.cmpPrioLt(myObjExprOp)
+          of exprBinop:
+            #inclParens = false
+            myObjExprOp.kind = exprOpBinop
+            myObjExprOp.myBinop = parent.myExpr.myBinop.kind
+            inclParens = myBinopExprOp.cmpPrioLt(myObjExprOp)
+          else:
+            inclParens = false
+            discard
+        else:
+          inclParens = false
+          discard
+
+      if inclParens:
+        result.add "("
+      result.add expr.myBinop.left.myToRepr() & " "
+      result.add(
+        helperTokKindSeq[uint(expr.myBinop.kind.binopToTok())][1].get()
+      )
+      result.add " " & expr.myBinop.right.myToRepr()
+      if inclParens:
+        result.add ")"
+    of exprFuncCall:
+      result.add expr.myFuncCall.ident.myToRepr()
+      #result.add expr.myFuncCall.genericImpl.myToRepr()
+      #for idx in 0 ..< expr.myFuncCall.genericImplSeq.len():
+      #  if idx == 0:
+      #    result.add "["
+      #  result.add expr.myFuncCall.genericImplSeq[idx].myToRepr()
+      #  if idx + 1 < expr.myFuncCall.genericImplSeq.len():
+      #    result.add ", "
+      #  else:
+      #    result.add "]"
+      result.add helperGenericSeq(expr.myFuncCall.genericImplSeq)
+      result.add "("
+      for idx in 0 ..< expr.myFuncCall.argImplSeq.len():
+        result.add expr.myFuncCall.argImplSeq[idx].myToRepr()
+        if idx + 1 < expr.myFuncCall.argImplSeq.len():
+          result.add ", "
+      result.add ")"
+  of astTypeSub:
+    let typeSub = ast.myTypeSub
+    case typeSub.kind
+    of typeSubBasicType:
+      case typeSub.myBasicType.kind:
+      of basicTypeVoid:
+        result.add "void"
+      of basicTypeBool:
+        result.add "bool"
+      of basicTypeU8:
+        result.add "u8"
+      of basicTypeI8:
+        result.add "i8"
+      of basicTypeU16:
+        result.add "u16"
+      of basicTypeI16:
+        result.add "i16"
+      of basicTypeU32:
+        result.add "u32"
+      of basicTypeI32:
+        result.add "i32"
+      of basicTypeU64:
+        result.add "u64"
+      of basicTypeI64:
+        result.add "i64"
+      of basicTypeF32:
+        result.add "f32"
+      of basicTypeF64:
+        result.add "f64"
+      of basicTypeChar:
+        result.add "char"
+      of basicTypeString:
+        result.add "string"
+    of typeSubNamedType:
+      result.add typeSub.myNamedType.ident.myToRepr()
+      #result.add typeSub.myNamedType.genericImpl.myToRepr()
+      result.add helperGenericSeq(typeSub.myNamedType.genericImplSeq)
+  of astType:
+    if ast.myType.kwVar:
+      doAssert(
+        ast.myType.ptrDim == 0,
+        "eek! " & $ast
+      )
+      result.add "var "
+    if ast.myType.ptrDim > 0:
+      doAssert(
+        not ast.myType.kwVar,
+        "eek! " & $ast
+      )
+      for idx in 0 ..< ast.myType.ptrDim:
+        result.add "ptr "
+    result.add ast.myType.child.myToRepr()
+  #of astStmtFuncCall:
+  #  result.add i & ast.myStmtFuncCall.funcCall.myToRepr() & ";"
+  #of astFuncNamedArgImpl:
+  #  result.add ast.myFuncNamedArgImpl.ident.myToRepr() & "="
+  #  result.add ast.myFuncNamedArgImpl.expr.myToRepr()
+  of astFuncArgImpl:
+    if ast.myFuncArgImpl.ident.isSome:
+      result.add ast.myFuncArgImpl.ident.get().myToRepr() & "="
+    result.add ast.myFuncArgImpl.expr.myToRepr()
+  #of astGenericNamedArgImpl:
+  #  result.add ast.myGenericNamedArgImpl.ident.myToRepr() & "="
+  #  result.add ast.myGenericNamedArgImpl.type.myToRepr()
+  of astGenericArgImpl:
+    if ast.myGenericArgImpl.ident.isSome:
+      result.add ast.myGenericArgImpl.ident.get().myToRepr() & "="
+    result.add ast.myGenericArgImpl.type.myToRepr()
+  #of astGenericList:
+  #  if ast.myGenericList.mySeq.len() > 0:
+  #    result.add "["
+  #    for idx in 0 ..< ast.myGenericList.mySeq.len():
+  #      result.add ast.myGenericList.mySeq[idx].myToRepr()
+  #      if idx + 1 < ast.myGenericList.mySeq.len():
+  #        result.add ", "
+  #    result.add "]"
+  of astVarEtcDeclMost:
+    result.add ast.myVarEtcDeclMost.ident.myToRepr() & ": "
+    result.add ast.myVarEtcDeclMost.type.myToRepr()
+
 #proc constEval*(
 #  ast: AstNode,
 #  inputFname: string,
