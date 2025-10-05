@@ -2194,8 +2194,19 @@ proc parseExprFieldArrEtcChoice(
       of astExpr:
         case myTemp.ast.myExpr.kind:
         of exprFuncCall:
-          var myPrev = self.parentTempSeq.pop().myFuncArgImpl
-          myTemp.ast.myExpr.myFuncCall.argImplSeq.insert(myPrev)
+          #echo $self.lexMain
+          var myPrev = self.parentTempSeq.pop()#.myFuncArgImpl
+          if myPrev.kind == astExpr:
+            myPrev = mkAst(
+              AstFuncArgImpl(
+                ident: none(AstIdent),
+                expr: myPrev.myExpr
+              ),
+              lexMain=some(myPrev.lexMain)
+            )
+          myTemp.ast.myExpr.myFuncCall.argImplSeq.insert(
+            myPrev.myFuncArgImpl
+          )
           self.parentTempSeq.add myTemp.ast
         #of astIdent:
         #  discard
@@ -2881,8 +2892,8 @@ proc parseSrcFile(
   self.lexAndExpect(tokEof)
   #self.astRoot = self.parseExpr(chk=false).ast
   #echo $self.astRoot.kind
-  echo $self.astRoot
-  #echo self.astRoot.toRepr()
+  #echo $self.astRoot
+  echo self.astRoot.toRepr()
   #echo self.astRoot.repr()
   #let temp = self.loopSelParse()
   #if not temp.foundTok.isSome:

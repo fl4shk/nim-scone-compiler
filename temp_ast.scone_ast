@@ -84,7 +84,10 @@
             left (SubAstBinop
               kind binopMul
               left (SubAstDot
-                left (SubAstExprIdent ident (AstIdent "a"))
+                left (SubAstDot
+                  left (SubAstExprIdent ident (AstIdent "a"))
+                  right (AstIdent "c")
+                )
                 right (AstIdent "x")
               )
               right (SubAstDot

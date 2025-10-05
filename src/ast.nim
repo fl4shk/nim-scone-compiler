@@ -1458,6 +1458,7 @@ proc toRepr*(
     #  else:
     #    result.add "]"
     result.add helperGenericSeq(ast.myStruct.genericDeclSeq)
+    result.add " {\n"
     for idx in 0 ..< ast.myStruct.fieldSeq.len():
       result.add(
         (
