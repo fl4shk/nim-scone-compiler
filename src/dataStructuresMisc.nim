@@ -366,27 +366,27 @@ const helperTokKindSeq*: seq[HelperTokKind] = @[
   ),
   (
     # 0-9, hex numbers, binary numbers, etc.
-    "U64Lit", none(string), true, metaAstNone,
+    "U64Lit", none(string), true, metaAstExpr,
     @[
       ("u64Val", astValU64, "")
     ]
   ),
   (
     # string literals
-    "StrLit", none(string), true, metaAstNone,
+    "StrLit", none(string), true, metaAstExpr,
     @[
       ("strLitVal", astValString, "")
     ]
   ),
   (
-    "OpenarrLit", some("$("), true, metaAstNone,
+    "OpenarrLit", some("$("), true, metaAstExpr,
     @[
       ("openarrLitSeq", astValSeqAstNode, "Expr"),
     ],
   ),
   #--------
-  ("True", some("true"), true, metaAstNone, @[]),
-  ("False", some("false"), true, metaAstNone, @[]),
+  ("True", some("true"), true, metaAstExpr, @[]),
+  ("False", some("false"), true, metaAstExpr, @[]),
   #--------
   ("LParen", some("("), false, metaAstNone, @[]),
   ("RParen", some(")"), false, metaAstNone, @[]),
@@ -406,13 +406,13 @@ const helperTokKindSeq*: seq[HelperTokKind] = @[
     ]
   ),
   (
-    "Deref", some("@"), true, metaAstNone, # pointer dereference
+    "Deref", some("@"), true, metaAstExpr, # pointer dereference
     @[
       ("obj", astValAstNode, "Expr")
     ]
   ),
   (
-    "Dot", some("."), true, metaAstNone,
+    "Dot", some("."), true, metaAstExpr,
     @[
       ("left", astValAstNode, "Expr"),
       ("right", astValAstNode, "Ident"),

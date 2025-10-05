@@ -4,229 +4,183 @@ type
     stmtReturn, stmtAssignEtc, stmtStmtExprLhs
 type
   AstExprKind* = enum
-    exprBuiltinTypeCast, exprExprIdent, exprUnop, exprBinop, exprFuncCall
+    exprU64Lit, exprStrLit, exprOpenarrLit, exprTrue, exprFalse, exprDeref,
+    exprDot, exprBuiltinTypeCast, exprExprIdent, exprUnop, exprBinop,
+    exprFuncCall
 type
   AstTypeSubKind* = enum
     typeSubBasicType, typeSubNamedType
 type
-  AstSrcFile* = ref AstSrcFileObj
-  AstSrcFileObj* = object
+  AstSrcFile* = ref object
     lexMain*: LexMain
     module*: AstModule
     funcDeclSeq*: seq[AstDef]
     structDeclSeq*: seq[AstStruct]
-  AstIdent* = ref AstIdentObj
-  AstIdentObj* = object
+  AstIdent* = ref object
     lexMain*: LexMain
     strVal*: string
-  AstU64Lit* = ref AstU64LitObj
-  AstU64LitObj* = object
+  SubAstU64Lit* = object
     lexMain*: LexMain
     u64Val*: uint64
-  AstStrLit* = ref AstStrLitObj
-  AstStrLitObj* = object
+  SubAstStrLit* = object
     lexMain*: LexMain
     strLitVal*: string
-  AstOpenarrLit* = ref AstOpenarrLitObj
-  AstOpenarrLitObj* = object
+  SubAstOpenarrLit* = object
     lexMain*: LexMain
     openarrLitSeq*: seq[AstExpr]
-  AstTrue* = ref AstTrueObj
-  AstTrueObj* = object
+  SubAstTrue* = object
     lexMain*: LexMain
-  AstFalse* = ref AstFalseObj
-  AstFalseObj* = object
+  SubAstFalse* = object
     lexMain*: LexMain
-  AstDeref* = ref AstDerefObj
-  AstDerefObj* = object
+  SubAstDeref* = object
     lexMain*: LexMain
     obj*: AstExpr
-  AstDot* = ref AstDotObj
-  AstDotObj* = object
+  SubAstDot* = object
     lexMain*: LexMain
     left*: AstExpr
     right*: AstIdent
-  AstVar* = ref AstVarObj
-  AstVarObj* = object
+  AstVar* = ref object
     lexMain*: LexMain
     child*: AstVarEtcDeclMost
     optExpr*: Option[AstExpr]
-  AstConst* = ref AstConstObj
-  AstConstObj* = object
+  AstConst* = ref object
     lexMain*: LexMain
     child*: AstVarEtcDeclMost
     expr*: AstExpr
-  AstDef* = ref AstDefObj
-  AstDefObj* = object
+  AstDef* = ref object
     lexMain*: LexMain
     ident*: AstIdent
     genericDeclSeq*: seq[AstIdent]
     argDeclSeq*: seq[AstVarEtcDeclMost]
     returnType*: AstType
     stmtSeq*: seq[AstStmt]
-  AstModule* = ref AstModuleObj
-  AstModuleObj* = object
+  AstModule* = ref object
     lexMain*: LexMain
     ident*: AstIdent
-  AstStruct* = ref AstStructObj
-  AstStructObj* = object
+  AstStruct* = ref object
     lexMain*: LexMain
     ident*: AstIdent
     genericDeclSeq*: seq[AstIdent]
     fieldSeq*: seq[AstVarEtcDeclMost]
-  AstEnum* = ref AstEnumObj
-  AstEnumObj* = object
+  AstEnum* = ref object
     lexMain*: LexMain
-  AstVariant* = ref AstVariantObj
-  AstVariantObj* = object
+  AstVariant* = ref object
     lexMain*: LexMain
-  AstExtern* = ref AstExternObj
-  AstExternObj* = object
+  AstExtern* = ref object
     lexMain*: LexMain
-  AstCextern* = ref AstCexternObj
-  AstCexternObj* = object
+  AstCextern* = ref object
     lexMain*: LexMain
-  AstImport* = ref AstImportObj
-  AstImportObj* = object
+  AstImport* = ref object
     lexMain*: LexMain
-  AstCimport* = ref AstCimportObj
-  AstCimportObj* = object
+  AstCimport* = ref object
     lexMain*: LexMain
-  SubAstScope* = ref SubAstScopeObj
-  SubAstScopeObj* = object
+  SubAstScope* = object
     lexMain*: LexMain
     stmtSeq*: seq[AstStmt]
-  SubAstIf* = ref SubAstIfObj
-  SubAstIfObj* = object
+  SubAstIf* = object
     lexMain*: LexMain
     expr*: AstExpr
     stmtSeq*: seq[AstStmt]
     elifSeq*: seq[AstElif]
     optElse*: Option[AstElse]
-  AstElif* = ref AstElifObj
-  AstElifObj* = object
+  AstElif* = ref object
     lexMain*: LexMain
     expr*: AstExpr
     stmtSeq*: seq[AstStmt]
-  AstElse* = ref AstElseObj
-  AstElseObj* = object
+  AstElse* = ref object
     lexMain*: LexMain
     stmtSeq*: seq[AstStmt]
-  SubAstSwitch* = ref SubAstSwitchObj
-  SubAstSwitchObj* = object
+  SubAstSwitch* = object
     lexMain*: LexMain
     expr*: AstExpr
     caseSeq*: seq[AstCase]
     optDefault*: Option[AstDefault]
-  AstCase* = ref AstCaseObj
-  AstCaseObj* = object
+  AstCase* = ref object
     lexMain*: LexMain
     expr*: AstExpr
     stmtSeq*: seq[AstStmt]
-  AstDefault* = ref AstDefaultObj
-  AstDefaultObj* = object
+  AstDefault* = ref object
     lexMain*: LexMain
     stmtSeq*: seq[AstStmt]
-  SubAstFor* = ref SubAstForObj
-  SubAstForObj* = object
+  SubAstFor* = object
     lexMain*: LexMain
     ident*: AstIdent
     exprPre*: AstExpr
     exprPost*: AstExpr
     isUntil*: bool
     stmtSeq*: seq[AstStmt]
-  SubAstWhile* = ref SubAstWhileObj
-  SubAstWhileObj* = object
+  SubAstWhile* = object
     lexMain*: LexMain
     expr*: AstExpr
     stmtSeq*: seq[AstStmt]
-  SubAstContinue* = ref SubAstContinueObj
-  SubAstContinueObj* = object
+  SubAstContinue* = object
     lexMain*: LexMain
-  SubAstBreak* = ref SubAstBreakObj
-  SubAstBreakObj* = object
+  SubAstBreak* = object
     lexMain*: LexMain
-  SubAstReturn* = ref SubAstReturnObj
-  SubAstReturnObj* = object
+  SubAstReturn* = object
     lexMain*: LexMain
     optExpr*: Option[AstExpr]
-  AstArray* = ref AstArrayObj
-  AstArrayObj* = object
+  AstArray* = ref object
     lexMain*: LexMain
     dim*: AstExpr
     elemType*: AstType
-  AstOpenarray* = ref AstOpenarrayObj
-  AstOpenarrayObj* = object
+  AstOpenarray* = ref object
     lexMain*: LexMain
     elemType*: AstType
-  SubAstBuiltinTypeCast* = ref SubAstBuiltinTypeCastObj
-  SubAstBuiltinTypeCastObj* = object
+  SubAstBuiltinTypeCast* = object
     lexMain*: LexMain
     type*: AstType
     obj*: AstExpr
-  SubAstExprIdent* = ref SubAstExprIdentObj
-  SubAstExprIdentObj* = object
+  SubAstExprIdent* = object
     lexMain*: LexMain
     ident*: AstIdent
-  SubAstUnop* = ref SubAstUnopObj
-  SubAstUnopObj* = object
+  SubAstUnop* = object
     lexMain*: LexMain
     kind*: AstUnopKind
     obj*: AstExpr
-  SubAstBinop* = ref SubAstBinopObj
-  SubAstBinopObj* = object
+  SubAstBinop* = object
     lexMain*: LexMain
     kind*: AstBinopKind
     left*: AstExpr
     right*: AstExpr
-  SubAstAssignEtc* = ref SubAstAssignEtcObj
-  SubAstAssignEtcObj* = object
+  SubAstAssignEtc* = object
     lexMain*: LexMain
     kind*: AstAssignEtcKind
     left*: AstExpr
     right*: AstExpr
-  SubAstBasicType* = ref SubAstBasicTypeObj
-  SubAstBasicTypeObj* = object
+  SubAstBasicType* = object
     lexMain*: LexMain
     kind*: AstBasicTypeKind
-  SubAstNamedType* = ref SubAstNamedTypeObj
-  SubAstNamedTypeObj* = object
+  SubAstNamedType* = object
     lexMain*: LexMain
     ident*: AstIdent
     genericImplSeq*: seq[AstGenericArgImpl]
-  AstType* = ref AstTypeObj
-  AstTypeObj* = object
+  AstType* = ref object
     lexMain*: LexMain
     kwVar*: bool
     ptrDim*: uint64
     child*: AstTypeSub
-  SubAstFuncCall* = ref SubAstFuncCallObj
-  SubAstFuncCallObj* = object
+  SubAstFuncCall* = object
     lexMain*: LexMain
     ident*: AstIdent
     genericImplSeq*: seq[AstGenericArgImpl]
     argImplSeq*: seq[AstFuncArgImpl]
-  AstFuncArgImpl* = ref AstFuncArgImplObj
-  AstFuncArgImplObj* = object
+  AstFuncArgImpl* = ref object
     lexMain*: LexMain
     ident*: Option[AstIdent]
     expr*: AstExpr
-  AstGenericArgImpl* = ref AstGenericArgImplObj
-  AstGenericArgImplObj* = object
+  AstGenericArgImpl* = ref object
     lexMain*: LexMain
     ident*: Option[AstIdent]
     type*: AstType
-  SubAstStmtExprLhs* = ref SubAstStmtExprLhsObj
-  SubAstStmtExprLhsObj* = object
+  SubAstStmtExprLhs* = object
     lexMain*: LexMain
     expr*: AstExpr
-  AstVarEtcDeclMost* = ref AstVarEtcDeclMostObj
-  AstVarEtcDeclMostObj* = object
+  AstVarEtcDeclMost* = ref object
     lexMain*: LexMain
     ident*: AstIdent
     type*: AstType
-  AstStmt* = ref AstStmtObj
-  AstStmtObj* = object
+  AstStmt* = ref object
     lexMain*: LexMain
     case kind*: AstStmtKind
     of stmtScope:
@@ -249,10 +203,23 @@ type
       myAssignEtc*: SubAstAssignEtc
     of stmtStmtExprLhs:
       myStmtExprLhs*: SubAstStmtExprLhs
-  AstExpr* = ref AstExprObj
-  AstExprObj* = object
+  AstExpr* = ref object
     lexMain*: LexMain
     case kind*: AstExprKind
+    of exprU64Lit:
+      myU64Lit*: SubAstU64Lit
+    of exprStrLit:
+      myStrLit*: SubAstStrLit
+    of exprOpenarrLit:
+      myOpenarrLit*: SubAstOpenarrLit
+    of exprTrue:
+      myTrue*: SubAstTrue
+    of exprFalse:
+      myFalse*: SubAstFalse
+    of exprDeref:
+      myDeref*: SubAstDeref
+    of exprDot:
+      myDot*: SubAstDot
     of exprBuiltinTypeCast:
       myBuiltinTypeCast*: SubAstBuiltinTypeCast
     of exprExprIdent:
@@ -263,8 +230,7 @@ type
       myBinop*: SubAstBinop
     of exprFuncCall:
       myFuncCall*: SubAstFuncCall
-  AstTypeSub* = ref AstTypeSubObj
-  AstTypeSubObj* = object
+  AstTypeSub* = ref object
     lexMain*: LexMain
     case kind*: AstTypeSubKind
     of typeSubBasicType:
@@ -279,20 +245,6 @@ type
       mySrcFile*: AstSrcFile
     of astIdent:
       myIdent*: AstIdent
-    of astU64Lit:
-      myU64Lit*: AstU64Lit
-    of astStrLit:
-      myStrLit*: AstStrLit
-    of astOpenarrLit:
-      myOpenarrLit*: AstOpenarrLit
-    of astTrue:
-      myTrue*: AstTrue
-    of astFalse:
-      myFalse*: AstFalse
-    of astDeref:
-      myDeref*: AstDeref
-    of astDot:
-      myDot*: AstDot
     of astVar:
       myVar*: AstVar
     of astConst:
@@ -342,107 +294,189 @@ type
     of astTypeSub:
       myTypeSub*: AstTypeSub
 
+proc toAstNode*(obj: AstSrcFile; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astSrcFile, mySrcFile: obj)
+  result.mySrcFile.lexMain = lexMain
+
 proc toAstNode*(obj: AstSrcFile): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astSrcFile, mySrcFile: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstIdent; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astIdent, myIdent: obj)
+  result.myIdent.lexMain = lexMain
 
 proc toAstNode*(obj: AstIdent): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astIdent, myIdent: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
 
-proc toAstNode*(obj: AstU64Lit): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astU64Lit, myU64Lit: obj)
-
-proc toAstNode*(obj: AstStrLit): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astStrLit, myStrLit: obj)
-
-proc toAstNode*(obj: AstOpenarrLit): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astOpenarrLit, myOpenarrLit: obj)
-
-proc toAstNode*(obj: AstTrue): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astTrue, myTrue: obj)
-
-proc toAstNode*(obj: AstFalse): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astFalse, myFalse: obj)
-
-proc toAstNode*(obj: AstDeref): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astDeref, myDeref: obj)
-
-proc toAstNode*(obj: AstDot): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astDot, myDot: obj)
+proc toAstNode*(obj: AstVar; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astVar, myVar: obj)
+  result.myVar.lexMain = lexMain
 
 proc toAstNode*(obj: AstVar): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astVar, myVar: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstConst; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astConst, myConst: obj)
+  result.myConst.lexMain = lexMain
 
 proc toAstNode*(obj: AstConst): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astConst, myConst: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstDef; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astDef, myDef: obj)
+  result.myDef.lexMain = lexMain
 
 proc toAstNode*(obj: AstDef): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astDef, myDef: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstModule; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astModule, myModule: obj)
+  result.myModule.lexMain = lexMain
 
 proc toAstNode*(obj: AstModule): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astModule, myModule: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstStruct; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astStruct, myStruct: obj)
+  result.myStruct.lexMain = lexMain
 
 proc toAstNode*(obj: AstStruct): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astStruct, myStruct: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstEnum; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astEnum, myEnum: obj)
+  result.myEnum.lexMain = lexMain
 
 proc toAstNode*(obj: AstEnum): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astEnum, myEnum: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstVariant; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astVariant, myVariant: obj)
+  result.myVariant.lexMain = lexMain
 
 proc toAstNode*(obj: AstVariant): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astVariant, myVariant: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstExtern; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astExtern, myExtern: obj)
+  result.myExtern.lexMain = lexMain
 
 proc toAstNode*(obj: AstExtern): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astExtern, myExtern: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstCextern; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astCextern, myCextern: obj)
+  result.myCextern.lexMain = lexMain
 
 proc toAstNode*(obj: AstCextern): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astCextern, myCextern: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstImport; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astImport, myImport: obj)
+  result.myImport.lexMain = lexMain
 
 proc toAstNode*(obj: AstImport): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astImport, myImport: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstCimport; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astCimport, myCimport: obj)
+  result.myCimport.lexMain = lexMain
 
 proc toAstNode*(obj: AstCimport): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astCimport, myCimport: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstElif; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astElif, myElif: obj)
+  result.myElif.lexMain = lexMain
 
 proc toAstNode*(obj: AstElif): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astElif, myElif: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstElse; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astElse, myElse: obj)
+  result.myElse.lexMain = lexMain
 
 proc toAstNode*(obj: AstElse): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astElse, myElse: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstCase; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astCase, myCase: obj)
+  result.myCase.lexMain = lexMain
 
 proc toAstNode*(obj: AstCase): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astCase, myCase: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstDefault; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astDefault, myDefault: obj)
+  result.myDefault.lexMain = lexMain
 
 proc toAstNode*(obj: AstDefault): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astDefault, myDefault: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstArray; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astArray, myArray: obj)
+  result.myArray.lexMain = lexMain
 
 proc toAstNode*(obj: AstArray): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astArray, myArray: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstOpenarray; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astOpenarray, myOpenarray: obj)
+  result.myOpenarray.lexMain = lexMain
 
 proc toAstNode*(obj: AstOpenarray): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astOpenarray, myOpenarray: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstType; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astType, myType: obj)
+  result.myType.lexMain = lexMain
 
 proc toAstNode*(obj: AstType): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astType, myType: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstFuncArgImpl; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astFuncArgImpl, myFuncArgImpl: obj)
+  result.myFuncArgImpl.lexMain = lexMain
 
 proc toAstNode*(obj: AstFuncArgImpl): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astFuncArgImpl,
-                   myFuncArgImpl: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstGenericArgImpl; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astGenericArgImpl,
+                   myGenericArgImpl: obj)
+  result.myGenericArgImpl.lexMain = lexMain
 
 proc toAstNode*(obj: AstGenericArgImpl): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astGenericArgImpl,
-                   myGenericArgImpl: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstVarEtcDeclMost; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astVarEtcDeclMost,
+                   myVarEtcDeclMost: obj)
+  result.myVarEtcDeclMost.lexMain = lexMain
 
 proc toAstNode*(obj: AstVarEtcDeclMost): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astVarEtcDeclMost,
-                   myVarEtcDeclMost: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstStmt; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astStmt, myStmt: obj)
+  result.myStmt.lexMain = lexMain
 
 proc toAstNode*(obj: AstStmt): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astStmt, myStmt: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstExpr; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astExpr, myExpr: obj)
+  result.myExpr.lexMain = lexMain
 
 proc toAstNode*(obj: AstExpr): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astExpr, myExpr: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
+
+proc toAstNode*(obj: AstTypeSub; lexMain: LexMain): AstNode =
+  result = AstNode(lexMain: lexMain, kind: astTypeSub, myTypeSub: obj)
+  result.myTypeSub.lexMain = lexMain
 
 proc toAstNode*(obj: AstTypeSub): AstNode =
-  result = AstNode(lexMain: obj.lexMain, kind: astTypeSub, myTypeSub: obj)
+  result = toAstNode(obj = obj, lexMain = obj.lexMain)
 
 case ast.kind
 of astSrcFile:
@@ -468,44 +502,6 @@ of astIdent:
   x = indent
   result.add(" " & "\"" & ast.myIdent.strVal & "\"" & "")
   result.add(")")
-of astU64Lit:
-  result.add "(AstU64Lit"
-  x = indent
-  result.add(" " & "u64Val" & " " & $ast.myU64Lit.u64Val & "")
-  result.add(")")
-of astStrLit:
-  result.add "(AstStrLit"
-  x = indent
-  result.add(" " & "\"" & ast.myStrLit.strLitVal & "\"" & "")
-  result.add(")")
-of astOpenarrLit:
-  result.add "(AstOpenarrLit"
-  x = indent
-  result.add((" " & "openarrLitSeq" & " "))
-  tempSeq.setLen(0)
-  for kdx in 0 ..< ast.myOpenarrLit.openarrLitSeq.len():
-    tempSeq.add(ast.myOpenarrLit.openarrLitSeq[kdx].toAstNode())
-  result.add tempSeq.toStr(x)
-  result.add("")
-  result.add(")")
-of astTrue:
-  result.add "(AstTrue"
-  result.add(")")
-of astFalse:
-  result.add "(AstFalse"
-  result.add(")")
-of astDeref:
-  result.add "(AstDeref"
-  x = indent
-  result.add((" " & "obj" & " ") & (ast.myDeref.obj.toAstNode().toStr(x)) & (""))
-  result.add(")")
-of astDot:
-  result.add "(AstDot"
-  result.add "\n"
-  result.add((i & "left" & " ") & (ast.myDot.left.toAstNode().toStr(x)) & ("\n"))
-  result.add((i & "right" & " ") & (ast.myDot.right.toAstNode().toStr(x)) &
-      ("\n"))
-  result.add(iFinish & ")")
 of astVar:
   result.add "(AstVar"
   result.add "\n"
@@ -821,6 +817,48 @@ of astStmt:
     result.add(")")
 of astExpr:
   case ast.myExpr.kind
+  of exprU64Lit:
+    result.add "(SubAstU64Lit"
+    x = indent
+    result.add(" " & "u64Val" & " " & $ast.myExpr.myU64Lit.u64Val & "")
+    result.add(")")
+  of exprStrLit:
+    result.add "(SubAstStrLit"
+    x = indent
+    result.add(" " & "\"" & ast.myExpr.myStrLit.strLitVal & "\"" & "")
+    result.add(")")
+  of exprOpenarrLit:
+    result.add "(SubAstOpenarrLit"
+    x = indent
+    result.add((" " & "openarrLitSeq" & " "))
+    tempSeq.setLen(0)
+    for kdx in 0 ..< ast.myExpr.myOpenarrLit.openarrLitSeq.len():
+      tempSeq.add(ast.myExpr.myOpenarrLit.openarrLitSeq[kdx].toAstNode())
+    result.add tempSeq.toStr(x)
+    result.add("")
+    result.add(")")
+  of exprTrue:
+    result.add "(SubAstTrue"
+    result.add(")")
+  of exprFalse:
+    result.add "(SubAstFalse"
+    result.add(")")
+  of exprDeref:
+    result.add "(SubAstDeref"
+    x = indent
+    result.add((" " & "obj" & " ") &
+        (ast.myExpr.myDeref.obj.toAstNode().toStr(x)) &
+        (""))
+    result.add(")")
+  of exprDot:
+    result.add "(SubAstDot"
+    result.add "\n"
+    result.add((i & "left" & " ") & (ast.myExpr.myDot.left.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "right" & " ") &
+        (ast.myExpr.myDot.right.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add(iFinish & ")")
   of exprBuiltinTypeCast:
     result.add "(SubAstBuiltinTypeCast"
     result.add "\n"

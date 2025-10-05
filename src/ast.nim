@@ -301,28 +301,54 @@ macro mkAstHierMost(): untyped =
     #  exprIdxSeq.add idx
     #of metaAstTypeSub:
     #  typeSubIdxSeq.add idx
+
+    #StmtList
+    #  TypeSection
+    #    TypeDef
+    #      Ident "AsdfAsdf"
+    #      Empty
+    #      RefTy
+    #        ObjectTy
+    #          Empty
+    #          Empty
+    #          RecList
+    #            IdentDefs
+    #              Ident "a"
+    #              Ident "int32"
+    #              Empty
+    #dumpTree:
+    #  type
+    #    AsdfAsdf = ref object
+    #      a: int32
+
     let info = metaAstInfoArr[int(h[3])]
     if info.kind.isSome:
       myIdxSeqArr[int(h[3])].add idx
 
     var tempStr: string = ""
+    var haveSubAst: bool = false
     case h[3]:
     of metaAstNone:
       tempStr = "Ast" & h[0]
     else:
+      haveSubAst = true
       tempStr = "SubAst" & h[0]
 
-    var typeDefRef = newNimNode(nnkTypeDef)
-    typeDefRef.add mkPubIdent(tempStr)
-    typeDefRef.add newNimNode(nnkEmpty)
-    typeDefRef.add newNimNode(nnkRefTy)
-    typeDefRef[2].add ident(tempStr & "Obj")
-    result.add typeDefRef
+    #var typeDefRef = newNimNode(nnkTypeDef)
+    #typeDefRef.add mkPubIdent(tempStr)
+    #typeDefRef.add newNimNode(nnkEmpty)
+    #typeDefRef.add newNimNode(nnkRefTy)
+    #typeDefRef[2].add ident(tempStr & "Obj")
+    #result.add typeDefRef
 
     var typeDef = newNimNode(nnkTypeDef)
-    typeDef.add mkPubIdent(tempStr & "Obj")
+    typeDef.add mkPubIdent(
+      tempStr #& "Obj"
+    )
 
     typeDef.add newNimNode(nnkEmpty)
+    if not haveSubAst:
+      typeDef.add newNimNode(nnkRefTy)
     var objTy = add(
       newNimNode(nnkObjectTy),
       [
@@ -387,7 +413,10 @@ macro mkAstHierMost(): untyped =
     #if not didAddRecList:
     #  #objTy.add newNimNode(nnkEmpty)
     #  addFieldLexMain()
-    typeDef.add objTy
+    if not haveSubAst:
+      typeDef[^1].add objTy
+    else:
+      typeDef.add objTy
     result.add typeDef
 
   for infoIdx in 0 ..< metaAstInfoArr.len():
@@ -395,18 +424,21 @@ macro mkAstHierMost(): untyped =
     if not info.kind.isSome:
       continue
 
-    block:
-      var typeDefRef = newNimNode(nnkTypeDef)
-      typeDefRef.add mkPubIdent("Ast" & info.nameUpper)
-      typeDefRef.add newNimNode(nnkEmpty)
-      typeDefRef.add newNimNode(nnkRefTy)
-      typeDefRef[2].add ident("Ast" & info.nameUpper & "Obj")
-      result.add typeDefRef
+    #block:
+    #  var typeDefRef = newNimNode(nnkTypeDef)
+    #  typeDefRef.add mkPubIdent("Ast" & info.nameUpper)
+    #  typeDefRef.add newNimNode(nnkEmpty)
+    #  typeDefRef.add newNimNode(nnkRefTy)
+    #  typeDefRef[2].add ident("Ast" & info.nameUpper & "Obj")
+    #  result.add typeDefRef
 
     block:
       var typeDef = newNimNode(nnkTypeDef)
-      typeDef.add mkPubIdent("Ast" & info.nameUpper & "Obj")
+      typeDef.add mkPubIdent(
+        "Ast" & info.nameUpper #& "Obj"
+      )
       typeDef.add newNimNode(nnkEmpty)
+      typeDef.add newNimNode(nnkRefTy)
 
       var objTy = add(
         newNimNode(nnkObjectTy),
@@ -438,7 +470,7 @@ macro mkAstHierMost(): untyped =
         identDefs.add newNimNode(nnkEmpty)
         ofBranch.add identDefs
         recCase.add ofBranch
-      typeDef.add objTy
+      typeDef[^1].add objTy
       result.add typeDef
 
   #block:
@@ -608,7 +640,9 @@ macro mkAstHierMost(): untyped =
         var obIdentDefs = newNimNode(nnkIdentDefs)
         obIdentDefs.add(
           mkPubIdent("my" & name),
-          ident("Ast" & name),
+          ident(
+            "Ast" & name #& "Obj"
+          ),
           newNimNode(nnkEmpty)
         )
 
@@ -645,6 +679,25 @@ macro mkAstHierMost(): untyped =
   echo result.repr()
 
 mkAstHierMost()
+
+#StmtList
+#  TypeSection
+#    TypeDef
+#      Ident "AsdfAsdf"
+#      Empty
+#      RefTy
+#        ObjectTy
+#          Empty
+#          Empty
+#          RecList
+#            IdentDefs
+#              Ident "a"
+#              Ident "int32"
+#              Empty
+#dumpTree:
+#  type
+#    AsdfAsdf = ref object
+#      a: int32
 
 #StmtList
 #  ProcDef
@@ -698,22 +751,46 @@ macro mkToAstNodeProcs(): untyped =
   result = newNimNode(nnkStmtList)
   for idx in 0 ..< tempSeq.len():
     let identKind = ident("ast" & tempSeq[idx])
-    let identObjType = ident("Ast" & tempSeq[idx])
+    let identObjType = ident(
+      "Ast" & tempSeq[idx] #& "Obj"
+    )
+    #let identRefType = ident("Ast" & tempSeq[idx])
     let identArgName = ident("my" & tempSeq[idx])
     let identObj = ident("obj")
+    let identLexMain = ident("lexMain")
 
     result.add quote do:
       proc toAstNode*(
-        `identObj`: `identObjType`
+        `identObj`: `identObjType`,
+        `identLexMain`: LexMain,
       ): AstNode =
         result = AstNode(
-          lexMain: `identObj`.lexMain,
+          `identLexMain`: `identLexMain`,
           kind: `identKind`,
           `identArgName`: `identObj`,
         )
+        result.`identArgName`.`identLexMain` = lexMain
+      proc toAstNode*(
+        `identObj`: `identObjType`
+      ): AstNode =
+        result = toAstNode(
+          `identObj`=`identObj`,
+          lexMain=`identObj`.`identLexMain`,
+        )
+        
+      #proc toAstNode*(
+      #  `identObj`: `identRefType`
+      #): AstNode =
+      #  result = toAstNode(`identObj`[])
   echo result.repr()
 
 mkToAstNodeProcs()
+
+type
+  HaveToAstNode* = concept
+    proc toAstNode(
+      obj: Self,
+    ): AstNode
 
 #macro mkAstNodeLexMainProc(): untyped =
 #  var tempSeq: seq[string]
@@ -1290,12 +1367,7 @@ proc toRepr*(
     indent: int=(-2),
   ): string =
     result = otherAst.toRepr(parent=ast, indent=indent)
-  type
-    MyToReprGeneric = concept
-      proc toAstNode(
-        obj: Self,
-      ): AstNode
-  proc myToRepr[T: MyToReprGeneric](
+  proc myToRepr[T: HaveToAstNode](
     otherAst: T,
     indent: int=(-2)
   ): string =
@@ -1342,33 +1414,10 @@ proc toRepr*(
       result.add ast.mySrcFile.structDeclSeq[idx].myToRepr() & ";\n\n"
   of astIdent:
     result.add ast.myIdent.strVal
-  of astU64Lit:
-    result.add $ast.myU64Lit.u64Val
-  of astStrLit:
-    result.add "\"" & ast.myStrLit.strLitVal & "\""
-  of astOpenarrLit:
-    result.add "$(" 
-    for idx in 0 ..< ast.myOpenarrLit.openarrLitSeq.len():
-      result.add ast.myOpenarrLit.openarrLitSeq[idx].myToRepr()
-      if idx + 1 < ast.myOpenarrLit.openarrLitSeq.len():
-        result.add ", "
-    result.add ")"
-  of astTrue:
-    result.add "true"
-  of astFalse:
-    result.add "false"
   #of astPtr:
   #  result.add "ptr"
   #of astAddr:
   #  result.add "(" & "addr " & ast.myAddr.obj.myToRepr(x) & ")"
-  of astDeref:
-    #result.add "(" & ast.myDeref.obj.myToRepr(x) & "@)"
-    result.add ast.myDeref.obj.myToRepr(x) & "@"
-  of astDot:
-    #result.add "("
-    result.add ast.myDot.left.myToRepr(x) & "."
-    result.add ast.myDot.right.myToRepr(x)
-    #result.add ")"
   of astVar:
     result.add i & "var " & ast.myVar.child.myToRepr()
     if ast.myVar.optExpr.isSome:
@@ -1535,6 +1584,29 @@ proc toRepr*(
   of astExpr:
     let expr = ast.myExpr
     case expr.kind:
+    of exprU64Lit:
+      result.add $expr.myU64Lit.u64Val
+    of exprStrLit:
+      result.add "\"" & expr.myStrLit.strLitVal & "\""
+    of exprOpenarrLit:
+      result.add "$(" 
+      for idx in 0 ..< expr.myOpenarrLit.openarrLitSeq.len():
+        result.add expr.myOpenarrLit.openarrLitSeq[idx].myToRepr()
+        if idx + 1 < expr.myOpenarrLit.openarrLitSeq.len():
+          result.add ", "
+      result.add ")"
+    of exprTrue:
+      result.add "true"
+    of exprFalse:
+      result.add "false"
+    of exprDeref:
+      #result.add "(" & expr.myDeref.obj.myToRepr(x) & "@)"
+      result.add expr.myDeref.obj.myToRepr(x) & "@"
+    of exprDot:
+      #result.add "("
+      result.add expr.myDot.left.myToRepr(x) & "."
+      result.add expr.myDot.right.myToRepr(x)
+      #result.add ")"
     of exprExprIdent:
       result.add expr.myExprIdent.ident.myToRepr()
     of exprBuiltinTypeCast:
