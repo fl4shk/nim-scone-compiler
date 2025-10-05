@@ -6,7 +6,7 @@ import dataStructuresMisc
 import ast
 import scone
 import lex
-import reduceEtc
+#import reduceEtc
 
   
 proc mkAstMain*[T: HaveToAstNode](
@@ -2893,7 +2893,7 @@ proc parseSrcFile(
   #self.astRoot = self.parseExpr(chk=false).ast
   #echo $self.astRoot.kind
   #echo $self.astRoot
-  echo self.astRoot.toRepr()
+  #echo self.astRoot.toRepr()
   #echo self.astRoot.repr()
   #let temp = self.loopSelParse()
   #if not temp.foundTok.isSome:

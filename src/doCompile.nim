@@ -9,6 +9,7 @@ import ast
 import scone
 import passParse
 #import passSymType
+import passSemanticMacro
 import passEmitC
 
 
@@ -64,7 +65,7 @@ proc doCompileModeOneFile(
     #  #  if tempSeq[].len() > 0:
     #  #    echo "#--------"
     of scoPassSemanticMacro:
-      discard
+      self.doPassSemanticMacro()
     of scoPassEmitC:
       self.doPassEmitC()
     else:
@@ -83,17 +84,13 @@ proc mkScone*(
   result.lexMain.lineNum = 1
   result.lexMain.inpIdx = 0
   result.astRoot = AstNode(
-    #tok: tokInternalAstStart,
-    #lineNum: 0.uint64,
     lexMain: result.lexMain,
-    #litVal: none(AstLitVal),
-    #parent: nil,
     kind: astSrcFile,
-    #module: nil,
     mySrcFile: AstSrcFile(
       module: nil,
     )
   )
+  result.symTblInfo = SconeCurrSymTblInfo()
   #result.ast = result.astRoot
   #result.ast.parent = nil
 

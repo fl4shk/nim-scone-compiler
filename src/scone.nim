@@ -30,6 +30,9 @@ type
                               # types with the same names as user-defined
                               # functions.
                               # This is to be an error!
+    scoSemPassHandleExprs,
+                              # handle function overloads.
+                              # also do type checking.
     limScoSemPass,
   SconeMacroPass* = enum
     scoMacroPassSemFirst,     # First semantic analysis
@@ -52,7 +55,7 @@ type
   #  #spstTypeCheck,
   #  limSpSymType,
 
-  SconeCurrSymTblInfo* = object
+  SconeCurrSymTblInfo* = ref object
     #symTblId*: int
     decls*: SymbolTable
     curr*: SymbolTable
@@ -63,13 +66,15 @@ type
     maxMacroExpansion*: uint #= 1024u
     mode*: Mode
     pass*: SconePass
+    semPass*: SconeSemanticPass
+    macPass*: SconeMacroPass
     #symTypeSubPass*: SconeSubPassSymType
     inFindAllDecls*: bool
     inFindTypeDecls*: bool
     astRoot*: AstNode
 
     symTblSeq*: seq[SymbolTable]
-    mySymTblInfo*: SconeCurrSymTblInfo
+    symTblInfo*: SconeCurrSymTblInfo
 
     savedLexMainSeq*: seq[LexMain]
 
@@ -89,7 +94,7 @@ proc nextSymTblPass*(
 ) =
   var toAdd = SymbolTable()
   self.symTblSeq.add toAdd
-  let info = addr self.mySymTblInfo
+  let info = addr self.symTblInfo
 
   if info[].curr != nil and info[].prev == nil:
     echo "nextSymTblPass(): "
@@ -118,7 +123,7 @@ proc addChildSymTbl(
   #self.currSymTbl = self.currSymTbl.childSeq[^1]
   # END: old version
   #--------
-  let info = addr self.mySymTblInfo
+  let info = addr self.symTblInfo
   var child = SymbolTable(
     ast: ast
   )
@@ -141,13 +146,13 @@ proc addChildSymTbl(
 #    #child=childSymTbl
 #    ast=ast
 #  )
-#  result = self.mySymTblInfo.curr
+#  result = self.symTblInfo.curr
 
 proc gotoParentSymTbl*(
   self: var Scone,
 ) =
   #self.currSymTbl = self.currSymTbl.parent
-  let info = addr self.mySymTblInfo
+  let info = addr self.symTblInfo
   #echo sconcat(@[
   #  "gotoParentSymTbl: parent != nil: ",
   #  $(info[].curr.parent != nil)
@@ -439,10 +444,10 @@ proc gatherFuncDecls*(
     ])
   )
   doAssert(
-    self.mySymTblInfo.decls != nil,
+    self.symTblInfo.decls != nil,
     "eek!"
   )
-  let info = addr self.mySymTblInfo
+  let info = addr self.symTblInfo
   let decls = info[].decls
   let name = funcCallExpr.myFuncCall.ident.strVal
   doAssert(
@@ -548,9 +553,9 @@ proc resolveFuncCallOverload*(
 #  self: var Scone,
 #  #sym: Symbol
 #): Option[SymbolTable] =
-#  let info = addr self.mySymTblInfo
+#  let info = addr self.symTblInfo
 #  result = self.findDuplFuncMain(
-#    #toChk=self.mySymTblInfo.curr,
+#    #toChk=self.symTblInfo.curr,
 #    #sym=sym
 #    parent=info[].curr.parent,
 #    toChk=info[].curr,
@@ -560,7 +565,7 @@ proc checkDuplSym*(
   self: var Scone,
   #sym: Symbol,
 ) =
-  let info = addr self.mySymTblInfo
+  let info = addr self.symTblInfo
   let optSym = info[].curr.sym
   if optSym.isSome:
     let sym = optSym.get()
@@ -615,7 +620,7 @@ proc addSym*(
   ast: AstNode,
   #typeInfo: TypeInfo,
 ) =
-  let info = addr self.mySymTblInfo
+  let info = addr self.symTblInfo
   self.addChildSymTbl(ast=ast)
   if sym.isSome:
     let parent = info[].curr.parent

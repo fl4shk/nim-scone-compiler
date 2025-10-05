@@ -209,7 +209,7 @@ macro mkEnumAstStmtKind(): untyped =
     public=true,
     pure=false,
   )
-  echo result.repr()
+  #echo result.repr()
 mkEnumAstStmtKind()
 macro mkEnumAstExprKind(): untyped =
   var tempSeq: seq[NimNode] = @[]
@@ -225,7 +225,7 @@ macro mkEnumAstExprKind(): untyped =
     public=true,
     pure=false,
   )
-  echo result.repr()
+  #echo result.repr()
 mkEnumAstExprKind()
 macro mkEnumAstTypeSubKind(): untyped =
   var tempSeq: seq[NimNode] = @[]
@@ -241,7 +241,7 @@ macro mkEnumAstTypeSubKind(): untyped =
     public=true,
     pure=false,
   )
-  echo result.repr()
+  #echo result.repr()
 mkEnumAstTypeSubKind()
 
 #dumpTree:
@@ -677,7 +677,7 @@ macro mkAstHierMost(): untyped =
   #block:
   #  for idx in exprIdxSeq:
   #    let h = helperTokKindSeq[idx]
-  echo result.repr()
+  #echo result.repr()
 
 mkAstHierMost()
 
@@ -783,7 +783,7 @@ macro mkToAstNodeProcs(): untyped =
       #  `identObj`: `identRefType`
       #): AstNode =
       #  result = toAstNode(`identObj`[])
-  echo result.repr()
+  #echo result.repr()
 
 mkToAstNodeProcs()
 
@@ -1325,7 +1325,7 @@ proc toStr*(
       ofBranch.add stmtList
       result.add ofBranch
 
-    echo result.repr()
+    #echo result.repr()
   doCaseStmt()
 
 proc toStr*(
