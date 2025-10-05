@@ -420,14 +420,14 @@ const helperTokKindSeq*: seq[HelperTokKind] = @[
   ),
   #--------
   (
-    "Var", some("var"), true, metaAstNone,
+    "Var", some("var"), true, metaAstStmt,
     @[
       ("child", astValAstNode, "VarEtcDeclMost"),  # `AstVarEtcDeclMost`
       ("optExpr", astValOptAstNode, "Expr"),  # optional expression
     ]
   ),
   (
-    "Const", some("const"), true, metaAstNone,
+    "Const", some("const"), true, metaAstStmt,
     @[
       ("child", astValAstNode, "VarEtcDeclMost"),         # `AstVarEtcDeclMost`
       ("expr", astValAstNode, "Expr"), # expression
@@ -595,14 +595,14 @@ const helperTokKindSeq*: seq[HelperTokKind] = @[
   #--------
   #("Type", some("type")),
   (
-    "Array", some("array"), true, metaAstNone,
+    "Array", some("array"), true, metaAstTypeSub,
     @[
       ("dim", astValAstNode, "Expr"),
       ("elemType", astValAstNode, "Type"),
     ]
   ),
   (
-    "Openarray", some("openarray"), true, metaAstNone,
+    "Openarray", some("openarray"), true, metaAstTypeSub,
     @[
       ("elemType", astValAstNode, "Type")
     ],

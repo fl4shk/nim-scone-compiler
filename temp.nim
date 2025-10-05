@@ -1,7 +1,7 @@
 type
   AstStmtKind* = enum
-    stmtScope, stmtIf, stmtSwitch, stmtFor, stmtWhile, stmtContinue, stmtBreak,
-    stmtReturn, stmtAssignEtc, stmtStmtExprLhs
+    stmtVar, stmtConst, stmtScope, stmtIf, stmtSwitch, stmtFor, stmtWhile,
+    stmtContinue, stmtBreak, stmtReturn, stmtAssignEtc, stmtStmtExprLhs
 type
   AstExprKind* = enum
     exprU64Lit, exprStrLit, exprOpenarrLit, exprTrue, exprFalse, exprDeref,
@@ -9,7 +9,7 @@ type
     exprFuncCall
 type
   AstTypeSubKind* = enum
-    typeSubBasicType, typeSubNamedType
+    typeSubArray, typeSubOpenarray, typeSubBasicType, typeSubNamedType
 type
   AstSrcFile* = ref object
     lexMain*: LexMain
@@ -20,31 +20,22 @@ type
     lexMain*: LexMain
     strVal*: string
   SubAstU64Lit* = object
-    lexMain*: LexMain
     u64Val*: uint64
   SubAstStrLit* = object
-    lexMain*: LexMain
     strLitVal*: string
   SubAstOpenarrLit* = object
-    lexMain*: LexMain
     openarrLitSeq*: seq[AstExpr]
   SubAstTrue* = object
-    lexMain*: LexMain
   SubAstFalse* = object
-    lexMain*: LexMain
   SubAstDeref* = object
-    lexMain*: LexMain
     obj*: AstExpr
   SubAstDot* = object
-    lexMain*: LexMain
     left*: AstExpr
     right*: AstIdent
-  AstVar* = ref object
-    lexMain*: LexMain
+  SubAstVar* = object
     child*: AstVarEtcDeclMost
     optExpr*: Option[AstExpr]
-  AstConst* = ref object
-    lexMain*: LexMain
+  SubAstConst* = object
     child*: AstVarEtcDeclMost
     expr*: AstExpr
   AstDef* = ref object
@@ -75,10 +66,8 @@ type
   AstCimport* = ref object
     lexMain*: LexMain
   SubAstScope* = object
-    lexMain*: LexMain
     stmtSeq*: seq[AstStmt]
   SubAstIf* = object
-    lexMain*: LexMain
     expr*: AstExpr
     stmtSeq*: seq[AstStmt]
     elifSeq*: seq[AstElif]
@@ -91,7 +80,6 @@ type
     lexMain*: LexMain
     stmtSeq*: seq[AstStmt]
   SubAstSwitch* = object
-    lexMain*: LexMain
     expr*: AstExpr
     caseSeq*: seq[AstCase]
     optDefault*: Option[AstDefault]
@@ -103,56 +91,42 @@ type
     lexMain*: LexMain
     stmtSeq*: seq[AstStmt]
   SubAstFor* = object
-    lexMain*: LexMain
     ident*: AstIdent
     exprPre*: AstExpr
     exprPost*: AstExpr
     isUntil*: bool
     stmtSeq*: seq[AstStmt]
   SubAstWhile* = object
-    lexMain*: LexMain
     expr*: AstExpr
     stmtSeq*: seq[AstStmt]
   SubAstContinue* = object
-    lexMain*: LexMain
   SubAstBreak* = object
-    lexMain*: LexMain
   SubAstReturn* = object
-    lexMain*: LexMain
     optExpr*: Option[AstExpr]
-  AstArray* = ref object
-    lexMain*: LexMain
+  SubAstArray* = object
     dim*: AstExpr
     elemType*: AstType
-  AstOpenarray* = ref object
-    lexMain*: LexMain
+  SubAstOpenarray* = object
     elemType*: AstType
   SubAstBuiltinTypeCast* = object
-    lexMain*: LexMain
     type*: AstType
     obj*: AstExpr
   SubAstExprIdent* = object
-    lexMain*: LexMain
     ident*: AstIdent
   SubAstUnop* = object
-    lexMain*: LexMain
     kind*: AstUnopKind
     obj*: AstExpr
   SubAstBinop* = object
-    lexMain*: LexMain
     kind*: AstBinopKind
     left*: AstExpr
     right*: AstExpr
   SubAstAssignEtc* = object
-    lexMain*: LexMain
     kind*: AstAssignEtcKind
     left*: AstExpr
     right*: AstExpr
   SubAstBasicType* = object
-    lexMain*: LexMain
     kind*: AstBasicTypeKind
   SubAstNamedType* = object
-    lexMain*: LexMain
     ident*: AstIdent
     genericImplSeq*: seq[AstGenericArgImpl]
   AstType* = ref object
@@ -161,7 +135,6 @@ type
     ptrDim*: uint64
     child*: AstTypeSub
   SubAstFuncCall* = object
-    lexMain*: LexMain
     ident*: AstIdent
     genericImplSeq*: seq[AstGenericArgImpl]
     argImplSeq*: seq[AstFuncArgImpl]
@@ -174,7 +147,6 @@ type
     ident*: Option[AstIdent]
     type*: AstType
   SubAstStmtExprLhs* = object
-    lexMain*: LexMain
     expr*: AstExpr
   AstVarEtcDeclMost* = ref object
     lexMain*: LexMain
@@ -183,6 +155,10 @@ type
   AstStmt* = ref object
     lexMain*: LexMain
     case kind*: AstStmtKind
+    of stmtVar:
+      myVar*: SubAstVar
+    of stmtConst:
+      myConst*: SubAstConst
     of stmtScope:
       myScope*: SubAstScope
     of stmtIf:
@@ -233,6 +209,10 @@ type
   AstTypeSub* = ref object
     lexMain*: LexMain
     case kind*: AstTypeSubKind
+    of typeSubArray:
+      myArray*: SubAstArray
+    of typeSubOpenarray:
+      myOpenarray*: SubAstOpenarray
     of typeSubBasicType:
       myBasicType*: SubAstBasicType
     of typeSubNamedType:
@@ -245,10 +225,6 @@ type
       mySrcFile*: AstSrcFile
     of astIdent:
       myIdent*: AstIdent
-    of astVar:
-      myVar*: AstVar
-    of astConst:
-      myConst*: AstConst
     of astDef:
       myDef*: AstDef
     of astModule:
@@ -275,10 +251,6 @@ type
       myCase*: AstCase
     of astDefault:
       myDefault*: AstDefault
-    of astArray:
-      myArray*: AstArray
-    of astOpenarray:
-      myOpenarray*: AstOpenarray
     of astType:
       myType*: AstType
     of astFuncArgImpl:
@@ -306,20 +278,6 @@ proc toAstNode*(obj: AstIdent; lexMain: LexMain): AstNode =
   result.myIdent.lexMain = lexMain
 
 proc toAstNode*(obj: AstIdent): AstNode =
-  result = toAstNode(obj = obj, lexMain = obj.lexMain)
-
-proc toAstNode*(obj: AstVar; lexMain: LexMain): AstNode =
-  result = AstNode(lexMain: lexMain, kind: astVar, myVar: obj)
-  result.myVar.lexMain = lexMain
-
-proc toAstNode*(obj: AstVar): AstNode =
-  result = toAstNode(obj = obj, lexMain = obj.lexMain)
-
-proc toAstNode*(obj: AstConst; lexMain: LexMain): AstNode =
-  result = AstNode(lexMain: lexMain, kind: astConst, myConst: obj)
-  result.myConst.lexMain = lexMain
-
-proc toAstNode*(obj: AstConst): AstNode =
   result = toAstNode(obj = obj, lexMain = obj.lexMain)
 
 proc toAstNode*(obj: AstDef; lexMain: LexMain): AstNode =
@@ -413,20 +371,6 @@ proc toAstNode*(obj: AstDefault; lexMain: LexMain): AstNode =
 proc toAstNode*(obj: AstDefault): AstNode =
   result = toAstNode(obj = obj, lexMain = obj.lexMain)
 
-proc toAstNode*(obj: AstArray; lexMain: LexMain): AstNode =
-  result = AstNode(lexMain: lexMain, kind: astArray, myArray: obj)
-  result.myArray.lexMain = lexMain
-
-proc toAstNode*(obj: AstArray): AstNode =
-  result = toAstNode(obj = obj, lexMain = obj.lexMain)
-
-proc toAstNode*(obj: AstOpenarray; lexMain: LexMain): AstNode =
-  result = AstNode(lexMain: lexMain, kind: astOpenarray, myOpenarray: obj)
-  result.myOpenarray.lexMain = lexMain
-
-proc toAstNode*(obj: AstOpenarray): AstNode =
-  result = toAstNode(obj = obj, lexMain = obj.lexMain)
-
 proc toAstNode*(obj: AstType; lexMain: LexMain): AstNode =
   result = AstNode(lexMain: lexMain, kind: astType, myType: obj)
   result.myType.lexMain = lexMain
@@ -502,26 +446,6 @@ of astIdent:
   x = indent
   result.add(" " & "\"" & ast.myIdent.strVal & "\"" & "")
   result.add(")")
-of astVar:
-  result.add "(AstVar"
-  result.add "\n"
-  result.add((i & "child" & " ") & (ast.myVar.child.toAstNode().toStr(x)) &
-      ("\n"))
-  if ast.myVar.optExpr.isSome:
-    result.add((i & "optExpr" & " ") &
-        (ast.myVar.optExpr.get.toAstNode().toStr(x)) &
-        ("\n"))
-  else:
-    result.add((i & "optExpr" & " " & "!isSome") & ("\n"))
-  result.add(iFinish & ")")
-of astConst:
-  result.add "(AstConst"
-  result.add "\n"
-  result.add((i & "child" & " ") & (ast.myConst.child.toAstNode().toStr(x)) &
-      ("\n"))
-  result.add((i & "expr" & " ") & (ast.myConst.expr.toAstNode().toStr(x)) &
-      ("\n"))
-  result.add(iFinish & ")")
 of astDef:
   result.add "(AstDef"
   result.add "\n"
@@ -635,21 +559,6 @@ of astDefault:
   result.add tempSeq.toStr(x)
   result.add("")
   result.add(")")
-of astArray:
-  result.add "(AstArray"
-  result.add "\n"
-  result.add((i & "dim" & " ") & (ast.myArray.dim.toAstNode().toStr(x)) & ("\n"))
-  result.add((i & "elemType" & " ") &
-      (ast.myArray.elemType.toAstNode().toStr(x)) &
-      ("\n"))
-  result.add(iFinish & ")")
-of astOpenarray:
-  result.add "(AstOpenarray"
-  x = indent
-  result.add((" " & "elemType" & " ") &
-      (ast.myOpenarray.elemType.toAstNode().toStr(x)) &
-      (""))
-  result.add(")")
 of astType:
   result.add "(AstType"
   result.add "\n"
@@ -695,6 +604,29 @@ of astVarEtcDeclMost:
   result.add(iFinish & ")")
 of astStmt:
   case ast.myStmt.kind
+  of stmtVar:
+    result.add "(SubAstVar"
+    result.add "\n"
+    result.add((i & "child" & " ") &
+        (ast.myStmt.myVar.child.toAstNode().toStr(x)) &
+        ("\n"))
+    if ast.myStmt.myVar.optExpr.isSome:
+      result.add((i & "optExpr" & " ") &
+          (ast.myStmt.myVar.optExpr.get.toAstNode().toStr(x)) &
+          ("\n"))
+    else:
+      result.add((i & "optExpr" & " " & "!isSome") & ("\n"))
+    result.add(iFinish & ")")
+  of stmtConst:
+    result.add "(SubAstConst"
+    result.add "\n"
+    result.add((i & "child" & " ") &
+        (ast.myStmt.myConst.child.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "expr" & " ") &
+        (ast.myStmt.myConst.expr.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add(iFinish & ")")
   of stmtScope:
     result.add "(SubAstScope"
     x = indent
@@ -915,6 +847,23 @@ of astExpr:
     result.add(iFinish & ")")
 of astTypeSub:
   case ast.myTypeSub.kind
+  of typeSubArray:
+    result.add "(SubAstArray"
+    result.add "\n"
+    result.add((i & "dim" & " ") &
+        (ast.myTypeSub.myArray.dim.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add((i & "elemType" & " ") &
+        (ast.myTypeSub.myArray.elemType.toAstNode().toStr(x)) &
+        ("\n"))
+    result.add(iFinish & ")")
+  of typeSubOpenarray:
+    result.add "(SubAstOpenarray"
+    x = indent
+    result.add((" " & "elemType" & " ") &
+        (ast.myTypeSub.myOpenarray.elemType.toAstNode().toStr(x)) &
+        (""))
+    result.add(")")
   of typeSubBasicType:
     result.add "(SubAstBasicType"
     x = indent

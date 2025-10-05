@@ -359,7 +359,8 @@ macro mkAstHierMost(): untyped =
     #template recList(): untyped = objTy[2]
     #var didAddRecList: bool = false
     objTy.add(newNimNode(nnkRecList))
-    addFieldLexMain()
+    if not haveSubAst:
+      addFieldLexMain()
     for jdx in 0 ..< h[4].len():
       #if jdx == 0:
       #  didAddRecList = true
@@ -1418,15 +1419,6 @@ proc toRepr*(
   #  result.add "ptr"
   #of astAddr:
   #  result.add "(" & "addr " & ast.myAddr.obj.myToRepr(x) & ")"
-  of astVar:
-    result.add i & "var " & ast.myVar.child.myToRepr()
-    if ast.myVar.optExpr.isSome:
-      result.add " = " & ast.myVar.optExpr.get().myToRepr()
-    result.add ";"
-  of astConst:
-    result.add i & "const " & ast.myConst.child.myToRepr()
-    result.add " = " & ast.myConst.expr.myToRepr()
-    result.add ";"
   of astDef:
     result.add "def " & ast.myDef.ident.myToRepr()
     #if ast.myDef.genericDecl.isSome:
@@ -1490,6 +1482,15 @@ proc toRepr*(
   of astStmt:
     let stmt = ast.myStmt
     case ast.myStmt.kind:
+    of stmtVar:
+      result.add i & "var " & stmt.myVar.child.myToRepr()
+      if stmt.myVar.optExpr.isSome:
+        result.add " = " & stmt.myVar.optExpr.get().myToRepr()
+      result.add ";"
+    of stmtConst:
+      result.add i & "const " & stmt.myConst.child.myToRepr()
+      result.add " = " & stmt.myConst.expr.myToRepr()
+      result.add ";"
     of stmtScope:
       result.add iPrev.get() & "scope {\n"
       result.add helperStmtSeq(stmt.myScope.stmtSeq)
@@ -1572,15 +1573,6 @@ proc toRepr*(
     result.add "default {\n"
     result.add helperStmtSeq(ast.myDefault.stmtSeq)
     result.add i & "}"
-  of astArray:
-    result.add "array["
-    result.add ast.myArray.dim.myToRepr() & "; "
-    result.add ast.myArray.elemType.myToRepr()
-    result.add "]"
-  of astOpenarray:
-    result.add "openarray["
-    result.add ast.myOpenarray.elemType.myToRepr()
-    result.add "]"
   of astExpr:
     let expr = ast.myExpr
     case expr.kind:
@@ -1708,6 +1700,15 @@ proc toRepr*(
   of astTypeSub:
     let typeSub = ast.myTypeSub
     case typeSub.kind
+    of typeSubArray:
+      result.add "array["
+      result.add typeSub.myArray.dim.myToRepr() & "; "
+      result.add typeSub.myArray.elemType.myToRepr()
+      result.add "]"
+    of typeSubOpenarray:
+      result.add "openarray["
+      result.add typeSub.myOpenarray.elemType.myToRepr()
+      result.add "]"
     of typeSubBasicType:
       case typeSub.myBasicType.kind:
       of basicTypeVoid:

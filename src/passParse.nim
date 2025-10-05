@@ -712,7 +712,10 @@ proc parseTypeArray(
   discard doChkTok(tokArray)
   result.ast = mkAst(
     #kind=astArray
-    AstArray()
+    #AstArray()
+    AstTypeSub(
+      kind: typeSubArray
+    )
   )
   #defer: discard unstack
 
@@ -723,9 +726,9 @@ proc parseTypeArray(
   #  sepTok=some(tokComma),
   #  haveOptEndSepTok=false,
   #)
-  result.ast.myArray.dim = self.parseExpr(chk=false).ast.myExpr
+  result.ast.myTypeSub.myArray.dim = self.parseExpr(chk=false).ast.myExpr
   self.lexAndExpect(tokSemicolon)
-  result.ast.myArray.elemType = (
+  result.ast.myTypeSub.myArray.elemType = (
     self.parseTypeWithoutOptPreKwVar(chk=false).ast.myType
   )
   self.lexAndExpect(tokRBracket)
@@ -737,10 +740,13 @@ proc parseTypeOpenarray(
   discard doChkTok(tokOpenarray)
   result.ast = mkAst(
     #kind=astOpenarray
-    AstOpenarray()
+    #AstOpenarray()
+    AstTypeSub(
+      kind: typeSubOpenarray
+    )
   )
   self.lexAndExpect(tokLBracket)
-  result.ast.myOpenarray.elemType = (
+  result.ast.myTypeSub.myOpenarray.elemType = (
     self.parseTypeWithoutOptPreKwVar(chk=false).ast.myType
   )
   self.lexAndExpect(tokRBracket)
@@ -1656,7 +1662,7 @@ proc parseExprIdentOrFuncCall(
         AstExpr(
           kind: exprExprIdent,
           myExprIdent: SubAstExprIdent(
-            lexMain: result.ast.lexMain,
+            #lexMain: result.ast.lexMain,
             ident: result.ast.myIdent
           )
         ),
@@ -2457,15 +2463,18 @@ proc parseStmtVarDecl(
   discard doChkTok(tokVar)
   result.ast = mkAst(
     #astVar
-    AstVar()
+    #AstVar()
+    AstStmt(
+      kind: stmtVar
+    )
   )
-  result.ast.myVar.child = (
+  result.ast.myStmt.myVar.child = (
     self.parseVarEtcDeclMost(chk=false).ast.myVarEtcDeclMost
   )
-  result.ast.myVar.optExpr = none(AstExpr)
+  result.ast.myStmt.myVar.optExpr = none(AstExpr)
   if self.lexAndCheck(chk=true, tok=tokAssign).isSome:
     self.lex()
-    result.ast.myVar.optExpr = some(
+    result.ast.myStmt.myVar.optExpr = some(
       self.parseExpr(chk=false).ast.myExpr
     )
   self.lexAndExpect(tokSemicolon)
@@ -2477,13 +2486,16 @@ proc parseStmtConstDecl(
   discard doChkTok(tokConst)
   result.ast = mkAst(
     #astConst
-    AstConst()
+    #AstConst()
+    AstStmt(
+      kind: stmtConst
+    )
   )
-  result.ast.myConst.child = (
+  result.ast.myStmt.myConst.child = (
     self.parseVarEtcDeclMost(chk=false).ast.myVarEtcDeclMost
   )
   discard self.lexAndCheck(chk=false, tok=tokAssign)
-  result.ast.myConst.expr = self.parseExpr(chk=false).ast.myExpr
+  result.ast.myStmt.myConst.expr = self.parseExpr(chk=false).ast.myExpr
   self.lexAndExpect(tokSemicolon)
 
 proc parseStmtBreak(
