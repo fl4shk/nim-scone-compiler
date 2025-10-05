@@ -1,336 +1,57 @@
 (AstSrcFile
-  module (AstModule ident (AstIdent "myModule"))
+  module (AstModule ident (AstIdent "test"))
   funcDeclSeq [
     (AstDef
-      ident (AstIdent "size")
-      genericDecl (AstGenericList mySeq [
+      ident (AstIdent "dot")
+      genericDeclSeq [
         (AstIdent "T")
-      ])
+      ]
       argDeclSeq [
         (AstVarEtcDeclMost
-          ident (AstIdent "self")
+          ident (AstIdent "a")
           type (AstType
             kwVar true
             ptrDim 0
-            child (AstNamedType
+            child (SubAstNamedType
               ident (AstIdent "Vec2")
-              genericImpl (AstGenericList mySeq [
-                (AstType
-                  kwVar false
-                  ptrDim 0
-                  child (AstNamedType
-                    ident (AstIdent "T")
-                    genericImpl (AstGenericList mySeq [
-                    ])
-                  )
-                )
-              ])
-            )
-          )
-        )
-      ]
-      returnType (AstType
-        kwVar false
-        ptrDim 0
-        child (AstBasicType kind basicTypeU32)
-      )
-      stmtSeq [
-        (AstReturn optExpr (AstBuiltinTypeCast
-          type (AstType
-            kwVar false
-            ptrDim 0
-            child (AstBasicType kind basicTypeU32)
-          )
-          obj (AstU64Lit u64Val 2)
-        ))
-      ]
-    )
-    (AstDef
-      ident (AstIdent "at")
-      genericDecl (AstGenericList mySeq [
-        (AstIdent "T")
-      ])
-      argDeclSeq [
-        (AstVarEtcDeclMost
-          ident (AstIdent "self")
-          type (AstType
-            kwVar true
-            ptrDim 0
-            child (AstNamedType
-              ident (AstIdent "Vec2")
-              genericImpl (AstGenericList mySeq [
-                (AstType
-                  kwVar false
-                  ptrDim 0
-                  child (AstNamedType
-                    ident (AstIdent "T")
-                    genericImpl (AstGenericList mySeq [
-                    ])
-                  )
-                )
-              ])
-            )
-          )
-        )
-        (AstVarEtcDeclMost
-          ident (AstIdent "idx")
-          type (AstType
-            kwVar false
-            ptrDim 0
-            child (AstBasicType kind basicTypeU32)
-          )
-        )
-      ]
-      returnType (AstType
-        kwVar true
-        ptrDim 0
-        child (AstNamedType
-          ident (AstIdent "T")
-          genericImpl (AstGenericList mySeq [
-          ])
-        )
-      )
-      stmtSeq [
-        (AstIf
-          expr (AstBinop
-            kind binopCmpEq
-            left (AstIdent "idx")
-            right (AstU64Lit u64Val 0)
-          )
-          stmtSeq [
-            (AstReturn optExpr (AstDot
-              left (AstIdent "self")
-              right (AstIdent "x")
-            ))
-          ]
-          elifSeq [
-          ]
-          optElse (AstElse stmtSeq [
-            (AstReturn optExpr (AstDot
-              left (AstIdent "self")
-              right (AstIdent "y")
-            ))
-          ])
-        )
-      ]
-    )
-    (AstDef
-      ident (AstIdent "plus")
-      genericDecl !isSome
-      argDeclSeq [
-        (AstVarEtcDeclMost
-          ident (AstIdent "left")
-          type (AstType
-            kwVar true
-            ptrDim 0
-            child (AstBasicType kind basicTypeU32)
-          )
-        )
-        (AstVarEtcDeclMost
-          ident (AstIdent "right")
-          type (AstType
-            kwVar true
-            ptrDim 0
-            child (AstBasicType kind basicTypeU32)
-          )
-        )
-      ]
-      returnType (AstType
-        kwVar false
-        ptrDim 0
-        child (AstBasicType kind basicTypeU32)
-      )
-      stmtSeq [
-        (AstConst
-          child (AstVarEtcDeclMost
-            ident (AstIdent "result")
-            type (AstType
-              kwVar false
-              ptrDim 0
-              child (AstBasicType kind basicTypeU32)
-            )
-          )
-          expr (AstBinop
-            kind binopPlus
-            left (AstIdent "left")
-            right (AstIdent "right")
-          )
-        )
-        (AstReturn optExpr (AstIdent "result"))
-      ]
-    )
-    (AstDef
-      ident (AstIdent "plus")
-      genericDecl (AstGenericList mySeq [
-        (AstIdent "T")
-      ])
-      argDeclSeq [
-        (AstVarEtcDeclMost
-          ident (AstIdent "left")
-          type (AstType
-            kwVar true
-            ptrDim 0
-            child (AstNamedType
-              ident (AstIdent "Vec2")
-              genericImpl (AstGenericList mySeq [
-                (AstType
-                  kwVar false
-                  ptrDim 0
-                  child (AstNamedType
-                    ident (AstIdent "T")
-                    genericImpl (AstGenericList mySeq [
-                    ])
-                  )
-                )
-              ])
-            )
-          )
-        )
-        (AstVarEtcDeclMost
-          ident (AstIdent "right")
-          type (AstType
-            kwVar true
-            ptrDim 0
-            child (AstNamedType
-              ident (AstIdent "Vec2")
-              genericImpl (AstGenericList mySeq [
-                (AstType
-                  kwVar false
-                  ptrDim 0
-                  child (AstNamedType
-                    ident (AstIdent "T")
-                    genericImpl (AstGenericList mySeq [
-                    ])
-                  )
-                )
-              ])
-            )
-          )
-        )
-      ]
-      returnType (AstType
-        kwVar false
-        ptrDim 0
-        child (AstNamedType
-          ident (AstIdent "Vec2")
-          genericImpl (AstGenericList mySeq [
-            (AstType
-              kwVar false
-              ptrDim 0
-              child (AstNamedType
-                ident (AstIdent "T")
-                genericImpl (AstGenericList mySeq [
-                ])
-              )
-            )
-          ])
-        )
-      )
-      stmtSeq [
-        (AstVar
-          child (AstVarEtcDeclMost
-            ident (AstIdent "result")
-            type (AstType
-              kwVar false
-              ptrDim 0
-              child (AstNamedType
-                ident (AstIdent "Vec2")
-                genericImpl (AstGenericList mySeq [
-                  (AstType
+              genericImplSeq [
+                (AstGenericArgImpl
+                  ident !isSome
+                  type (AstType
                     kwVar false
                     ptrDim 0
-                    child (AstNamedType
+                    child (SubAstNamedType
                       ident (AstIdent "T")
-                      genericImpl (AstGenericList mySeq [
-                      ])
+                      genericImplSeq [
+                      ]
                     )
                   )
-                ])
-              )
+                )
+              ]
             )
           )
-          optExpr !isSome
         )
-        (AstFor
-          ident (AstIdent "idx")
-          exprPre (AstU64Lit u64Val 0)
-          exprPost (AstFuncCall
-            ident (AstIdent "size")
-            genericImpl (AstGenericList mySeq [
-            ])
-            argImplSeq [
-              (AstIdent "left")
-            ]
-          )
-          isUntil true
-          stmtSeq [
-            (AstAssignEtc
-              kind assignEtcRegular
-              left (AstFuncCall
-                ident (AstIdent "at")
-                genericImpl (AstGenericList mySeq [
-                ])
-                argImplSeq [
-                  (AstIdent "result")
-                  (AstIdent "idx")
-                ]
-              )
-              right (AstFuncCall
-                ident (AstIdent "plus")
-                genericImpl (AstGenericList mySeq [
-                ])
-                argImplSeq [
-                  (AstFuncCall
-                    ident (AstIdent "at")
-                    genericImpl (AstGenericList mySeq [
-                    ])
-                    argImplSeq [
-                      (AstIdent "left")
-                      (AstIdent "idx")
-                    ]
-                  )
-                  (AstFuncCall
-                    ident (AstIdent "at")
-                    genericImpl (AstGenericList mySeq [
-                    ])
-                    argImplSeq [
-                      (AstIdent "right")
-                      (AstIdent "idx")
-                    ]
-                  )
-                ]
-              )
-            )
-          ]
-        )
-        (AstReturn optExpr (AstIdent "result"))
-      ]
-    )
-    (AstDef
-      ident (AstIdent "sum")
-      genericDecl !isSome
-      argDeclSeq [
         (AstVarEtcDeclMost
-          ident (AstIdent "toSum")
+          ident (AstIdent "b")
           type (AstType
             kwVar true
             ptrDim 0
-            child (AstArray
-              dim (AstU64Lit u64Val 8)
-              elemType (AstType
-                kwVar false
-                ptrDim 0
-                child (AstNamedType
-                  ident (AstIdent "Vec2")
-                  genericImpl (AstGenericList mySeq [
-                    (AstType
-                      kwVar false
-                      ptrDim 0
-                      child (AstBasicType kind basicTypeU32)
+            child (SubAstNamedType
+              ident (AstIdent "Vec2")
+              genericImplSeq [
+                (AstGenericArgImpl
+                  ident !isSome
+                  type (AstType
+                    kwVar false
+                    ptrDim 0
+                    child (SubAstNamedType
+                      ident (AstIdent "T")
+                      genericImplSeq [
+                      ]
                     )
-                  ])
+                  )
                 )
-              )
+              ]
             )
           )
         )
@@ -338,128 +59,520 @@
       returnType (AstType
         kwVar false
         ptrDim 0
-        child (AstNamedType
-          ident (AstIdent "Vec2")
-          genericImpl (AstGenericList mySeq [
-            (AstType
-              kwVar false
-              ptrDim 0
-              child (AstBasicType kind basicTypeU32)
-            )
-          ])
+        child (SubAstNamedType
+          ident (AstIdent "T")
+          genericImplSeq [
+          ]
         )
       )
       stmtSeq [
-        (AstVar
+        (SubAstConst
           child (AstVarEtcDeclMost
             ident (AstIdent "result")
             type (AstType
               kwVar false
               ptrDim 0
-              child (AstNamedType
-                ident (AstIdent "Vec2")
-                genericImpl (AstGenericList mySeq [
-                  (AstType
-                    kwVar false
-                    ptrDim 0
-                    child (AstNamedType
-                      ident (AstIdent "U")
-                      genericImpl (AstGenericList mySeq [
-                      ])
-                    )
-                  )
-                  (AstGenericNamedArgImpl
-                    ident (AstIdent "T")
-                    type (AstType
-                      kwVar false
-                      ptrDim 0
-                      child (AstBasicType kind basicTypeU32)
-                    )
-                  )
-                ])
+              child (SubAstNamedType
+                ident (AstIdent "T")
+                genericImplSeq [
+                ]
               )
             )
           )
-          optExpr !isSome
+          expr (SubAstBinop
+            kind binopPlus
+            left (SubAstBinop
+              kind binopMul
+              left (SubAstDot
+                left (SubAstExprIdent ident (AstIdent "a"))
+                right (AstIdent "x")
+              )
+              right (SubAstDot
+                left (SubAstExprIdent ident (AstIdent "b"))
+                right (AstIdent "x")
+              )
+            )
+            right (SubAstBinop
+              kind binopMul
+              left (SubAstDot
+                left (SubAstExprIdent ident (AstIdent "a"))
+                right (AstIdent "y")
+              )
+              right (SubAstDot
+                left (SubAstExprIdent ident (AstIdent "b"))
+                right (AstIdent "y")
+              )
+            )
+          )
         )
-        (AstFor
-          ident (AstIdent "idx")
-          exprPre (AstU64Lit u64Val 0)
-          exprPost (AstFuncCall
-            ident (AstIdent "size")
-            genericImpl (AstGenericList mySeq [
-            ])
+        (SubAstReturn optExpr (SubAstExprIdent ident (AstIdent "result")))
+      ]
+    )
+    (AstDef
+      ident (AstIdent "testFunc")
+      genericDeclSeq [
+        (AstIdent "T")
+      ]
+      argDeclSeq [
+        (AstVarEtcDeclMost
+          ident (AstIdent "a")
+          type (AstType
+            kwVar true
+            ptrDim 0
+            child (SubAstNamedType
+              ident (AstIdent "Vec2")
+              genericImplSeq [
+                (AstGenericArgImpl
+                  ident !isSome
+                  type (AstType
+                    kwVar false
+                    ptrDim 0
+                    child (SubAstNamedType
+                      ident (AstIdent "T")
+                      genericImplSeq [
+                      ]
+                    )
+                  )
+                )
+              ]
+            )
+          )
+        )
+        (AstVarEtcDeclMost
+          ident (AstIdent "b")
+          type (AstType
+            kwVar true
+            ptrDim 0
+            child (SubAstNamedType
+              ident (AstIdent "Vec2")
+              genericImplSeq [
+                (AstGenericArgImpl
+                  ident !isSome
+                  type (AstType
+                    kwVar false
+                    ptrDim 0
+                    child (SubAstNamedType
+                      ident (AstIdent "T")
+                      genericImplSeq [
+                      ]
+                    )
+                  )
+                )
+              ]
+            )
+          )
+        )
+      ]
+      returnType (AstType
+        kwVar false
+        ptrDim 0
+        child (SubAstNamedType
+          ident (AstIdent "T")
+          genericImplSeq [
+          ]
+        )
+      )
+      stmtSeq [
+        (SubAstConst
+          child (AstVarEtcDeclMost
+            ident (AstIdent "result")
+            type (AstType
+              kwVar false
+              ptrDim 0
+              child (SubAstNamedType
+                ident (AstIdent "T")
+                genericImplSeq [
+                ]
+              )
+            )
+          )
+          expr (SubAstFuncCall
+            ident (AstIdent "dot")
+            genericImplSeq [
+              (AstGenericArgImpl
+                ident !isSome
+                type (AstType
+                  kwVar false
+                  ptrDim 0
+                  child (SubAstNamedType
+                    ident (AstIdent "T")
+                    genericImplSeq [
+                    ]
+                  )
+                )
+              )
+            ]
             argImplSeq [
-              (AstIdent "toSum")
+              (AstFuncArgImpl
+                ident !isSome
+                expr (SubAstExprIdent ident (AstIdent "a"))
+              )
+              (AstFuncArgImpl
+                ident (AstIdent "b")
+                expr (SubAstExprIdent ident (AstIdent "b"))
+              )
             ]
           )
-          isUntil true
+        )
+        (SubAstVar
+          child (AstVarEtcDeclMost
+            ident (AstIdent "c")
+            type (AstType
+              kwVar false
+              ptrDim 0
+              child (SubAstBasicType kind basicTypeI32)
+            )
+          )
+          optExpr (SubAstBinop
+            kind binopMul
+            left (SubAstBinop
+              kind binopPlus
+              left (SubAstDot
+                left (SubAstDot
+                  left (SubAstDot
+                    left (SubAstExprIdent ident (AstIdent "d"))
+                    right (AstIdent "c")
+                  )
+                  right (AstIdent "e")
+                )
+                right (AstIdent "g")
+              )
+              right (SubAstExprIdent ident (AstIdent "a"))
+            )
+            right (SubAstExprIdent ident (AstIdent "b"))
+          )
+        )
+        (SubAstAssignEtc
+          kind assignEtcRegular
+          left (SubAstExprIdent ident (AstIdent "c"))
+          right (SubAstUnop
+            kind unopMinus
+            obj (SubAstUnop
+              kind unopMinus
+              obj (SubAstDeref obj (SubAstExprIdent ident (AstIdent "d")))
+            )
+          )
+        )
+        (SubAstStmtExprLhs expr (SubAstFuncCall
+          ident (AstIdent "b")
+          genericImplSeq [
+          ]
+          argImplSeq [
+            (AstFuncArgImpl
+              ident !isSome
+              expr (SubAstExprIdent ident (AstIdent "a"))
+            )
+          ]
+        ))
+        (SubAstVar
+          child (AstVarEtcDeclMost
+            ident (AstIdent "x")
+            type (AstType
+              kwVar false
+              ptrDim 0
+              child (SubAstBasicType kind basicTypeI32)
+            )
+          )
+          optExpr (SubAstBinop
+            kind binopPlus
+            left (SubAstFuncCall
+              ident (AstIdent "b")
+              genericImplSeq [
+                (AstGenericArgImpl
+                  ident !isSome
+                  type (AstType
+                    kwVar false
+                    ptrDim 0
+                    child (SubAstNamedType
+                      ident (AstIdent "g")
+                      genericImplSeq [
+                      ]
+                    )
+                  )
+                )
+              ]
+              argImplSeq [
+                (AstFuncArgImpl
+                  ident !isSome
+                  expr (SubAstExprIdent ident (AstIdent "d"))
+                )
+                (AstFuncArgImpl
+                  ident (AstIdent "asdf")
+                  expr (SubAstExprIdent ident (AstIdent "asdf"))
+                )
+              ]
+            )
+            right (SubAstBinop
+              kind binopMul
+              left (SubAstExprIdent ident (AstIdent "c"))
+              right (SubAstU64Lit u64Val 3)
+            )
+          )
+        )
+        (SubAstIf
+          expr (SubAstExprIdent ident (AstIdent "asdf"))
           stmtSeq [
-            (AstSwitch
-              expr (AstIdent "idx")
+            (SubAstSwitch
+              expr (SubAstUnop
+                kind unopAddr
+                obj (SubAstExprIdent ident (AstIdent "result"))
+              )
               caseSeq [
                 (AstCase
-                  expr (AstU64Lit u64Val 0)
-                  stmtSeq [
-                    (AstAssignEtc
-                      kind assignEtcRegular
-                      left (AstIdent "result")
-                      right (AstFuncCall
-                        ident (AstIdent "toSum")
-                        genericImpl (AstGenericList mySeq [
-                        ])
-                        argImplSeq [
-                          (AstIdent "idx")
-                        ]
+                  expr (SubAstFuncCall
+                    ident (AstIdent "T")
+                    genericImplSeq [
+                    ]
+                    argImplSeq [
+                      (AstFuncArgImpl
+                        ident !isSome
+                        expr (SubAstU64Lit u64Val 3)
                       )
+                    ]
+                  )
+                  stmtSeq [
+                  ]
+                )
+                (AstCase
+                  expr (SubAstFuncCall
+                    ident (AstIdent "T")
+                    genericImplSeq [
+                    ]
+                    argImplSeq [
+                      (AstFuncArgImpl
+                        ident !isSome
+                        expr (SubAstU64Lit u64Val 5)
+                      )
+                    ]
+                  )
+                  stmtSeq [
+                    (SubAstVar
+                      child (AstVarEtcDeclMost
+                        ident (AstIdent "d")
+                        type (AstType
+                          kwVar false
+                          ptrDim 0
+                          child (SubAstBasicType kind basicTypeI32)
+                        )
+                      )
+                      optExpr (SubAstU64Lit u64Val 3)
+                    )
+                    (SubAstAssignEtc
+                      kind assignEtcPlus
+                      left (SubAstExprIdent ident (AstIdent "d"))
+                      right (SubAstU64Lit u64Val 8)
                     )
                   ]
                 )
               ]
               optDefault (AstDefault stmtSeq [
-                (AstAssignEtc
-                  kind assignEtcRegular
-                  left (AstIdent "result")
-                  right (AstFuncCall
-                    ident (AstIdent "plus")
-                    genericImpl (AstGenericList mySeq [
-                    ])
-                    argImplSeq [
-                      (AstIdent "result")
-                      (AstFuncCall
-                        ident (AstIdent "toSum")
-                        genericImpl (AstGenericList mySeq [
-                        ])
-                        argImplSeq [
-                          (AstIdent "idx")
-                        ]
-                      )
-                    ]
-                  )
-                )
               ])
             )
           ]
+          elifSeq [
+          ]
+          optElse !isSome
         )
+        (SubAstIf
+          expr (SubAstBinop
+            kind binopCmpEq
+            left (SubAstExprIdent ident (AstIdent "result"))
+            right (SubAstFuncCall
+              ident (AstIdent "T")
+              genericImplSeq [
+              ]
+              argImplSeq [
+                (AstFuncArgImpl
+                  ident !isSome
+                  expr (SubAstU64Lit u64Val 3)
+                )
+              ]
+            )
+          )
+          stmtSeq [
+            (SubAstIf
+              expr (SubAstBinop
+                kind binopCmpEq
+                left (SubAstFuncCall
+                  ident (AstIdent "dot")
+                  genericImplSeq [
+                  ]
+                  argImplSeq [
+                    (AstFuncArgImpl
+                      ident !isSome
+                      expr (SubAstExprIdent ident (AstIdent "a"))
+                    )
+                    (AstFuncArgImpl
+                      ident !isSome
+                      expr (SubAstExprIdent ident (AstIdent "b"))
+                    )
+                  ]
+                )
+                right (SubAstU64Lit u64Val 8)
+              )
+              stmtSeq [
+                (SubAstReturn optExpr (SubAstFuncCall
+                  ident (AstIdent "T")
+                  genericImplSeq [
+                  ]
+                  argImplSeq [
+                    (AstFuncArgImpl
+                      ident !isSome
+                      expr (SubAstU64Lit u64Val 5)
+                    )
+                  ]
+                ))
+              ]
+              elifSeq [
+                (AstElif
+                  expr (SubAstBinop
+                    kind binopCmpEq
+                    left (SubAstExprIdent ident (AstIdent "asdf"))
+                    right (SubAstU64Lit u64Val 8)
+                  )
+                  stmtSeq [
+                    (SubAstReturn optExpr (SubAstU64Lit u64Val 8))
+                  ]
+                )
+              ]
+              optElse (AstElse stmtSeq [
+                (SubAstReturn optExpr (SubAstExprIdent ident (AstIdent "aaaa")))
+              ])
+            )
+          ]
+          elifSeq [
+            (AstElif
+              expr (SubAstBinop
+                kind binopCmpEq
+                left (SubAstExprIdent ident (AstIdent "result"))
+                right (SubAstFuncCall
+                  ident (AstIdent "T")
+                  genericImplSeq [
+                  ]
+                  argImplSeq [
+                    (AstFuncArgImpl
+                      ident !isSome
+                      expr (SubAstU64Lit u64Val 2)
+                    )
+                  ]
+                )
+              )
+              stmtSeq [
+                (SubAstReturn optExpr (SubAstFuncCall
+                  ident (AstIdent "T")
+                  genericImplSeq [
+                  ]
+                  argImplSeq [
+                    (AstFuncArgImpl
+                      ident !isSome
+                      expr (SubAstU64Lit u64Val 3)
+                    )
+                  ]
+                ))
+              ]
+            )
+            (AstElif
+              expr (SubAstBinop
+                kind binopCmpEq
+                left (SubAstExprIdent ident (AstIdent "result"))
+                right (SubAstFuncCall
+                  ident (AstIdent "T")
+                  genericImplSeq [
+                  ]
+                  argImplSeq [
+                    (AstFuncArgImpl
+                      ident !isSome
+                      expr (SubAstU64Lit u64Val 5)
+                    )
+                  ]
+                )
+              )
+              stmtSeq [
+                (SubAstWhile
+                  expr (SubAstDot
+                    left (SubAstExprIdent ident (AstIdent "yoshi"))
+                    right (AstIdent "throw")
+                  )
+                  stmtSeq [
+                  ]
+                )
+              ]
+            )
+            (AstElif
+              expr (SubAstBinop
+                kind binopCmpEq
+                left (SubAstExprIdent ident (AstIdent "result"))
+                right (SubAstU64Lit u64Val 3)
+              )
+              stmtSeq [
+              ]
+            )
+          ]
+          optElse (AstElse stmtSeq [
+            (SubAstReturn optExpr (SubAstFuncCall
+              ident (AstIdent "T")
+              genericImplSeq [
+              ]
+              argImplSeq [
+                (AstFuncArgImpl
+                  ident !isSome
+                  expr (SubAstU64Lit u64Val 25)
+                )
+              ]
+            ))
+          ])
+        )
+        (SubAstFor
+          ident (AstIdent "i")
+          exprPre (SubAstU64Lit u64Val 0)
+          exprPost (SubAstU64Lit u64Val 3)
+          isUntil true
+          stmtSeq [
+            (SubAstConst
+              child (AstVarEtcDeclMost
+                ident (AstIdent "a")
+                type (AstType
+                  kwVar false
+                  ptrDim 0
+                  child (SubAstBasicType kind basicTypeI32)
+                )
+              )
+              expr (SubAstU64Lit u64Val 5)
+            )
+            (SubAstWhile
+              expr (SubAstBinop
+                kind binopPlus
+                left (SubAstExprIdent ident (AstIdent "b"))
+                right (SubAstDeref obj (SubAstDot
+                  left (SubAstExprIdent ident (AstIdent "c"))
+                  right (AstIdent "d")
+                ))
+              )
+              stmtSeq [
+              ]
+            )
+          ]
+        )
+        (SubAstReturn optExpr (SubAstExprIdent ident (AstIdent "result")))
       ]
     )
   ]
   structDeclSeq [
     (AstStruct
       ident (AstIdent "Vec2")
-      genericDecl (AstGenericList mySeq [
+      genericDeclSeq [
         (AstIdent "T")
-      ])
+      ]
       fieldSeq [
         (AstVarEtcDeclMost
           ident (AstIdent "x")
           type (AstType
             kwVar false
             ptrDim 0
-            child (AstNamedType
+            child (SubAstNamedType
               ident (AstIdent "T")
-              genericImpl (AstGenericList mySeq [
-              ])
+              genericImplSeq [
+              ]
             )
           )
         )
@@ -468,35 +581,82 @@
           type (AstType
             kwVar false
             ptrDim 0
-            child (AstNamedType
+            child (SubAstNamedType
               ident (AstIdent "T")
-              genericImpl (AstGenericList mySeq [
-              ])
+              genericImplSeq [
+              ]
             )
           )
         )
       ]
     )
     (AstStruct
-      ident (AstIdent "Vec2Oarr")
-      genericDecl (AstGenericList mySeq [
+      ident (AstIdent "Vec2Ptr")
+      genericDeclSeq [
         (AstIdent "T")
-      ])
+      ]
+      fieldSeq [
+        (AstVarEtcDeclMost
+          ident (AstIdent "x")
+          type (AstType
+            kwVar false
+            ptrDim 1
+            child (SubAstNamedType
+              ident (AstIdent "T")
+              genericImplSeq [
+              ]
+            )
+          )
+        )
+        (AstVarEtcDeclMost
+          ident (AstIdent "y")
+          type (AstType
+            kwVar false
+            ptrDim 1
+            child (SubAstNamedType
+              ident (AstIdent "T")
+              genericImplSeq [
+              ]
+            )
+          )
+        )
+      ]
+    )
+    (AstStruct
+      ident (AstIdent "Vec2Arr3")
+      genericDeclSeq [
+        (AstIdent "T")
+      ]
       fieldSeq [
         (AstVarEtcDeclMost
           ident (AstIdent "x")
           type (AstType
             kwVar false
             ptrDim 0
-            child (AstOpenarray elemType (AstType
-              kwVar false
-              ptrDim 0
-              child (AstNamedType
-                ident (AstIdent "T")
-                genericImpl (AstGenericList mySeq [
-                ])
+            child (SubAstArray
+              dim (SubAstU64Lit u64Val 3)
+              elemType (AstType
+                kwVar false
+                ptrDim 0
+                child (SubAstNamedType
+                  ident (AstIdent "Vec2")
+                  genericImplSeq [
+                    (AstGenericArgImpl
+                      ident !isSome
+                      type (AstType
+                        kwVar false
+                        ptrDim 0
+                        child (SubAstNamedType
+                          ident (AstIdent "T")
+                          genericImplSeq [
+                          ]
+                        )
+                      )
+                    )
+                  ]
+                )
               )
-            ))
+            )
           )
         )
         (AstVarEtcDeclMost
@@ -504,138 +664,33 @@
           type (AstType
             kwVar false
             ptrDim 0
-            child (AstOpenarray elemType (AstType
-              kwVar false
-              ptrDim 0
-              child (AstNamedType
-                ident (AstIdent "T")
-                genericImpl (AstGenericList mySeq [
-                ])
+            child (SubAstArray
+              dim (SubAstU64Lit u64Val 3)
+              elemType (AstType
+                kwVar false
+                ptrDim 0
+                child (SubAstNamedType
+                  ident (AstIdent "Vec2")
+                  genericImplSeq [
+                    (AstGenericArgImpl
+                      ident !isSome
+                      type (AstType
+                        kwVar false
+                        ptrDim 0
+                        child (SubAstNamedType
+                          ident (AstIdent "T")
+                          genericImplSeq [
+                          ]
+                        )
+                      )
+                    )
+                  ]
+                )
               )
-            ))
+            )
           )
         )
       ]
     )
   ]
 )
-nextSymTblPass(): 
-unnamed:
-  named: "Vec2"
-  * symbol: (inputFname: "testBug.scone", name: "Vec2", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2]))
-
-    named: "T"
-    * symbol: (inputFname: "testBug.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "x"
-    * symbol: (inputFname: "testBug.scone", name: "x", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "y"
-    * symbol: (inputFname: "testBug.scone", name: "y", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-  named: "Vec2Oarr"
-  * symbol: (inputFname: "testBug.scone", name: "Vec2Oarr", kind: symStructDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2Oarr"), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiStruct, myStruct: (genericIdxSeq: @[0], fieldIdxSeq: @[1, 2]))
-
-    named: "T"
-    * symbol: (inputFname: "testBug.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "x"
-    * symbol: (inputFname: "testBug.scone", name: "x", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrOpenarr), kind: tiToResolve, myToResolve: ())
-
-    named: "y"
-    * symbol: (inputFname: "testBug.scone", name: "y", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("T"), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrOpenarr), kind: tiToResolve, myToResolve: ())
-
-  named: "size"
-  * symbol: (inputFname: "testBug.scone", name: "size", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1], resultIdx: 2))
-
-    named: "T"
-    * symbol: (inputFname: "testBug.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "self"
-    * symbol: (inputFname: "testBug.scone", name: "self", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "<result>"
-    * symbol: (inputFname: "testBug.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
-
-  named: "at"
-  * symbol: (inputFname: "testBug.scone", name: "at", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
-
-    named: "T"
-    * symbol: (inputFname: "testBug.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "self"
-    * symbol: (inputFname: "testBug.scone", name: "self", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "idx"
-    * symbol: (inputFname: "testBug.scone", name: "idx", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
-
-    named: "<result>"
-    * symbol: (inputFname: "testBug.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("T"), funcVar: true, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-  named: "plus"
-  * symbol: (inputFname: "testBug.scone", name: "plus", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiFunc, myFunc: (genericIdxSeq: @[], argIdxSeq: @[0, 1], resultIdx: 2))
-
-    named: "left"
-    * symbol: (inputFname: "testBug.scone", name: "left", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: true, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
-
-    named: "right"
-    * symbol: (inputFname: "testBug.scone", name: "right", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: true, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
-
-    named: "<result>"
-    * symbol: (inputFname: "testBug.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiBasicType, myBasicType: (kind: basicTypeVoid))
-
-  named: "plus"
-  * symbol: (inputFname: "testBug.scone", name: "plus", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiFunc, myFunc: (genericIdxSeq: @[0], argIdxSeq: @[1, 2], resultIdx: 3))
-
-    named: "T"
-    * symbol: (inputFname: "testBug.scone", name: "T", kind: symGenericDecl, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "left"
-    * symbol: (inputFname: "testBug.scone", name: "left", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "right"
-    * symbol: (inputFname: "testBug.scone", name: "right", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-    named: "<result>"
-    * symbol: (inputFname: "testBug.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
-  named: "sum"
-  * symbol: (inputFname: "testBug.scone", name: "sum", kind: symFuncDecl, initValAst: none(AstNode), typeInfo: ...)
-  * typeInfo: (main: (inputFname: "testBug.scone", name: none(string), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiFunc, myFunc: (genericIdxSeq: @[], argIdxSeq: @[0], resultIdx: 1))
-
-    named: "toSum"
-    * symbol: (inputFname: "testBug.scone", name: "toSum", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2"), funcVar: true, ptrDim: 0, arrDim: some(8), arrKind: tiarrArr), kind: tiToResolve, myToResolve: ())
-
-    named: "<result>"
-    * symbol: (inputFname: "testBug.scone", name: "<result>", kind: symVar, initValAst: none(AstNode), typeInfo: ...)
-    * typeInfo: (main: (inputFname: "testBug.scone", name: some("Vec2"), funcVar: false, ptrDim: 0, arrDim: none(uint64), arrKind: tiarrNothing), kind: tiToResolve, myToResolve: ())
-
---------
-
