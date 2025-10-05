@@ -31,8 +31,8 @@ type
     # #symMacroArg
     # #symMacroReturnType,
 
-  Symbol* = ref SymbolObj
-  SymbolObj* = object
+  #Symbol* = ref SymbolObj
+  Symbol* = ref object
     #moduleName*: string
     inputFname*: string
     name*: string
@@ -42,8 +42,8 @@ type
     typeInfo*: TypeInfo
     #parent*: SymbolTable
 
-  SymbolTable* = ref SymbolTableObj
-  SymbolTableObj* = object
+  #SymbolTable* = ref SymbolTableObj
+  SymbolTable* = ref object
     ast*: AstNode                 # the `AstNode` of the scope
     sym*: Option[Symbol]          # The `Symbol` this `SymbolTable`
                                   # represents
