@@ -50,227 +50,225 @@ proc doAstMain(
   ast: AstVarEtcDeclMost,
 ) =
   let ident = ast.ident.doAst()
-
+#--------
 proc doAstMain(
   #self: var Scone,
   args: SemMacArgs,
   ast: AstExpr,
 ) =
-  proc doSubAstU64Lit(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstU64Lit,
   ) =
-    #let myU64Lit = ast.myU64Lit
     discard
-  proc doSubAstStrLit(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstStrLit,
   ) =
-    #let myStrLit = ast.myStrLit
     discard
-  proc doSubAstOpenarrLit(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstOpenarrLit,
   ) =
-    #let myOpenarrLit = ast.myOpenarrLit
     discard
-  proc doSubAstTrue(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstTrue,
+  ): bool =
+    result = true
+  proc doSubAst(
+    args: SemMacArgs,
+    ast: var SubAstFalse,
+  ): bool =
+    result = false
+  proc doSubAst(
+    args: SemMacArgs,
+    ast: var SubAstDeref,
   ) =
-    #let myTrue = ast.myTrue
     discard
-  proc doSubAstFalse(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstDot,
   ) =
-    #let myFalse = ast.myFalse
     discard
-  proc doSubAstDeref(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstBuiltinTypeCast,
   ) =
-    #let myDeref = ast.myDeref
     discard
-  proc doSubAstDot(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstExprIdent,
   ) =
-    #let myDot = ast.myDot
     discard
-  proc doSubAstBuiltinTypeCast(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstUnop,
   ) =
-    #let myBuiltinTypeCast = ast.myBuiltinTypeCast
     discard
-  proc doSubAstExprIdent(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstBinop,
   ) =
-    #let myExprIdent = ast.myExprIdent
     discard
-  proc doSubAstUnop(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstExpr,
+    ast: var SubAstFuncCall,
   ) =
-    #let myUnop = ast.myUnop
-    discard
-  proc doSubAstBinop(
-    args: SemMacArgs,
-    ast: AstExpr,
-  ) =
-    #let myBinop = ast.myBinop
-    discard
-  proc doSubAstFuncCall(
-    args: SemMacArgs,
-    ast: AstExpr,
-  ) =
-    #let myFuncCall = ast.myFuncCall
     discard
 
   case ast.kind:
   of exprU64Lit:
-    args.doSubAstU64Lit(ast)
+    args.doSubAst(ast.myU64Lit)
   of exprStrLit:
-    args.doSubAstStrLit(ast)
+    args.doSubAst(ast.myStrLit)
   of exprOpenarrLit:
-    args.doSubAstOpenarrLit(ast)
+    args.doSubAst(ast.myOpenarrLit)
   of exprTrue:
-    args.doSubAstTrue(ast)
+    discard args.doSubAst(ast.myTrue)
   of exprFalse:
-    args.doSubAstFalse(ast)
+    discard args.doSubAst(ast.myFalse)
   of exprDeref:
-    args.doSubAstDeref(ast)
+    args.doSubAst(ast.myDeref)
   of exprDot:
-    args.doSubAstDot(ast)
+    args.doSubAst(ast.myDot)
   of exprBuiltinTypeCast:
-    args.doSubAstBuiltinTypeCast(ast)
+    args.doSubAst(ast.myBuiltinTypeCast)
   of exprExprIdent:
-    args.doSubAstExprIdent(ast)
+    args.doSubAst(ast.myExprIdent)
   of exprUnop:
-    args.doSubAstUnop(ast)
+    args.doSubAst(ast.myUnop)
   of exprBinop:
-    args.doSubAstBinop(ast)
+    args.doSubAst(ast.myBinop)
   of exprFuncCall:
-    args.doSubAstFuncCall(ast)
+    args.doSubAst(ast.myFuncCall)
 
 proc doAstMain(
   args: SemMacArgs,
   ast: AstStmt,
 ) =
-  proc doSubAstVar(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstVar,
   ) =
-    #let myVar = addr ast.myVar
     discard
-  proc doSubAstConst(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstConst,
   ) =
-    #let myConst = addr ast.myConst
     discard
-  proc doSubAstScope(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstScope,
   ) =
-    #let myScope = addr ast.myScope
     discard
-  proc doSubAstIf(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstIf,
   ) =
-    #let myIf = addr ast.myIf
     discard
-  proc doSubAstSwitch(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstSwitch,
   ) =
-    #let mySwitch = addr ast.mySwitch
     discard
-  proc doSubAstFor(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstFor,
   ) =
-    #let myFor = addr ast.myFor
     discard
-  proc doSubAstWhile(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstWhile,
   ) =
-    #let myWhile = addr ast.myWhile
     discard
-  proc doSubAstContinue(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstContinue,
   ) =
-    #let myContinue = addr ast.myContinue
     discard
-  proc doSubAstBreak(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstBreak,
   ) =
-    #let myBreak = addr ast.myBreak
     discard
-  proc doSubAstReturn(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstReturn,
   ) =
-    #let myReturn = addr ast.myReturn
     discard
-  proc doSubAstAssignEtc(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstAssignEtc,
   ) =
-    #let myAssignEtc = addr ast.myAssignEtc
     discard
-  proc doSubAstStmtExprLhs(
+  proc doSubAst(
     args: SemMacArgs,
-    ast: AstStmt,
+    ast: var SubAstStmtExprLhs,
   ) =
-    #let myStmtExprLhs = addr ast.myStmtExprLhs
     discard
-
   case ast.kind:
   of stmtVar:
-    args.doSubAstVar(ast)
+    args.doSubAst(ast.myVar)
   of stmtConst:
-    args.doSubAstConst(ast)
+    args.doSubAst(ast.myConst)
   of stmtScope:
-    args.doSubAstScope(ast)
+    args.doSubAst(ast.myScope)
   of stmtIf:
-    args.doSubAstIf(ast)
+    args.doSubAst(ast.myIf)
   of stmtSwitch:
-    args.doSubAstSwitch(ast)
+    args.doSubAst(ast.mySwitch)
   of stmtFor:
-    args.doSubAstFor(ast)
+    args.doSubAst(ast.myFor)
   of stmtWhile:
-    args.doSubAstWhile(ast)
+    args.doSubAst(ast.myWhile)
   of stmtContinue:
-    args.doSubAstContinue(ast)
+    args.doSubAst(ast.myContinue)
   of stmtBreak:
-    args.doSubAstBreak(ast)
+    args.doSubAst(ast.myBreak)
   of stmtReturn:
-    args.doSubAstReturn(ast)
+    args.doSubAst(ast.myReturn)
   of stmtAssignEtc:
-    args.doSubAstAssignEtc(ast)
+    args.doSubAst(ast.myAssignEtc)
   of stmtStmtExprLhs:
-    args.doSubAstStmtExprLhs(ast)
+    args.doSubAst(ast.myStmtExprLhs)
 
 proc doAstMain(
   args: SemMacArgs,
   ast: AstTypeSub
 ) =
+  proc doSubAst(
+    args: SemMacArgs,
+    ast: var SubAstArray,
+  ) =
+    discard
+  proc doSubAst(
+    args: SemMacArgs,
+    ast: var SubAstOpenarray,
+  ) =
+    discard
+  proc doSubAst(
+    args: SemMacArgs,
+    ast: var SubAstBasicType,
+  ) =
+    discard
+  proc doSubAst(
+    args: SemMacArgs,
+    ast: var SubAstNamedType,
+  ) =
+    discard
+
+  let parent = args.parentSeq[][^1].myType
+
   case ast.kind:
   of typeSubArray:
-    discard
+    args.doSubAst(ast.myArray)
   of typeSubOpenarray:
-    discard
+    args.doSubAst(ast.myOpenarray)
   of typeSubBasicType:
-    discard
+    args.doSubAst(ast.myBasicType)
   of typeSubNamedType:
-    discard
+    args.doSubAst(ast.myNamedType)
 
 proc doAstMain(
   args: SemMacArgs,
